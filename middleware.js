@@ -28,10 +28,14 @@ const isAuthorized = (request) => {
 
 export function middleware(request) {
   const url = new URL(request.url);
-  const { pathname, search } = url;
+  const { pathname } = url;
 
   if (!pathname.startsWith('/admin')) {
     return;
+  }
+
+  if (pathname === '/admin' || pathname === '/admin/' || pathname === '/admin/index.html' || pathname === '/admin/login.html') {
+    return new Response('Not found', { status: 404 });
   }
 
   if (pathname === LOGIN_PATH || pathname === '/portal-7f3a9c/index.html') {
