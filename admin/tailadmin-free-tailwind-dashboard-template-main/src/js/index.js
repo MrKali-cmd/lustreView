@@ -16,7 +16,15 @@ import "./components/calendar-init.js";
 import "./components/image-resize";
 
 const API_BASE = (() => {
+  const configuredBase =
+    window.__LUXE_API_BASE__ ||
+    document.querySelector('meta[name="luxe-api-base"]')?.content ||
+    "";
   const { protocol, hostname, port, origin } = window.location;
+
+  if (configuredBase) {
+    return configuredBase.replace(/\/$/, "");
+  }
 
   if (protocol === "file:") {
     return "http://localhost:3001/api";

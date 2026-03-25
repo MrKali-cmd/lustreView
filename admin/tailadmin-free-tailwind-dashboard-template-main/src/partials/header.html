@@ -145,13 +145,13 @@
     >
       <div class="2xsm:gap-3 flex items-center gap-2">
         <a
-          href="http://localhost:3001/index.html"
+          href="/index.html"
           class="hidden items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-200 dark:hover:bg-white/5 md:inline-flex"
         >
           View Website
         </a>
         <a
-          href="http://localhost:3001/zebra-collection.html"
+          href="/zebra-collection.html"
           class="hidden items-center gap-2 rounded-lg bg-brand-500 px-3 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 md:inline-flex"
         >
           Collections Page
@@ -780,7 +780,14 @@
     if (!notificationList) return;
 
     const API_BASE = (() => {
+      const configuredBase =
+        window.__LUXE_API_BASE__ ||
+        document.querySelector('meta[name="luxe-api-base"]')?.content ||
+        '';
       const { protocol, hostname, port, origin } = window.location;
+      if (configuredBase) {
+        return configuredBase.replace(/\/$/, '');
+      }
       if (protocol === 'file:') {
         return 'http://localhost:3001/api';
       }

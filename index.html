@@ -521,6 +521,11 @@
 
     <script>
         const API_BASE = (() => {
+            const configuredBase = window.__LUXE_API_BASE__
+                || document.querySelector('meta[name="luxe-api-base"]')?.getAttribute('content')?.trim();
+            if (configuredBase) {
+                return configuredBase.replace(/\/$/, '');
+            }
             const { protocol, hostname, port, origin } = window.location;
             if (protocol === 'file:') {
                 return 'http://localhost:3001/api';
@@ -1066,6 +1071,11 @@
                     });
 
                     if (!response.ok) {
+                        console.error('[contact-form] request failed', {
+                            url: `${API_BASE}/contact-messages`,
+                            status: response.status,
+                            statusText: response.statusText
+                        });
                         throw new Error('Failed to send message');
                     }
 
@@ -1073,7 +1083,7 @@
                     setContactStatus('Your request was sent successfully. We will review it in the admin panel.', 'is-success');
                     openContactSuccessModal();
                 } catch (error) {
-                    setContactStatus('Could not send the request. Please make sure the server is running.', 'is-error');
+                    setContactStatus('Could not send the request. The hosted API is not reachable yet.', 'is-error');
                 }
             });
         }
