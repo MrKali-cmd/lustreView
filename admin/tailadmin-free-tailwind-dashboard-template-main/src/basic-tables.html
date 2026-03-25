@@ -238,13 +238,14 @@
 
       const api = {
         list: async () => {
-          const res = await fetch(API_BASE);
+          const res = await fetch(API_BASE, { cache: 'no-store' });
           if (!res.ok) throw new Error('Failed to load collections');
           return res.json();
         },
         create: async (payload) => {
           const res = await fetch(API_BASE, {
             method: 'POST',
+            cache: 'no-store',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           });
@@ -254,6 +255,7 @@
         update: async (payload) => {
           const res = await fetch(`${API_BASE}/${payload.id}`, {
             method: 'PUT',
+            cache: 'no-store',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
           });
@@ -261,7 +263,7 @@
           return res.json();
         },
         remove: async (id) => {
-          const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
+          const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE', cache: 'no-store' });
           if (!res.ok) throw new Error('Failed to delete collection');
         }
       };

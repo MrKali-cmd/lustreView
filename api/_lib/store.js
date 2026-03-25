@@ -191,12 +191,14 @@ const setCors = (res) => {
 
 const sendJson = (res, statusCode, payload) => {
   setCors(res);
+  res.setHeader('Cache-Control', 'no-store, max-age=0');
   res.statusCode = statusCode;
   res.end(JSON.stringify(payload));
 };
 
 const sendEmpty = (res, statusCode = 204) => {
   setCors(res);
+  res.setHeader('Cache-Control', 'no-store, max-age=0');
   res.statusCode = statusCode;
   res.end();
 };

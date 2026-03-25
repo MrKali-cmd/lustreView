@@ -70,7 +70,9 @@ window.Alpine = Alpine;
 Alpine.start();
 
 const fetchJson = async (path) => {
-  const response = await fetch(`${API_BASE}${path}`);
+  const response = await fetch(`${API_BASE}${path}`, {
+    cache: "no-store",
+  });
   if (!response.ok) {
     throw new Error(`Request failed for ${path}`);
   }

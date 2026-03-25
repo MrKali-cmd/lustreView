@@ -379,7 +379,7 @@
 
             <form class="contact-form" id="contact-form">
                 <input type="text" name="name" placeholder="Your Name" required>
-                <input type="email" name="email" placeholder="Gmail Address" required pattern="^[a-zA-Z0-9._%+-]+@gmail\.com$" title="Only Gmail addresses are allowed">
+                <input type="email" name="email" placeholder="Gmail Address" required title="Only Gmail addresses are allowed">
                 <input type="text" name="roomType" placeholder="Room Type (Bedroom, Living Room, ...)" required>
                 <textarea name="message" rows="4" placeholder="Tell us your preferred style, color, and dimensions" required></textarea>
                 <button type="submit" class="btn-primary">Send Request</button>
@@ -1066,6 +1066,7 @@
                 try {
                     const response = await fetch(`${API_BASE}/contact-messages`, {
                         method: 'POST',
+                        cache: 'no-store',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });

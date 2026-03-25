@@ -860,7 +860,9 @@
     };
 
     const loadNotifications = async () => {
-      const response = await fetch(`${API_BASE}/contact-messages`);
+      const response = await fetch(`${API_BASE}/contact-messages`, {
+        cache: 'no-store'
+      });
       if (!response.ok) throw new Error('Failed to load notifications');
       const messages = await response.json();
       render(messages);

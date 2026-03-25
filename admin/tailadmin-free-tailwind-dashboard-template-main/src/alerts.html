@@ -273,7 +273,9 @@
 
       const loadMessages = async () => {
         listEl.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400">Loading messages...</p>';
-        const response = await fetch(`${API_BASE}/contact-messages`);
+        const response = await fetch(`${API_BASE}/contact-messages`, {
+          cache: 'no-store'
+        });
         if (!response.ok) {
           throw new Error('Failed to load messages');
         }
@@ -286,6 +288,7 @@
       const updateMessage = async (id, status) => {
         const response = await fetch(`${API_BASE}/contact-messages/${id}`, {
           method: 'PUT',
+          cache: 'no-store',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status })
         });
@@ -319,6 +322,7 @@
         if (!activeReplyId) return;
         const response = await fetch(`${API_BASE}/contact-messages/${activeReplyId}/reply`, {
           method: 'POST',
+          cache: 'no-store',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             subject: replySubject.value.trim(),
@@ -336,7 +340,8 @@
 
       const deleteMessage = async (id) => {
         const response = await fetch(`${API_BASE}/contact-messages/${id}`, {
-          method: 'DELETE'
+          method: 'DELETE',
+          cache: 'no-store'
         });
 
         if (!response.ok) {
