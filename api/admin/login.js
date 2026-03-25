@@ -1,7 +1,11 @@
 const {
   buildSessionCookie,
+  clearFailedLoginAttempts,
   credentialsMatch,
-  isLoginConfigured
+  getLoginBlockedMessage,
+  isLoginConfigured,
+  isLoginBlocked,
+  recordFailedLoginAttempt
 } = require('../../_lib/admin-auth');
 const {
   handleOptions,
@@ -24,6 +28,13 @@ module.exports = async (req, res) => {
     return;
   }
 
+  if (isLoginBlocked(req)) {
+    sendJson(res, 429, {
+      error: getLoginBlockedMessage(req) || 'Too many failed login attempts. Try again later.'
+    });
+    return;
+  }
+
   const payload = await readJson(req);
   const identifier = String(payload.identifier || payload.email || payload.username || '').trim();
   const password = String(payload.password || '').trim();
@@ -34,10 +45,19 @@ module.exports = async (req, res) => {
   }
 
   if (!credentialsMatch(identifier, password)) {
+    const lockState = recordFailedLoginAttempt(req);
+    if (lockState && lockState.lockedUntil && lockState.lockedUntil > Date.now()) {
+      sendJson(res, 429, {
+        error: getLoginBlockedMessage(req) || 'Too many failed login attempts. Try again later.'
+      });
+      return;
+    }
+
     sendJson(res, 401, { error: 'Invalid username or password' });
     return;
   }
 
+  clearFailedLoginAttempts(req);
   const cookie = buildSessionCookie(req);
   if (!cookie) {
     sendJson(res, 500, { error: 'Admin session token is missing' });

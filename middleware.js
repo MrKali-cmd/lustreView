@@ -1,5 +1,5 @@
 const ADMIN_COOKIE_NAME = 'luxe_admin_session';
-const LOGIN_PATHS = new Set(['/admin', '/admin/', '/admin/index.html', '/admin/login.html']);
+const LOGIN_PATH = '/portal-7f3a9c/';
 
 const getExpectedToken = () => String(process.env.ADMIN_SESSION_TOKEN || '').trim();
 
@@ -34,7 +34,7 @@ export function middleware(request) {
     return;
   }
 
-  if (LOGIN_PATHS.has(pathname)) {
+  if (pathname === LOGIN_PATH || pathname === '/portal-7f3a9c/index.html') {
     if (isAuthorized(request)) {
       const next = url.searchParams.get('next');
       const target = next && next.startsWith('/admin')
@@ -47,7 +47,7 @@ export function middleware(request) {
   }
 
   if (!isAuthorized(request)) {
-    const loginUrl = new URL('/admin/', url);
+    const loginUrl = new URL(LOGIN_PATH, url);
     loginUrl.searchParams.set('next', `${pathname}${search}`);
     return Response.redirect(loginUrl, 302);
   }

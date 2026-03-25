@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Admin Login | Luxe Drapes</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.0.0/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --gold: #d4af37;
+            --gold-dark: #b5942f;
+            --text: #f8fafc;
+            --glass: rgba(255, 255, 255, 0.07);
+            --glass-border: rgba(255, 255, 255, 0.12);
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        body {
+            min-height: 100vh;
+            overflow: hidden;
+            display: grid;
+            place-items: center;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top, rgba(212, 175, 55, 0.14), transparent 34%),
+                linear-gradient(135deg, #09111f 0%, #101b31 45%, #060b14 100%);
+        }
+        .scene {
+            position: relative;
+            width: min(980px, 100%);
+            min-height: 620px;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+        }
+        .curtain {
+            position: absolute;
+            top: 0;
+            width: 50%;
+            height: 100%;
+            z-index: 1;
+            background: linear-gradient(180deg, #6d1230, #95193d 50%, #6d1230);
+            box-shadow: 0 0 26px rgba(0, 0, 0, 0.45);
+            transition: transform 1.8s cubic-bezier(0.85, 0, 0.15, 1);
+        }
+        .curtain.left { left: 0; border-right: 2px solid rgba(212, 175, 55, 0.55); }
+        .curtain.right { right: 0; border-left: 2px solid rgba(212, 175, 55, 0.55); }
+        .scene.loaded .curtain.left { transform: translateX(-102%); }
+        .scene.loaded .curtain.right { transform: translateX(102%); }
+        .curtain::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.04) 20px, rgba(0,0,0,0.08) 20px, rgba(0,0,0,0.08) 40px);
+            opacity: 0.85;
+        }
+        .login-box {
+            position: relative;
+            z-index: 2;
+            width: min(440px, 92vw);
+            padding: 34px 28px;
+            border-radius: 24px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            opacity: 0;
+            transform: translateY(24px) scale(0.98);
+            transition: opacity 0.9s ease 0.9s, transform 0.9s ease 0.9s;
+        }
+        .scene.loaded .login-box { opacity: 1; transform: translateY(0) scale(1); }
+        .brand {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .brand i {
+            font-size: 2.4rem;
+            color: var(--gold);
+            filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.45));
+            margin-bottom: 12px;
+        }
+        .brand h1 {
+            font-size: 1.55rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.3;
+        }
+        .brand p {
+            margin-top: 6px;
+            font-size: 0.92rem;
+            color: rgba(255, 255, 255, 0.72);
+        }
+        .login-form {
+            display: grid;
+            gap: 14px;
+        }
+        .field { position: relative; }
+        .field i {
+            position: absolute;
+            top: 50%;
+            right: 16px;
+            transform: translateY(-50%);
+            color: var(--gold);
+            pointer-events: none;
+        }
+        .field input {
+            width: 100%;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            border-radius: 14px;
+            padding: 15px 18px 15px 48px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color .25s ease, background .25s ease, box-shadow .25s ease;
+        }
+        .field input::placeholder { color: rgba(255, 255, 255, 0.5); }
+        .field input:focus {
+            border-color: var(--gold);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.16);
+        }
+        .meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin: 4px 0;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.78);
+        }
+        .meta label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .meta input[type="checkbox"] { accent-color: var(--gold); }
+        .meta a { color: var(--gold); text-decoration: none; }
+        .meta a:hover { color: #fff; }
+        .login-btn {
+            width: 100%;
+            border: none;
+            border-radius: 14px;
+            padding: 15px 18px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            color: #fff;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 16px 26px rgba(212, 175, 55, 0.24);
+            transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+        }
+        .login-btn:hover { transform: translateY(-2px); box-shadow: 0 20px 30px rgba(212, 175, 55, 0.3); }
+        .login-btn:disabled { cursor: wait; opacity: 0.75; transform: none; }
+        .status {
+            min-height: 22px;
+            font-size: 0.92rem;
+            color: rgba(255, 255, 255, 0.78);
+            text-align: center;
+            margin-top: 4px;
+        }
+        .status.error { color: #fca5a5; }
+        .status.success { color: #86efac; }
+        .footer-note {
+            margin-top: 18px;
+            text-align: center;
+            font-size: 0.86rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .footer-note code { color: #fff; }
+        @media (max-width: 540px) {
+            .scene { min-height: 100vh; padding: 18px; }
+            .login-box { padding: 28px 20px; border-radius: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <main class="scene" id="scene">
+        <div class="curtain left" aria-hidden="true"></div>
+        <div class="curtain right" aria-hidden="true"></div>
+        <section class="login-box" aria-label="Admin login">
+            <div class="brand">
+                <i class="fa-solid fa-helmet-safety"></i>
+                <h1>Luxe Drapes Admin</h1>
+                <p>Secure sign in for the admin panel</p>
+            </div>
+            <form class="login-form" id="login-form" novalidate>
+                <div class="field">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <input id="identifier" name="identifier" type="text" autocomplete="username" placeholder="Admin username or email" required>
+                </div>
+                <div class="field">
+                    <i class="fa-solid fa-lock"></i>
+                    <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Password" required>
+                </div>
+                <div class="meta">
+                    <label>
+                        <input type="checkbox" name="remember" id="remember">
+                        Remember me
+                    </label>
+                    <a href="mailto:hello@luxedrapes.ir">Need access?</a>
+                </div>
+                <button type="submit" class="login-btn" id="login-btn">Sign In</button>
+                <p class="status" id="login-status" aria-live="polite"></p>
+                <p class="footer-note">
+                    Hidden entry point: <code>/portal-7f3a9c/</code>
+                </p>
+            </form>
+        </section>
+    </main>
+
+    <script>
+        const LOGIN_API = '/api/admin/login';
+        const ME_API = '/api/admin/me';
+        const DASHBOARD_URL = '/admin/tailadmin-free-tailwind-dashboard-template-main/src/index.html';
+        const loginForm = document.getElementById('login-form');
+        const loginBtn = document.getElementById('login-btn');
+        const loginStatus = document.getElementById('login-status');
+        const scene = document.getElementById('scene');
+        const params = new URLSearchParams(window.location.search);
+        const nextTarget = params.get('next') || DASHBOARD_URL;
+
+        const setStatus = (message, kind = '') => {
+            loginStatus.textContent = message || '';
+            loginStatus.className = `status ${kind}`.trim();
+        };
+
+        const openDashboard = () => {
+            window.location.replace(nextTarget.startsWith('/admin') ? nextTarget : DASHBOARD_URL);
+        };
+
+        const loadSessionState = async () => {
+            try {
+                const response = await fetch(ME_API, { cache: 'no-store' });
+                if (response.ok) {
+                    openDashboard();
+                    return;
+                }
+            } catch (error) {
+                // Stay on login page when the API is temporarily unreachable.
+            }
+
+            setTimeout(() => scene.classList.add('loaded'), 260);
+        };
+
+        loginForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const identifier = document.getElementById('identifier').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!identifier || !password) {
+                setStatus('Please enter your username and password.', 'error');
+                return;
+            }
+
+            loginBtn.disabled = true;
+            setStatus('Checking credentials...');
+
+            try {
+                const response = await fetch(LOGIN_API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identifier, password })
+                });
+
+                const payload = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    throw new Error(payload.error || 'Login failed');
+                }
+
+                setStatus('Login successful. Redirecting...', 'success');
+                window.location.replace(payload.redirectTo || nextTarget);
+            } catch (error) {
+                setStatus(error.message || 'Login failed.', 'error');
+                loginBtn.disabled = false;
+            }
+        });
+
+        window.addEventListener('load', () => {
+            loadSessionState();
+        });
+    </script>
+</body>
+</html>
