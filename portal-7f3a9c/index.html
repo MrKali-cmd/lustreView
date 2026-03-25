@@ -267,10 +267,20 @@
                     body: JSON.stringify({ identifier, password })
                 });
 
-                const payload = await response.json().catch(() => ({}));
+                const rawBody = await response.text().catch(() => '');
+                let payload = {};
+
+                if (rawBody) {
+                    try {
+                        payload = JSON.parse(rawBody);
+                    } catch {
+                        payload = { error: rawBody.trim() };
+                    }
+                }
 
                 if (!response.ok) {
-                    throw new Error(payload.error || 'Login failed');
+                    const reason = payload.error || payload.message || `HTTP ${response.status}`;
+                    throw new Error(`Login failed (${response.status}): ${reason}`);
                 }
 
                 setStatus('Login successful. Redirecting...', 'success');
