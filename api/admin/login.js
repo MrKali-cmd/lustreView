@@ -52,7 +52,7 @@ module.exports = async (req, res) => {
     res.setHeader('Set-Cookie', cookie);
     sendJson(res, 200, {
       ok: true,
-      redirectTo: '/admin/tailadmin-free-tailwind-dashboard-template-main/build/index.html'
+      redirectTo: '/admin/dashboard'
     });
   } catch (error) {
     console.error('[admin/login] unexpected error:', error);

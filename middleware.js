@@ -43,11 +43,19 @@ export function middleware(request) {
       const next = url.searchParams.get('next');
       const target = next && next.startsWith('/admin')
         ? next
-        : '/admin/tailadmin-free-tailwind-dashboard-template-main/build/index.html';
+        : '/admin/dashboard';
       return Response.redirect(new URL(target, url), 302);
     }
 
     return;
+  }
+
+  if (pathname === '/admin/dashboard' || pathname === '/admin/dashboard.html') {
+    if (!isAuthorized(request)) {
+      return new Response('Not found', { status: 404 });
+    }
+
+    return Response.redirect(new URL('/admin/tailadmin-free-tailwind-dashboard-template-main/build/index.html', url), 302);
   }
 
   if (!isAuthorized(request)) {
