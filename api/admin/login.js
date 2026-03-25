@@ -4,12 +4,12 @@ const {
   credentialsMatch,
   isLoginConfigured,
   recordFailedLoginAttempt
-} = require('../../_lib/admin-auth');
+} = require('../_lib/admin-auth');
 const {
   handleOptions,
   readJson,
   sendJson
-} = require('../../_lib/store');
+} = require('../_lib/store');
 
 module.exports = async (req, res) => {
   try {
