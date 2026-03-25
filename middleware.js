@@ -43,7 +43,7 @@ export function middleware(request) {
       const next = url.searchParams.get('next');
       const target = next && next.startsWith('/admin')
         ? next
-        : '/admin/tailadmin-free-tailwind-dashboard-template-main/src/index.html';
+        : '/admin/tailadmin-free-tailwind-dashboard-template-main/build/index.html';
       return Response.redirect(new URL(target, url), 302);
     }
 
