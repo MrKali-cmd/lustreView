@@ -771,6 +771,24 @@
 </header>
 <script>
   (() => {
+    const API_BASE = (() => {
+      const configuredBase =
+        window.__LUXE_API_BASE__ ||
+        document.querySelector('meta[name="luxe-api-base"]')?.content ||
+        '';
+      const { protocol, hostname, port, origin } = window.location;
+      if (configuredBase) {
+        return configuredBase.replace(/\/$/, '');
+      }
+      if (protocol === 'file:') {
+        return 'http://localhost:3001/api';
+      }
+      if (hostname === 'localhost' && port && port !== '3001') {
+        return 'http://localhost:3001/api';
+      }
+      return `${origin}/api`;
+    })();
+
     const notificationList = document.querySelector(
       '.relative[x-data*="dropdownOpen"] ul.custom-scrollbar'
     );
@@ -807,24 +825,6 @@
       });
 
     if (!notificationList) return;
-
-    const API_BASE = (() => {
-      const configuredBase =
-        window.__LUXE_API_BASE__ ||
-        document.querySelector('meta[name="luxe-api-base"]')?.content ||
-        '';
-      const { protocol, hostname, port, origin } = window.location;
-      if (configuredBase) {
-        return configuredBase.replace(/\/$/, '');
-      }
-      if (protocol === 'file:') {
-        return 'http://localhost:3001/api';
-      }
-      if (hostname === 'localhost' && port && port !== '3001') {
-        return 'http://localhost:3001/api';
-      }
-      return `${origin}/api`;
-    })();
 
     const escapeHtml = (value) =>
       String(value ?? '')
