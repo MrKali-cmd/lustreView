@@ -5,6 +5,9 @@ const {
   sendJson,
   upsertCollection
 } = require('../_lib/store');
+const {
+  requireAdminAuth
+} = require('../_lib/admin-auth');
 
 module.exports = async (req, res) => {
   if (handleOptions(req, res)) return;
@@ -15,6 +18,7 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'POST') {
+    if (!requireAdminAuth(req, res)) return;
     const payload = await readJson(req);
     const now = new Date().toISOString().slice(0, 10);
     const row = {

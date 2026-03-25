@@ -1,4 +1,7 @@
 const {
+  requireAdminAuth
+} = require('../_lib/admin-auth');
+const {
   deleteCollection,
   getCollections,
   handleOptions,
@@ -27,6 +30,7 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'PUT' || req.method === 'PATCH') {
+    if (!requireAdminAuth(req, res)) return;
     const payload = await readJson(req);
     const existing = getCollections().find((item) => item.id === id) || {};
     const now = new Date().toISOString().slice(0, 10);
@@ -52,6 +56,7 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'DELETE') {
+    if (!requireAdminAuth(req, res)) return;
     deleteCollection(id);
     sendJson(res, 204, {});
     return;

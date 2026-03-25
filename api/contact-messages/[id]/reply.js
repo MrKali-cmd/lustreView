@@ -1,4 +1,7 @@
 const {
+  requireAdminAuth
+} = require('../../_lib/admin-auth');
+const {
   getMailConfigError,
   sendMail
 } = require('../../_lib/mail');
@@ -13,6 +16,8 @@ const {
 
 module.exports = async (req, res) => {
   if (handleOptions(req, res)) return;
+
+  if (!requireAdminAuth(req, res)) return;
 
   const { id } = req.query || {};
   if (!id) {

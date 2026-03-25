@@ -740,6 +740,8 @@
             </li>
           </ul>
           <button
+            type="button"
+            data-admin-logout
             class="group text-theme-sm mt-3 flex items-center gap-3 rounded-lg px-3 py-2 font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
           >
             <svg
@@ -776,6 +778,33 @@
       '.relative[x-data*="dropdownOpen"]'
     );
     const notificationDot = notificationContainer?.querySelector('button span.absolute.top-0\\.5');
+    const adminLoginPath = '/admin/';
+
+    if (document.body) {
+      document.body.style.visibility = 'hidden';
+    }
+
+    const redirectToLogin = () => {
+      const next = encodeURIComponent(window.location.pathname + window.location.search);
+      window.location.replace(`${adminLoginPath}?next=${next}`);
+    };
+
+    fetch(`${API_BASE}/admin/me`, {
+      cache: 'no-store'
+    })
+      .then((response) => {
+        if (!response.ok) {
+          redirectToLogin();
+          return;
+        }
+
+        if (document.body) {
+          document.body.style.visibility = '';
+        }
+      })
+      .catch(() => {
+        redirectToLogin();
+      });
 
     if (!notificationList) return;
 
@@ -882,6 +911,22 @@
     setInterval(() => {
       loadNotifications().catch(() => {});
     }, 15000);
+
+    const logoutButton = document.querySelector('[data-admin-logout]');
+    if (logoutButton) {
+      logoutButton.addEventListener('click', async () => {
+        try {
+          await fetch(`${API_BASE}/admin/logout`, {
+            method: 'POST',
+            cache: 'no-store'
+          });
+        } catch (error) {
+          // Continue to sign-out redirect even if the API is temporarily unreachable.
+        } finally {
+          window.location.replace(adminLoginPath);
+        }
+      });
+    }
   })();
 </script>
 

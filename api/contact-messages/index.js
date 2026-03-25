@@ -3,6 +3,9 @@ const {
   sendMail
 } = require('../_lib/mail');
 const {
+  requireAdminAuth
+} = require('../_lib/admin-auth');
+const {
   getMessages,
   handleOptions,
   readJson,
@@ -16,6 +19,7 @@ module.exports = async (req, res) => {
   if (handleOptions(req, res)) return;
 
   if (req.method === 'GET') {
+    if (!requireAdminAuth(req, res)) return;
     sendJson(res, 200, getMessages());
     return;
   }

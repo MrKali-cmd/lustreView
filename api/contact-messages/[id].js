@@ -1,4 +1,7 @@
 const {
+  requireAdminAuth
+} = require('../_lib/admin-auth');
+const {
   deleteMessage,
   getMessages,
   handleOptions,
@@ -17,6 +20,7 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'GET') {
+    if (!requireAdminAuth(req, res)) return;
     const row = getMessages().find((item) => item.id === id);
     if (!row) {
       sendJson(res, 404, { error: 'Message not found' });
@@ -27,6 +31,7 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'PUT' || req.method === 'PATCH') {
+    if (!requireAdminAuth(req, res)) return;
     const payload = await readJson(req);
     const existing = getMessages().find((item) => item.id === id);
     if (!existing) {
@@ -55,6 +60,7 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'DELETE') {
+    if (!requireAdminAuth(req, res)) return;
     deleteMessage(id);
     sendJson(res, 204, {});
     return;
