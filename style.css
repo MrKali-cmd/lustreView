@@ -1482,12 +1482,257 @@ body::after {
 
             .header-btn { display: none; }
             .mobile-menu-btn { display: block; }
-            .hero { padding-top: 80px; }
-            .hero-title { font-size: 42px; line-height: 1.2; }
+            .hero {
+                height: 640px;
+                padding-top: 74px;
+            }
+            .hero-slide {
+                padding: 0 6% 78px;
+            }
+            .hero-content {
+                max-width: 100%;
+            }
+            .hero-tag {
+                padding: 8px 18px;
+                font-size: 12px;
+                margin-bottom: 18px;
+            }
+            .hero-title {
+                font-size: 40px;
+                line-height: 1.16;
+                margin-bottom: 18px;
+            }
+            .hero-desc {
+                font-size: 16px;
+                line-height: 1.65;
+                margin-bottom: 28px;
+            }
             .hero-image { display: none; }
             .hero-buttons { flex-direction: column; gap: 20px; }
-            .features-grid, .why-grid, .products-grid, .categories-grid, .testimonials-grid, .contact-grid {
+            .hero-buttons .btn-primary,
+            .hero-buttons .btn-secondary {
+                width: 100%;
+                justify-content: center;
+                padding: 15px 24px;
+                font-size: 14px;
+            }
+            .slider-dots {
+                bottom: 22px;
+                gap: 10px;
+            }
+            .slider-dot {
+                width: 10px;
+                height: 10px;
+            }
+            .section-header {
+                margin-bottom: 42px;
+            }
+            .section-title {
+                font-size: 34px;
+                margin-bottom: 16px;
+            }
+            .section-desc {
+                font-size: 15px;
+                line-height: 1.7;
+            }
+            .products,
+            .why-us,
+            .about,
+            .testimonials,
+            .contact,
+            .cta,
+            .features {
+                padding-left: 5%;
+                padding-right: 5%;
+            }
+            .products {
+                padding-top: 88px;
+                padding-bottom: 88px;
+            }
+            .products-filter {
+                gap: 10px;
+                margin-bottom: 34px;
+            }
+            .filter-btn {
+                padding: 9px 14px;
+                font-size: 12px;
+                border-width: 2px;
+            }
+            .features-grid,
+            .categories-grid,
+            .contact-grid,
+            .testimonials-grid {
                 grid-template-columns: 1fr;
+            }
+            .why-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 14px;
+            }
+            .why-card {
+                padding: 24px 14px;
+                border-radius: 18px;
+            }
+            .why-icon {
+                width: 58px;
+                height: 58px;
+                margin-bottom: 16px;
+                font-size: 22px;
+            }
+            .why-card h3 {
+                font-size: 16px;
+                line-height: 1.35;
+                margin-bottom: 8px;
+            }
+            .why-card p {
+                font-size: 13px;
+                line-height: 1.6;
+            }
+            .products-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 14px;
+                align-items: start;
+            }
+            .product-card {
+                border-radius: 18px;
+            }
+            .product-image {
+                height: 180px;
+            }
+            .product-badge {
+                top: 12px;
+                right: 12px;
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+            .product-actions,
+            .product-card:hover .product-actions {
+                bottom: 14px;
+                gap: 8px;
+            }
+            .product-action {
+                width: 38px;
+                height: 38px;
+                font-size: 14px;
+            }
+            .product-info {
+                padding: 16px 14px 18px;
+            }
+            .product-category {
+                font-size: 11px;
+                margin-bottom: 6px;
+            }
+            .product-name {
+                font-size: 16px;
+                margin-bottom: 8px;
+                line-height: 1.35;
+            }
+            .product-info p {
+                font-size: 12.5px;
+                line-height: 1.55;
+                display: -webkit-box;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 2;
+                overflow: hidden;
+            }
+            .price {
+                font-size: 17px;
+            }
+            .price small,
+            .product-rating {
+                font-size: 11px;
+            }
+            .explore-card {
+                grid-column: 1 / -1;
+                min-height: 280px !important;
+            }
+            .explore-card > div {
+                padding: 30px !important;
+            }
+            .explore-card .product-name {
+                font-size: 26px !important;
+            }
+            .explore-card p {
+                font-size: 15px !important;
+                margin-bottom: 22px !important;
+            }
+            .explore-card .btn-primary {
+                padding: 14px 28px !important;
+                font-size: 15px !important;
+            }
+            .about {
+                grid-template-columns: 1fr;
+                gap: 34px;
+                padding-top: 88px;
+                padding-bottom: 88px;
+            }
+            .about-image img {
+                max-height: 320px;
+                object-fit: cover;
+            }
+            .about-image::before {
+                display: none;
+            }
+            .about-content .section-tag,
+            .about-content .section-title {
+                text-align: left;
+            }
+            .about-content .section-title {
+                font-size: 34px;
+            }
+            .about-features {
+                margin: 24px 0;
+            }
+            .about-features li {
+                gap: 12px;
+                margin-bottom: 14px;
+                font-size: 14px;
+                line-height: 1.55;
+                align-items: flex-start;
+            }
+            .about-features li i {
+                width: 28px;
+                height: 28px;
+                font-size: 12px;
+                flex-shrink: 0;
+            }
+            .about-btn {
+                padding: 14px 28px;
+                font-size: 14px;
+            }
+            .testimonials {
+                padding-top: 88px;
+                padding-bottom: 88px;
+            }
+            .testimonials-grid {
+                gap: 16px;
+                margin-top: 34px;
+            }
+            .testimonial-card {
+                padding: 26px 18px;
+                border-radius: 18px;
+            }
+            .testimonial-card::before {
+                top: 12px;
+                right: 16px;
+                font-size: 60px;
+            }
+            .testimonial-text {
+                font-size: 14px;
+                line-height: 1.75;
+                margin-bottom: 20px;
+            }
+            .testimonial-author {
+                gap: 12px;
+            }
+            .author-avatar {
+                width: 52px;
+                height: 52px;
+            }
+            .author-info h4 {
+                font-size: 16px;
+            }
+            .author-info span {
+                font-size: 13px;
             }
             .quick-view-content {
                 padding: 18px;
@@ -1528,5 +1773,58 @@ body::after {
             }
             .footer-grid { grid-template-columns: 1fr; }
             .footer-bottom { flex-direction: column; text-align: center; }
+        }
+
+        @media (max-width: 560px) {
+            .hero {
+                height: 560px;
+            }
+            .hero-slide {
+                padding: 0 5% 70px;
+            }
+            .hero-title {
+                font-size: 32px;
+            }
+            .hero-desc {
+                font-size: 14px;
+                margin-bottom: 22px;
+            }
+            .slider-dots {
+                bottom: 18px;
+            }
+            .products-grid {
+                gap: 12px;
+            }
+            .product-image {
+                height: 150px;
+            }
+            .product-info {
+                padding: 14px 12px 16px;
+            }
+            .product-name {
+                font-size: 14px;
+            }
+            .product-info p {
+                font-size: 11.5px;
+            }
+            .price {
+                font-size: 15px;
+            }
+            .why-card {
+                padding: 20px 12px;
+            }
+            .why-card h3 {
+                font-size: 14px;
+            }
+            .why-card p {
+                font-size: 12px;
+            }
+            .about-content .section-title,
+            .section-title {
+                font-size: 30px;
+            }
+            .testimonial-card {
+                padding: 22px 16px;
+            }
         }
 
