@@ -541,6 +541,7 @@
         const header = document.querySelector('header');
         const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
         const mobileMenuIcon = mobileMenuBtn?.querySelector('i');
+        const headerConsultBtn = document.querySelector('header .header-btn');
         const filterButtons = document.querySelectorAll('.products-filter .filter-btn');
         const productCards = Array.from(document.querySelectorAll('.products-grid .product-card:not(.explore-card)'));
         const productsGrid = document.querySelector('.products-grid');
@@ -935,6 +936,12 @@
         });
 
         mobileMenuBtn?.addEventListener('click', toggleMobileMenu);
+        headerConsultBtn?.addEventListener('click', () => {
+            const contactSection = document.getElementById('contact');
+            if (!contactSection) return;
+            contactSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            closeMobileMenu();
+        });
         window.addEventListener('resize', () => {
             if (window.innerWidth > 768) closeMobileMenu();
             applyMobileProductLayout();

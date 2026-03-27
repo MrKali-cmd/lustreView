@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" dir="ltr">
 
 <head>
@@ -9,7 +9,7 @@
         href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=20260328">
+    <link rel="stylesheet" href="style.css?v=1774654595037">
     <style>
         :root {
             --collection-bg: #f4f2ee;
@@ -469,7 +469,9 @@
             }
 
             .products-grid {
-                width: 94%;
+                width: 100%;
+                padding-inline: 14px;
+                box-sizing: border-box;
                 display: flex !important;
                 flex-wrap: wrap;
                 gap: 12px;
@@ -496,7 +498,9 @@
 
         @media (max-width: 480px) {
             .products-grid {
-                width: 96%;
+                width: 100%;
+                padding-inline: 12px;
+                box-sizing: border-box;
                 display: flex !important;
                 flex-wrap: wrap;
                 gap: 10px;
@@ -692,8 +696,13 @@
         const header = document.querySelector('header');
         const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
         const mobileMenuIcon = mobileMenuBtn?.querySelector('i');
+        const headerConsultBtn = document.querySelector('header .header-btn');
 
-        const formatPrice = (value) => Number(value || 0).toLocaleString('en-US');
+        const USD_RATE = 42000;
+        const formatPrice = (value) => `$${(Number(value || 0) / USD_RATE).toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        })}`;
         const truncate = (text, max = 90) => {
             const value = String(text || '');
             return value.length > max ? `${value.slice(0, max).trim()}...` : value;
@@ -742,7 +751,7 @@
                         <h3 class="product-name">${item.name}</h3>
                         <p>${truncate(item.description)}</p>
                         <div class="product-price">
-                            <span class="price">${formatPrice(item.price)} <small>IRR</small></span>
+                            <span class="price">${formatPrice(item.price)}</span>
                         </div>
                     </div>
                 </div>`;
@@ -759,13 +768,17 @@
                 grid.style.setProperty('display', 'grid', 'important');
                 grid.style.setProperty('grid-template-columns', 'repeat(2, minmax(0, 1fr))', 'important');
                 grid.style.setProperty('gap', '10px', 'important');
-                grid.style.setProperty('width', '94%', 'important');
+                grid.style.setProperty('width', '100%', 'important');
+                grid.style.setProperty('padding-inline', '14px', 'important');
+                grid.style.setProperty('box-sizing', 'border-box', 'important');
                 grid.style.setProperty('align-items', 'start', 'important');
             } else {
                 grid.style.removeProperty('display');
                 grid.style.removeProperty('grid-template-columns');
                 grid.style.removeProperty('gap');
                 grid.style.removeProperty('width');
+                grid.style.removeProperty('padding-inline');
+                grid.style.removeProperty('box-sizing');
                 grid.style.removeProperty('align-items');
             }
 
@@ -872,6 +885,9 @@
         });
 
         mobileMenuBtn?.addEventListener('click', toggleMobileMenu);
+        headerConsultBtn?.addEventListener('click', () => {
+            window.location.href = 'index.html#contact';
+        });
         document.querySelectorAll('.nav-links a').forEach((link) => {
             link.addEventListener('click', () => {
                 closeMobileMenu();

@@ -1,394 +1,507 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوسـو | گالری پرده‌های مدرن</title>
-    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-    
+    <title>Luxe Drapes | 3D Virtual Showroom</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400&display=swap" rel="stylesheet">
     <style>
-        /* متغیرهای رنگی */
-        :root {
-            --primary-gold: #c5a059;
-            --dark-bg: #0d0d0d;
-            --card-bg: #1a1a1a;
-            --text-light: #f5f5f5;
-            --text-muted: #a0a0a0;
+        /* تنظیمات پایه برای فضای تمام صفحه و بدون اسکرول */
+        body, html { 
+            margin: 0; padding: 0; height: 100%; 
+            overflow: hidden; 
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+            color: #fff; font-family: 'Inter', sans-serif; 
+            cursor: grab; /* نشانگر موس مخصوص درگ کردن */
         }
-
-        /* استایل‌های پایه */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        body:active { cursor: grabbing; }
+        
+        /* لایه رابط کاربری (متون روی صفحه) */
+        .overlay { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            pointer-events: none; z-index: 10; 
+            display: flex; flex-direction: column; justify-content: space-between; 
+            padding: 40px; box-sizing: border-box; 
         }
-
-        body {
-            font-family: 'Vazirmatn', sans-serif;
-            background-color: var(--dark-bg);
-            color: var(--text-light);
-            overflow-x: hidden;
-            scroll-behavior: smooth;
+        header { display: flex; justify-content: space-between; align-items: center; }
+        h1 { font-family: 'Playfair Display', serif; font-size: 24px; letter-spacing: 2px; margin: 0; }
+        h1 span { color: #C9A962; font-style: italic; }
+        .hint { 
+            text-align: center; font-size: 14px; letter-spacing: 4px; 
+            text-transform: uppercase; color: #888; margin-bottom: 20px; 
+            animation: pulse 2s infinite; 
         }
+        @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
 
-        /* نوار ناوبری (هدر) */
-        nav {
-            position: fixed;
-            top: 0; width: 100%;
-            padding: 20px 50px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 100;
-            background: rgba(13, 13, 13, 0.8);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(197, 160, 89, 0.2);
-            transform: translateY(-100%); /* برای انیمیشن ورود */
+        /* راه‌اندازی صحنه سه‌بعدی */
+        .scene { 
+            width: 100vw; height: 100vh; 
+            perspective: 1000px; /* عمق میدان دوربین */
+            display: flex; justify-content: center; align-items: center; 
         }
-
-        .logo {
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--primary-gold);
-            letter-spacing: 2px;
+        
+        /* استوانه نگهدارنده کارت‌ها */
+        .carousel { 
+            width: 350px; height: 500px; 
+            position: relative; 
+            transform-style: preserve-3d; 
         }
-
-        .nav-links {
-            list-style: none;
-            display: flex;
-            gap: 30px;
+        
+        /* استایل کارت‌های محصولات (پنل‌ها) */
+        .panel { 
+            position: absolute; width: 100%; height: 100%; left: 0; top: 0; 
+            background-color: #111; 
+            border: 1px solid rgba(201, 169, 98, 0.3); 
+            border-radius: 15px; overflow: hidden; 
+            display: flex; flex-direction: column; justify-content: flex-end; 
+            box-shadow: 0 0 50px rgba(0,0,0,0.9); 
+            /* ایجاد انعکاس (رفلکس) شیشه‌ای در پایین کارت‌ها برای حس لوکس بودن */
+            -webkit-box-reflect: below 10px linear-gradient(transparent 60%, rgba(0,0,0,0.5)); 
         }
-
-        .nav-links a {
-            color: var(--text-light);
-            text-decoration: none;
-            font-size: 1.1rem;
-            transition: color 0.3s ease;
+        
+        .panel img { 
+            width: 100%; height: 100%; object-fit: cover; 
+            position: absolute; top: 0; left: 0; z-index: 1; 
+            opacity: 0.6; transition: opacity 0.6s, transform 0.6s cubic-bezier(0.25, 1, 0.5, 1); 
+            filter: grayscale(40%); 
         }
-
-        .nav-links a:hover { color: var(--primary-gold); }
-
-        /* افکت پرده سه‌بعدی */
-        .curtain-wrapper {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: 90;
-            display: flex;
-            pointer-events: none;
-            perspective: 1000px;
+        .panel:hover img { 
+            opacity: 1; transform: scale(1.08); filter: grayscale(0%); 
         }
-
-        .curtain {
-            width: 50%; height: 100%;
-            background: linear-gradient(90deg, #1a0500 0%, #4a1000 50%, #1a0500 100%);
-            box-shadow: inset 0 0 60px rgba(0,0,0,0.9);
-            transform-origin: top;
+        
+        .panel-content { 
+            position: relative; z-index: 2; padding: 30px; 
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%); 
+            transform: translateY(20px); transition: transform 0.5s; 
         }
-
-        .curtain::after {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: repeating-linear-gradient(to right, transparent, transparent 50px, rgba(0,0,0,0.5) 50px, rgba(0,0,0,0.5) 100px);
-        }
-
-        .curtain-left { border-right: 3px solid var(--primary-gold); }
-        .curtain-right { border-left: 3px solid var(--primary-gold); }
-
-        /* ساختار سکشن‌ها */
-        section {
-            min-height: 100vh;
-            padding: 100px 10vw;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            position: relative;
-            z-index: 10;
-        }
-
-        /* سکشن هیرو */
-        #hero {
-            align-items: center;
-            text-align: center;
-            background: radial-gradient(circle at center, #2a2a2a 0%, var(--dark-bg) 70%);
-        }
-
-        .hero-title {
-            font-size: 5vw;
-            font-weight: 900;
-            margin-bottom: 20px;
-            background: linear-gradient(45deg, #fff, var(--primary-gold));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            opacity: 0; /* برای انیمیشن */
-            transform: translateZ(-200px);
-        }
-
-        .hero-subtitle {
-            font-size: 1.5rem;
-            color: var(--text-muted);
-            max-width: 600px;
-            margin-bottom: 40px;
-            opacity: 0;
-        }
-
-        .btn {
-            padding: 15px 40px;
-            font-size: 1.2rem;
-            background: transparent;
-            color: var(--primary-gold);
-            border: 2px solid var(--primary-gold);
-            cursor: pointer;
-            border-radius: 30px;
-            transition: all 0.4s ease;
-            opacity: 0;
-        }
-
-        .btn:hover {
-            background: var(--primary-gold);
-            color: var(--dark-bg);
-            box-shadow: 0 0 20px rgba(197, 160, 89, 0.5);
-        }
-
-        /* سکشن گالری (کارت‌های سه‌بعدی) */
-        .section-title {
-            font-size: 3rem;
-            margin-bottom: 50px;
-            color: var(--primary-gold);
-            text-align: center;
-        }
-
-        .gallery-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 40px;
-            perspective: 1000px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            height: 400px;
-            border-radius: 15px;
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            position: relative;
-            transform-style: preserve-3d;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-            border: 1px solid #333;
-            transition: border-color 0.3s;
-        }
-
-        .card:hover { border-color: var(--primary-gold); }
-
-        .card-content {
-            transform: translateZ(50px); /* ایجاد عمق داخل کارت */
-        }
-
-        .card h3 { font-size: 1.8rem; margin-bottom: 10px; }
-        .card p { color: var(--text-muted); line-height: 1.6; }
-
-        /* المان‌های تزئینی داخل کارت به عنوان عکس فرضی */
-        .card-bg-shape {
-            position: absolute;
-            top: 20px; left: 20px; right: 20px; bottom: 150px;
-            background: linear-gradient(135deg, #2c2c2c, #111);
-            border-radius: 10px;
-            transform: translateZ(20px);
-        }
-
-        /* سکشن خدمات با اسکرول افقی فرضی */
-        #services {
-            background-color: #080808;
-            border-top: 1px solid #222;
-        }
-
-        .service-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 100px;
-            gap: 50px;
-        }
-
-        .service-row:nth-child(even) { flex-direction: row-reverse; }
-
-        .service-text { flex: 1; }
-        .service-text h2 { font-size: 2.5rem; color: var(--primary-gold); margin-bottom: 20px; }
-        .service-text p { font-size: 1.2rem; line-height: 1.8; color: var(--text-muted); }
-
-        .service-visual {
-            flex: 1;
-            height: 300px;
-            background: #1a1a1a;
-            border-radius: 20px;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid #333;
-        }
-
-        /* فوتر */
-        footer {
-            padding: 50px 10vw;
-            background: #000;
-            text-align: center;
-            border-top: 2px solid var(--primary-gold);
-        }
-
-        footer p { color: var(--text-muted); margin-top: 20px; }
+        .panel:hover .panel-content { transform: translateY(0); }
+        .panel-content h2 { font-family: 'Playfair Display', serif; font-size: 26px; color: #C9A962; margin: 0 0 8px 0; }
+        .panel-content p { margin: 0; font-size: 13px; color: #aaa; text-transform: uppercase; letter-spacing: 1px;}
     </style>
 </head>
 <body>
 
-    <nav class="navbar">
-        <div class="logo">LUSSO</div>
+    <div class="overlay">
+        <header>
+            <h1>Luxe <span>Drapes</span></h1>
+            <div style="font-size: 12px; letter-spacing: 2px; color: #C9A962;">3D VIRTUAL SHOWROOM</div>
+        </header>
+        <div class="hint">← Drag to Explore →</div>
+    </div>
+
+    <div class="scene">
+        <div class="carousel" id="carousel">
+            </div>
+    </div>
+
+    <script>
+        const carousel = document.getElementById('carousel');
+        
+        // داده‌های فرضی برای پرده‌ها
+        const items = [
+            { title: 'Midnight Charcoal', img: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800' },
+            { title: 'Royal Amber', img: 'https://images.unsplash.com/photo-1616046229478-9901c5536a45?w=800' },
+            { title: 'Nordic Linen', img: 'https://images.unsplash.com/photo-1600565193348-f74a4d160a86?w=800' },
+            { title: 'Whisper Sheer', img: 'https://images.unsplash.com/photo-1588854337236-6889d631faa8?w=800' },
+            { title: 'Crimson Velvet', img: 'https://images.unsplash.com/photo-1617325247661-675ab4b64ae2?w=800' },
+            { title: 'Zebra Smart', img: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800' }
+        ];
+
+        const numPanels = items.length;
+        const theta = 360 / numPanels; // زاویه بین هر پنل
+        const panelWidth = 350;
+        
+        // فرمول ریاضی حیاتی: محاسبه شعاع استوانه بر اساس عرض پنل‌ها و تعدادشان
+        const radius = Math.round((panelWidth / 2) / Math.tan(Math.PI / numPanels));
+
+        // ساخت و چیدمان پنل‌ها در فضای سه‌بعدی
+        items.forEach((item, i) => {
+            const panel = document.createElement('div');
+            panel.className = 'panel';
+            
+            // چرخش و هل دادن هر کارت به سمت بیرون برای ساخت شکل استوانه
+            const angle = theta * i;
+            panel.style.transform = `rotateY(${angle}deg) translateZ(${radius + 60}px)`; 
+            
+            panel.innerHTML = `
+                <img src="${item.img}" alt="${item.title}" draggable="false">
+                <div class="panel-content">
+                    <h2>${item.title}</h2>
+                    <p>Premium Collection</p>
+                </div>
+            `;
+            carousel.appendChild(panel);
+        });
+
+        // === منطق چرخش بسیار نرم (Buttery Smooth Drag) با استفاده از فرمول Lerp ===
+        let currentX = 0;   // زاویه فعلی
+        let targetX = -60;  // زاویه هدف (کمی میچرخد تا انیمیشن ورود داشته باشد)
+        let isDragging = false;
+        let startX = 0;
+
+        // رویدادهای موس
+        window.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - startX; // میزان جابجایی موس
+            targetX += dx * 0.25;          // حساسیت چرخش
+            startX = e.clientX;
+        });
+
+        window.addEventListener('mouseup', () => { isDragging = false; });
+        window.addEventListener('mouseleave', () => { isDragging = false; });
+
+        // رویدادهای لمسی برای موبایل
+        window.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            startX = e.touches[0].clientX;
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            const dx = e.touches[0].clientX - startX;
+            targetX += dx * 0.25;
+            startX = e.touches[0].clientX;
+        });
+
+        window.addEventListener('touchend', () => { isDragging = false; });
+
+        // حلقه انیمیشن که 60 فریم بر ثانیه اجرا می‌شود
+        function animate() {
+            // فرمول Linear Interpolation (Lerp) برای نرم کردن حرکت
+            currentX += (targetX - currentX) * 0.08; 
+            
+            // اعمال چرخش به کل استوانه و کمی متمایل کردن دوربین رو به پایین (rotateX)
+            carousel.style.transform = `translateZ(${-radius - 200}px) rotateX(-4deg) rotateY(${currentX}deg)`;
+            
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
+
+
+/*
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxe Drapes | Ultra Premium Redesign</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/@studio-freight/lenis@1.0.33/dist/lenis.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #C9A962;
+            --dark: #0a0a0a;
+            --dark-light: #151515;
+            --text: #F9F7F2;
+            --text-muted: #888;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            cursor: none; /* مخفی کردن موس اصلی برای موس کاستوم */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--dark);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3 { font-family: 'Playfair Display', serif; font-weight: 500; }
+
+        /* Custom Cursor */
+        .cursor {
+            position: fixed; top: 0; left: 0;
+            width: 20px; height: 20px;
+            border: 1px solid var(--primary);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s, background-color 0.3s;
+            mix-blend-mode: difference;
+        }
+        .cursor.active {
+            width: 60px; height: 60px;
+            background-color: rgba(201, 169, 98, 0.2);
+        }
+
+        /* Navbar */
+        nav {
+            position: fixed; top: 0; width: 100%;
+            padding: 30px 5%;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+            mix-blend-mode: difference;
+        }
+        .logo { font-size: 24px; color: var(--text); text-decoration: none; font-family: 'Playfair Display', serif; letter-spacing: 2px;}
+        .logo span { color: var(--primary); font-style: italic; }
+        .nav-links { display: flex; gap: 40px; list-style: none; }
+        .nav-links a { color: var(--text); text-decoration: none; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;}
+
+        /* Hero Section */
+        .hero {
+            height: 100vh; width: 100%;
+            position: relative; display: flex;
+            align-items: center; justify-content: center;
+            overflow: hidden;
+        }
+        .hero-img-wrap {
+            position: absolute; top: 0; left: 0; width: 100%; height: 120%; /* بزرگتر برای پارالکس */
+            z-index: 1;
+        }
+        .hero-img-wrap img {
+            width: 100%; height: 100%; object-fit: cover;
+            filter: brightness(0.4);
+        }
+        .hero-content {
+            position: relative; z-index: 2; text-align: center;
+        }
+        .hero-title {
+            font-size: 8vw; line-height: 1; margin-bottom: 20px;
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+        }
+        .hero-title .char { transform: translateY(110%); display: inline-block; transition: transform 0.8s cubic-bezier(0.77, 0, 0.175, 1); }
+        .hero-subtitle {
+            font-size: 18px; color: var(--primary); letter-spacing: 4px;
+            text-transform: uppercase; opacity: 0;
+        }
+
+        /* Horizontal Scroll Section (The Magic) */
+        .horizontal-section {
+            height: 100vh; width: 100%;
+            background: var(--dark-light);
+            display: flex; align-items: center;
+            overflow: hidden; position: relative;
+        }
+        .pin-wrap {
+            display: flex; height: 100vh; align-items: center;
+            padding: 0 10vw; gap: 100px;
+        }
+        .h-title {
+            font-size: 5vw; white-space: nowrap; flex-shrink: 0;
+            color: var(--primary);
+        }
+        .product-card {
+            width: 400px; height: 550px; flex-shrink: 0;
+            position: relative; overflow: hidden;
+            border-radius: 10px;
+        }
+        .product-card img {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform 1.5s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+        .product-card:hover img { transform: scale(1.1); }
+        .card-info {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            padding: 40px 30px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            transform: translateY(20px); opacity: 0;
+            transition: all 0.5s ease;
+        }
+        .product-card:hover .card-info { transform: translateY(0); opacity: 1; }
+        .card-info h3 { font-size: 24px; margin-bottom: 5px; }
+        .card-info p { color: var(--primary); font-family: 'Inter', sans-serif;}
+
+        /* Feature Split Section */
+        .split-section {
+            min-height: 100vh; padding: 150px 10%;
+            display: flex; align-items: center; justify-content: space-between; gap: 50px;
+        }
+        .split-text { width: 45%; }
+        .split-text h2 { font-size: 4vw; margin-bottom: 30px; line-height: 1.1; }
+        .split-text p { font-size: 18px; line-height: 1.8; color: var(--text-muted); margin-bottom: 40px;}
+        .outline-btn {
+            padding: 15px 40px; border: 1px solid var(--primary);
+            color: var(--primary); text-decoration: none; border-radius: 50px;
+            text-transform: uppercase; letter-spacing: 1px; font-size: 12px;
+            transition: background 0.3s, color 0.3s;
+        }
+        .outline-btn:hover { background: var(--primary); color: var(--dark); }
+        
+        .split-img {
+            width: 45%; height: 700px; overflow: hidden; border-radius: 10px;
+        }
+        .split-img img {
+            width: 100%; height: 130%; /* برای پارالکس داخلی */
+            object-fit: cover; transform: translateY(-15%);
+        }
+
+        /* Footer */
+        footer {
+            padding: 100px 10% 50px; background: #050505; text-align: center;
+        }
+        .huge-footer { font-size: 12vw; font-family: 'Playfair Display', serif; color: var(--primary); margin-bottom: 50px; opacity: 0.3;}
+    </style>
+</head>
+<body>
+
+    <div class="cursor"></div>
+
+    <nav>
+        <a href="#" class="logo">Luxe <span>Drapes</span></a>
         <ul class="nav-links">
-            <li><a href="#hero">خانه</a></li>
-            <li><a href="#gallery">کالکشن‌ها</a></li>
-            <li><a href="#services">خدمات</a></li>
+            <li><a href="#" class="hover-link">Collections</a></li>
+            <li><a href="#" class="hover-link">About</a></li>
+            <li><a href="#" class="hover-link">Contact</a></li>
         </ul>
     </nav>
 
-    <div class="curtain-wrapper">
-        <div class="curtain curtain-left"></div>
-        <div class="curtain curtain-right"></div>
-    </div>
-
-    <section id="hero">
-        <h1 class="hero-title">هنـر پوشـش پنجـره‌ها</h1>
-        <p class="hero-subtitle">طراحی، دوخت و اجرای مدرن‌ترین پرده‌های کلاسیک، مینیمال و هوشمند برای فضاهای لوکس شما.</p>
-        <button class="btn">مشاهده کاتالوگ</button>
-    </section>
-
-    <section id="gallery">
-        <h2 class="section-title">کالکشن‌های برگزیده</h2>
-        <div class="gallery-container">
-            <div class="card 3d-card">
-                <div class="card-bg-shape"></div>
-                <div class="card-content">
-                    <h3>پرده‌های حریر</h3>
-                    <p>عبور نور لطیف برای فضاهای مینیمال و مدرن.</p>
-                </div>
-            </div>
-            <div class="card 3d-card">
-                <div class="card-bg-shape" style="background: linear-gradient(135deg, #3a2a1a, #111);"></div>
-                <div class="card-content">
-                    <h3>مخمل سلطنتی</h3>
-                    <p>شکوه و اصالت برای پذیرایی‌های کلاسیک و مجلل.</p>
-                </div>
-            </div>
-            <div class="card 3d-card">
-                <div class="card-bg-shape" style="background: linear-gradient(135deg, #1a2a3a, #111);"></div>
-                <div class="card-content">
-                    <h3>شیدهای هوشمند</h3>
-                    <p>کنترل نور با یک کلیک، تلفیق تکنولوژی و زیبایی.</p>
-                </div>
-            </div>
+    <section class="hero">
+        <div class="hero-img-wrap" data-speed="0.5">
+            <img src="https://images.unsplash.com/photo-1617325247661-675ab4b64ae2?w=1600" alt="Luxury Drapery">
+        </div>
+        <div class="hero-content" data-speed="1.2">
+            <h1 class="hero-title">Elevate Reality</h1>
+            <p class="hero-subtitle">Premium Window Solutions 2026</p>
         </div>
     </section>
 
-    <section id="services">
-        <h2 class="section-title" style="margin-bottom: 80px;">چرا لوسو؟</h2>
-        
-        <div class="service-row sr-1">
-            <div class="service-text">
-                <h2>مشاوره و طراحی سه‌بعدی</h2>
-                <p>پیش از هر اقدامی، نمای دقیق پرده‌ها را در فضای واقعی خانه خود به صورت مدل‌سازی سه‌بعدی مشاهده کنید تا بهترین تصمیم را بگیرید.</p>
+    <section class="horizontal-section">
+        <div class="pin-wrap">
+            <h2 class="h-title">Zebra Blinds</h2>
+            
+            <div class="product-card hover-link">
+                <img src="https://twopagescurtains.com/cdn/shop/files/cream-zbs-2-brio-1.webp?v=1765760097&width=800" alt="Blinds">
+                <div class="card-info">
+                    <h3>Soft Taupe</h3>
+                    <p>$67.86 / Light Filtering</p>
+                </div>
             </div>
-            <div class="service-visual"></div>
-        </div>
 
-        <div class="service-row sr-2">
-            <div class="service-text">
-                <h2>نصب حرفه‌ای و دقیق</h2>
-                <p>تیم متخصص ما با استفاده از مدرن‌ترین ابزارها، نصب چوب‌پرده‌ها و اجرای نهایی را بدون کوچکترین آسیبی به معماری داخلی شما انجام می‌دهند.</p>
+            <div class="product-card hover-link" style="margin-top: 100px;">
+                <img src="https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800" alt="Blinds">
+                <div class="card-info">
+                    <h3>Charcoal Gray</h3>
+                    <p>$82.14 / Blackout</p>
+                </div>
             </div>
-            <div class="service-visual"></div>
+
+            <div class="product-card hover-link">
+                <img src="https://images.unsplash.com/photo-1600565193348-f74a4d160a86?w=800" alt="Blinds">
+                <div class="card-info">
+                    <h3>Eco Conscious</h3>
+                    <p>$75.00 / Sustainable</p>
+                </div>
+            </div>
+            
+            <h2 class="h-title" style="color: transparent; -webkit-text-stroke: 1px var(--primary);">Discover More</h2>
+        </div>
+    </section>
+
+    <section class="split-section">
+        <div class="split-text">
+            <h2>Crafting Timeless<br><i>Elegance</i></h2>
+            <p>With over 15 years of experience, Luxe Drapes combines traditional craftsmanship with modern design to create window treatments that transform spaces perfectly. Every stitch is a statement of luxury.</p>
+            <a href="#" class="outline-btn hover-link">Our Story</a>
+        </div>
+        <div class="split-img">
+            <img class="parallax-img" src="https://images.unsplash.com/photo-1616046229478-9901c5536a45?w=1200" alt="Craftsmanship">
         </div>
     </section>
 
     <footer>
-        <h2 style="color: var(--primary-gold);">LUSSO GALLERY</h2>
-        <p>تمامی حقوق برای گالری پرده لوسو محفوظ است. © ۲۰۲۴</p>
+        <div class="huge-footer">LUXE DRAPES</div>
+        <p style="color: var(--text-muted); font-size: 14px;">© 2026 Luxe Drapes. Crafted for luxury.</p>
     </footer>
 
     <script>
+        // 1. ثبت پلاگین‌های GSAP
         gsap.registerPlugin(ScrollTrigger);
 
-        // ۱. انیمیشن لودینگ اولیه (باز شدن پرده‌ها و ورود هدر/هیرو)
-        const tlLoad = gsap.timeline();
-        
-        tlLoad.to(".curtain-left", { xPercent: -100, duration: 2, ease: "power3.inOut" }, 0.5)
-              .to(".curtain-right", { xPercent: 100, duration: 2, ease: "power3.inOut" }, 0.5)
-              .to(".navbar", { y: 0, duration: 1, ease: "power2.out" }, 1.5)
-              .to(".hero-title", { opacity: 1, z: 0, scale: 1, duration: 1.5, ease: "back.out(1.7)" }, 1.5)
-              .to(".hero-subtitle", { opacity: 1, y: 0, duration: 1 }, 2)
-              .to(".btn", { opacity: 1, y: 0, duration: 0.5 }, 2.2);
-
-        // ۲. انیمیشن کارت‌های گالری هنگام اسکرول
-        gsap.from(".card", {
-            scrollTrigger: {
-                trigger: "#gallery",
-                start: "top 70%",
-            },
-            y: 150,
-            opacity: 0,
-            rotationX: 45, // ورود با چرخش سه‌بعدی
+        // 2. راه‌اندازی اسکرول نرم (Lenis) - راز اصلی روانی سایت
+        const lenis = new Lenis({
             duration: 1.2,
-            stagger: 0.2, // ورود با تاخیر نسبت به هم
-            ease: "power3.out"
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            direction: 'vertical',
+            gestureDirection: 'vertical',
+            smooth: true,
+            mouseMultiplier: 1,
+            smoothTouch: false,
         });
 
-        // ۳. انیمیشن بخش خدمات (ورود از چپ و راست)
-        gsap.from(".sr-1 .service-text", {
-            scrollTrigger: { trigger: ".sr-1", start: "top 80%" },
-            x: 100, opacity: 0, duration: 1
-        });
-        gsap.from(".sr-1 .service-visual", {
-            scrollTrigger: { trigger: ".sr-1", start: "top 80%" },
-            x: -100, opacity: 0, duration: 1
-        });
-
-        gsap.from(".sr-2 .service-text", {
-            scrollTrigger: { trigger: ".sr-2", start: "top 80%" },
-            x: -100, opacity: 0, duration: 1
-        });
-        gsap.from(".sr-2 .service-visual", {
-            scrollTrigger: { trigger: ".sr-2", start: "top 80%" },
-            x: 100, opacity: 0, duration: 1
-        });
-
-        // ۴. افکت تیلت سه‌بعدی روی کارت‌ها با حرکت موس (Vanilla JS)
-        const cards = document.querySelectorAll('.3d-card');
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
         
-        cards.forEach(card => {
-            card.addEventListener('mousemove', e => {
-                const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left; // موقعیت x موس داخل کارت
-                const y = e.clientY - rect.top;  // موقعیت y موس داخل کارت
-                
-                // محاسبه زاویه چرخش بر اساس مرکز کارت
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-                
-                const rotateX = ((y - centerY) / centerY) * -15; // مکس 15 درجه چرخش
-                const rotateY = ((x - centerX) / centerX) * 15;
+        // همگام‌سازی Lenis با GSAP ScrollTrigger
+        lenis.on('scroll', ScrollTrigger.update);
+        gsap.ticker.add((time)=>{ lenis.raf(time * 1000) });
+        gsap.ticker.lagSmoothing(0, 0);
 
-                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
-            });
+        // 3. انیمیشن ورود اولیه (Hero Reveal)
+        const tl = gsap.timeline();
+        tl.to('.hero-title', { opacity: 1, duration: 0.1 })
+          .from('.hero-title', { y: 100, opacity: 0, duration: 1.5, ease: "power4.out" })
+          .to('.hero-subtitle', { opacity: 1, y: -10, duration: 1, ease: "power2.out" }, "-=1");
 
-            // بازگشت به حالت اولیه وقتی موس خارج می‌شود
-            card.addEventListener('mouseleave', () => {
-                card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
-                card.style.transition = "transform 0.5s ease"; // نرم شدن برگشت
+        // 4. افکت پارالکس (اختلاف منظر) برای تصاویر
+        gsap.utils.toArray('[data-speed]').forEach(el => {
+            gsap.to(el, {
+                y: (i, el) => (1 - parseFloat(el.getAttribute('data-speed'))) * (ScrollTrigger.maxScroll(window) - (this.scrollY || 0)),
+                ease: "none",
+                scrollTrigger: { trigger: el, start: "top bottom", end: "bottom top", scrub: 0 }
             });
-            
-            // حذف ترانزیشن هنگام حرکت موس برای واکنش سریع‌تر
-            card.addEventListener('mouseenter', () => {
-                card.style.transition = "none";
-            });
+        });
+
+        // افکت پارالکس اختصاصی برای عکس بخش Split
+        gsap.to(".parallax-img", {
+            yPercent: 30, // حرکت عکس درون کادر خودش
+            ease: "none",
+            scrollTrigger: { trigger: ".split-img", start: "top bottom", end: "bottom top", scrub: true }
+        });
+
+        // 5. شاهکار اسکرول افقی (Horizontal Scroll)
+        const pinWrap = document.querySelector(".pin-wrap");
+        const pinWrapWidth = pinWrap.offsetWidth;
+        const horizontalScrollLength = pinWrapWidth - window.innerWidth;
+
+        gsap.to(".pin-wrap", {
+            x: -horizontalScrollLength,
+            ease: "none",
+            scrollTrigger: {
+                trigger: ".horizontal-section",
+                pin: true, // پین کردن سکشن در صفحه
+                scrub: 1,  // حرکت نرم همراه با اسکرول موس
+                end: () => "+=" + pinWrapWidth // طول زمان اسکرول بر اساس عرض کل کانتینر
+            }
+        });
+
+        // 6. انیمیشن Fade up متن‌ها با اسکرول
+        gsap.from(".split-text h2, .split-text p, .outline-btn", {
+            y: 50, opacity: 0, duration: 1, stagger: 0.2, ease: "power3.out",
+            scrollTrigger: { trigger: ".split-text", start: "top 80%" }
+        });
+
+        // 7. منطق نشانگر موس کاستوم (Custom Cursor)
+        const cursor = document.querySelector('.cursor');
+        document.addEventListener('mousemove', (e) => {
+            // استفاده از GSAP برای حرکت نرم‌تر موس
+            gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1, ease: "power2.out" });
+        });
+
+        // بزرگ شدن موس روی لینک‌ها و عکس‌ها
+        const hoverLinks = document.querySelectorAll('a, .hover-link');
+        hoverLinks.forEach(link => {
+            link.addEventListener('mouseenter', () => cursor.classList.add('active'));
+            link.addEventListener('mouseleave', () => cursor.classList.remove('active'));
         });
     </script>
 </body>
 </html>
+*/

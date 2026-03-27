@@ -696,6 +696,7 @@
         const header = document.querySelector('header');
         const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
         const mobileMenuIcon = mobileMenuBtn?.querySelector('i');
+        const headerConsultBtn = document.querySelector('header .header-btn');
 
         const USD_RATE = 42000;
         const formatPrice = (value) => `$${(Number(value || 0) / USD_RATE).toLocaleString('en-US', {
@@ -884,6 +885,9 @@
         });
 
         mobileMenuBtn?.addEventListener('click', toggleMobileMenu);
+        headerConsultBtn?.addEventListener('click', () => {
+            window.location.href = 'index.html#contact';
+        });
         document.querySelectorAll('.nav-links a').forEach((link) => {
             link.addEventListener('click', () => {
                 closeMobileMenu();

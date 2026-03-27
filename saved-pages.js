@@ -47,6 +47,7 @@
     const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
     const mobileMenuIcon = mobileMenuBtn?.querySelector('i');
     let focusTimer = null;
+    const USD_RATE = 42000;
 
     const readSet = (key) => {
         try {
@@ -60,15 +61,22 @@
         localStorage.setItem(key, JSON.stringify(Array.from(set)));
     };
 
-    const formatPrice = (value) => Number(value || 0).toLocaleString('en-US');
+    const toUsd = (value) => Number(value || 0) / USD_RATE;
+    const formatPrice = (rawValue) => `$${toUsd(rawValue).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    })}`;
 
     const getCatalogItem = (key) => catalog.find((item) => item.key === key) || null;
 
     const renderSummary = (items) => {
-        const total = items.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
+        const total = items.reduce((sum, item) => sum + toUsd(Number(item.price) || 0), 0);
         summaryCountEl.textContent = `${items.length} ${config.countLabel}${items.length === 1 ? '' : 's'}`;
         summaryValueLabelEl.textContent = config.summaryValueLabel;
-        summaryValueEl.textContent = `${formatPrice(total)} IRR`;
+        summaryValueEl.textContent = `$${total.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        })}`;
     };
 
     const focusItem = () => {
@@ -126,7 +134,7 @@
                                 <span class="saved-card-category">${item.category}</span>
                                 <h3 class="saved-card-title">${item.name}</h3>
                             </div>
-                            <div class="saved-card-price">${formatPrice(item.price)} IRR</div>
+                            <div class="saved-card-price">${formatPrice(item.price)}</div>
                         </div>
                         <p class="saved-card-desc">${item.description}</p>
                         <div class="saved-card-actions">
