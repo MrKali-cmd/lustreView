@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" dir="ltr">
 
 <head>
@@ -697,7 +697,11 @@
         const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
         const mobileMenuIcon = mobileMenuBtn?.querySelector('i');
 
-        const formatPrice = (value) => Number(value || 0).toLocaleString('en-US');
+        const USD_RATE = 42000;
+        const formatPrice = (value) => `$${(Number(value || 0) / USD_RATE).toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        })}`;
         const truncate = (text, max = 90) => {
             const value = String(text || '');
             return value.length > max ? `${value.slice(0, max).trim()}...` : value;
@@ -746,7 +750,7 @@
                         <h3 class="product-name">${item.name}</h3>
                         <p>${truncate(item.description)}</p>
                         <div class="product-price">
-                            <span class="price">${formatPrice(item.price)} <small>IRR</small></span>
+                            <span class="price">${formatPrice(item.price)}</span>
                         </div>
                     </div>
                 </div>`;

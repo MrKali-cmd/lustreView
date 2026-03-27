@@ -86,8 +86,12 @@ const monthIndexFromValue = (value) => {
   return parsed.getMonth();
 };
 
+const USD_RATE = 42000;
 const formatCount = (value) => Number(value || 0).toLocaleString("en-US");
-const formatMoney = (value) => Number(value || 0).toLocaleString("en-US");
+const formatMoney = (value) => `$${(Number(value || 0) / USD_RATE).toLocaleString("en-US", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+})}`;
 const formatPercent = (value) => `${Math.round(Number(value) || 0)}%`;
 
 const statusBadgeClass = (status) => {
@@ -300,7 +304,7 @@ const renderOverviewTable = (data) => {
           <td class="py-3">
             <div class="flex items-center">
               <p class="text-gray-500 text-theme-sm dark:text-gray-400">
-                ${formatMoney(item.price)} IRR
+                ${formatMoney(item.price)}
               </p>
             </div>
           </td>
