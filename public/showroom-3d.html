@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxe Drapes | 3D Showroom</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --showroom-gold: #c9a962;
+            --showroom-gold-soft: #ecd8a1;
+            --showroom-dark: #050505;
+            --showroom-copy: rgba(255, 255, 255, 0.78);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            min-height: 100%;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #fff;
+            background:
+                radial-gradient(circle at 18% 18%, rgba(201, 169, 98, 0.2), transparent 22%),
+                radial-gradient(circle at 82% 22%, rgba(255, 255, 255, 0.06), transparent 18%),
+                linear-gradient(180deg, #111 0%, #020202 100%);
+            overflow: hidden;
+            cursor: grab;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body.is-dragging {
+            cursor: grabbing;
+        }
+
+        .showroom-shell {
+            position: relative;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .showroom-shell::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.12;
+            pointer-events: none;
+        }
+
+        .overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 34px 4.8%;
+        }
+
+        .showroom-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+            pointer-events: auto;
+        }
+
+        .showroom-brand {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .showroom-brand a {
+            color: #fff;
+            text-decoration: none;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.9rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+        }
+
+        .showroom-brand a span {
+            color: var(--showroom-gold);
+            font-style: italic;
+        }
+
+        .showroom-brand p {
+            max-width: 520px;
+            color: var(--showroom-copy);
+            line-height: 1.7;
+        }
+
+        .showroom-links {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .showroom-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 150px;
+            padding: 14px 22px;
+            border-radius: 999px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            transition: transform 0.25s ease, background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+        }
+
+        .showroom-link.primary {
+            background: var(--showroom-gold);
+            color: #111;
+        }
+
+        .showroom-link.secondary {
+            border: 1px solid rgba(255, 255, 255, 0.36);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            backdrop-filter: blur(10px);
+        }
+
+        .showroom-link:hover {
+            transform: translateY(-2px);
+        }
+
+        .showroom-link.secondary:hover {
+            border-color: var(--showroom-gold);
+            color: var(--showroom-gold-soft);
+        }
+
+        .showroom-hint {
+            align-self: center;
+            margin-bottom: 22px;
+            padding: 12px 20px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.72);
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            font-size: 0.78rem;
+            backdrop-filter: blur(10px);
+            animation: pulse 2.2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.45; }
+            50% { opacity: 1; }
+            100% { opacity: 0.45; }
+        }
+
+        .scene {
+            width: 100vw;
+            height: 100vh;
+            perspective: 1200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: pan-y;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .carousel {
+            width: 330px;
+            height: 500px;
+            position: relative;
+            transform-style: preserve-3d;
+            will-change: transform;
+        }
+
+        .panel-shell {
+            position: absolute;
+            inset: 0;
+            transform-style: preserve-3d;
+            opacity: 1;
+            transition: transform 1.6s cubic-bezier(0.22, 1, 0.36, 1);
+            will-change: transform;
+        }
+
+        .panel {
+            position: absolute;
+            inset: 0;
+            border-radius: 22px;
+            overflow: hidden;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(7, 7, 7, 0.96));
+            border: 1px solid rgba(201, 169, 98, 0.22);
+            box-shadow: 0 20px 42px rgba(0, 0, 0, 0.6);
+            -webkit-box-reflect: below 8px linear-gradient(transparent 76%, rgba(0, 0, 0, 0.22));
+            transition:
+                transform 1.45s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.45s ease;
+        }
+
+        .panel img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            opacity: 0.76;
+            transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+            pointer-events: none;
+        }
+
+        .panel:hover img {
+            opacity: 1;
+            transform: scale(1.08);
+        }
+
+        .panel:hover {
+            box-shadow: 0 24px 54px rgba(0, 0, 0, 0.72);
+        }
+
+        .panel::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 24%, rgba(0, 0, 0, 0.82));
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .panel-content {
+            position: absolute;
+            inset: auto 0 0;
+            z-index: 3;
+            padding: 28px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, transparent 100%);
+            transform: translateY(18px);
+            transition: transform 0.5s ease;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .panel:hover .panel-content {
+            transform: translateY(0);
+        }
+
+        .panel-kicker {
+            display: inline-flex;
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(201, 169, 98, 0.16);
+            border: 1px solid rgba(201, 169, 98, 0.28);
+            color: var(--showroom-gold-soft);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 700;
+        }
+
+        .panel-content h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            color: var(--showroom-gold);
+            margin-bottom: 10px;
+        }
+
+        .panel-content p {
+            margin: 0 0 16px;
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.78);
+            line-height: 1.75;
+        }
+
+        .panel-content a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.88rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .panel-content a:hover {
+            color: var(--showroom-gold-soft);
+        }
+
+        @media (max-width: 900px) {
+            .overlay {
+                padding: 24px 18px;
+            }
+
+            .showroom-head {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .showroom-links {
+                justify-content: flex-start;
+            }
+
+            .carousel {
+                width: 280px;
+                height: 430px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                overflow-y: auto;
+                overflow-x: hidden;
+            }
+
+            .showroom-shell {
+                min-height: 100svh;
+            }
+
+            .overlay {
+                justify-content: flex-start;
+                gap: 24px;
+            }
+
+            .showroom-brand a {
+                font-size: 1.6rem;
+            }
+
+            .showroom-brand p {
+                font-size: 0.92rem;
+            }
+
+            .showroom-link {
+                width: 100%;
+            }
+
+            .showroom-hint {
+                align-self: stretch;
+                text-align: center;
+                letter-spacing: 0.16em;
+                margin-bottom: 0;
+            }
+
+            .scene {
+                padding: 220px 0 80px;
+                height: auto;
+                min-height: 100svh;
+            }
+
+            .carousel {
+                width: 240px;
+                height: 390px;
+            }
+
+            .panel-content {
+                padding: 20px;
+            }
+
+            .panel-content h2 {
+                font-size: 1.6rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="showroom-shell">
+        <div class="overlay">
+            <div class="showroom-head">
+                <div class="showroom-brand">
+                    <a href="index.html">Luxe <span>Drapes</span></a>
+                    <p>Move through a cinematic ring of signature fabrics and zebra finishes, then jump back to the collection when a piece catches your eye.</p>
+                </div>
+                <div class="showroom-links">
+                    <a href="zebra-collection.html" class="showroom-link primary">Open Collection</a>
+                    <a href="index.html#contact" class="showroom-link secondary">Book Consultation</a>
+                </div>
+            </div>
+            <div class="showroom-hint">Drag to Explore</div>
+        </div>
+
+        <div class="scene">
+            <div class="carousel" id="carousel"></div>
+        </div>
+    </div>
+
+    <script>
+        const carousel = document.getElementById('carousel');
+        const items = [
+            {
+                title: 'Midnight Charcoal',
+                desc: 'Deep layered blackout tones for bedrooms and quiet private rooms.',
+                img: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=1600',
+                href: 'zebra-collection.html'
+            },
+            {
+                title: 'Royal Amber',
+                desc: 'Warm bronze reflections with a richer lounge atmosphere.',
+                img: 'https://images.unsplash.com/photo-1616046229478-9901c5536a45?w=1600',
+                href: 'zebra-collection.html'
+            },
+            {
+                title: 'Nordic Linen',
+                desc: 'Bright calm textures designed for modern minimal interiors.',
+                img: 'https://images.unsplash.com/photo-1600565193348-f74a4d160a86?w=1600',
+                href: 'zebra-collection.html'
+            },
+            {
+                title: 'Whisper Sheer',
+                desc: 'Soft filtered daylight with a cleaner and lighter mood.',
+                img: 'https://images.unsplash.com/photo-1588854337236-6889d631faa8?w=1600',
+                href: 'zebra-collection.html'
+            },
+            {
+                title: 'Crimson Velvet',
+                desc: 'A dramatic texture statement for layered and expressive rooms.',
+                img: 'https://images.unsplash.com/photo-1617325247661-675ab4b64ae2?w=1600',
+                href: 'zebra-collection.html'
+            },
+            {
+                title: 'Zebra Smart',
+                desc: 'A precise balance of privacy and daylight for everyday living.',
+                img: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=1600',
+                href: 'zebra-collection.html'
+            }
+        ];
+
+        const numPanels = items.length;
+        const theta = 360 / numPanels;
+        const panelWidth = window.matchMedia('(max-width: 900px)').matches ? 280 : 330;
+        const radius = Math.round((panelWidth / 2) / Math.tan(Math.PI / numPanels));
+        const introShift = Math.round((window.innerWidth / 2) + radius + panelWidth + 160);
+        const autoSpinSpeed = -0.19;
+        let introComplete = false;
+
+        items.forEach((item, i) => {
+            const shell = document.createElement('div');
+            shell.className = 'panel-shell';
+            const panel = document.createElement('article');
+            panel.className = 'panel';
+            const finalTransform = `rotateY(${theta * i}deg) translateZ(${radius + 74}px)`;
+            const entryShift = i % 2 === 0 ? -introShift : introShift;
+            panel.dataset.finalTransform = finalTransform;
+            panel.style.transform = finalTransform;
+            shell.dataset.finalTransform = 'translateX(0) scale(1)';
+            shell.style.transform = `translateX(${entryShift}px) scale(0.82)`;
+            panel.innerHTML = `
+                <img src="${item.img}" alt="${item.title}" draggable="false">
+                <div class="panel-content">
+                    <span class="panel-kicker">Premium Collection</span>
+                    <h2>${item.title}</h2>
+                    <p>${item.desc}</p>
+                    <a href="${item.href}">View Collection</a>
+                </div>
+            `;
+            shell.appendChild(panel);
+            carousel.appendChild(shell);
+        });
+
+        requestAnimationFrame(() => {
+            document.querySelectorAll('.panel-shell').forEach((shell, index) => {
+                window.setTimeout(() => {
+                    shell.style.transform = shell.dataset.finalTransform;
+                }, 120 + (index * 110));
+            });
+
+            window.setTimeout(() => {
+                introComplete = true;
+                targetX = -38;
+            }, 1180);
+        });
+
+        let currentX = 0;
+        let targetX = 0;
+        let isDragging = false;
+        let startX = 0;
+
+        const startDrag = (clientX) => {
+            if (!introComplete) return;
+            isDragging = true;
+            startX = clientX;
+            document.body.classList.add('is-dragging');
+        };
+
+        const moveDrag = (clientX) => {
+            if (!isDragging) return;
+            const dx = clientX - startX;
+            targetX += dx * 0.42;
+            startX = clientX;
+        };
+
+        const endDrag = () => {
+            isDragging = false;
+            document.body.classList.remove('is-dragging');
+        };
+
+        window.addEventListener('mousedown', (event) => startDrag(event.clientX));
+        window.addEventListener('mousemove', (event) => moveDrag(event.clientX));
+        window.addEventListener('mouseup', endDrag);
+        window.addEventListener('mouseleave', endDrag);
+
+        window.addEventListener('touchstart', (event) => startDrag(event.touches[0].clientX), { passive: true });
+        window.addEventListener('touchmove', (event) => moveDrag(event.touches[0].clientX), { passive: true });
+        window.addEventListener('touchend', endDrag);
+        window.addEventListener('dragstart', (event) => event.preventDefault());
+        window.addEventListener('selectstart', (event) => event.preventDefault());
+
+        function animate() {
+            if (introComplete && !isDragging) {
+                targetX += autoSpinSpeed;
+            }
+            currentX += (targetX - currentX) * 0.12;
+            carousel.style.transform = `translateZ(${-radius - 230}px) rotateX(-4deg) rotateY(${currentX}deg)`;
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+
+</html>

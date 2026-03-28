@@ -13,6 +13,7 @@ const filesToCopy = [
   'zebra-collection.html',
   'cart.html',
   'wishlist.html',
+  'showroom-3d.html',
   'gemini.html',
   'login.html',
   'admin/index.html',

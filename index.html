@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" dir="ltr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Luxe Drapes | Premium Custom Curtains & Design</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="style.css?v=20260328">
@@ -37,69 +37,56 @@
         </nav>
     </header>
 
-    <section class="hero" id="home">
-        <div class="hero-slider">
-            <div class="hero-slide">
-                <div class="hero-content">
-                    <span class="hero-tag">2025 New Collection</span>
-                    <h1 class="hero-title">Luxury <span>Drapery</span><br>Elevate Your Home</h1>
-                    <p class="hero-desc">Timeless elegance meets masterful craftsmanship. Premium fabrics, custom
-                        tailoring, perfect fit.</p>
-                    <div class="hero-buttons">
-                        <a href="zebra-collection.html" class="btn-primary">
-                            Explore Zebra Collection <i class="fas fa-arrow-right"></i>
-                            <!-- Go to the new page -->
-                        </a>
-                        <a href="#about" class="btn-secondary">Our Story</a>
+    <section class="hero-premium" id="home">
+        <div class="hero-inner">
+            <div class="p-slide active">
+                <div class="p-slide-bg" style="background-image: url('https://images.unsplash.com/photo-1617325247661-675ab4b64ae2?w=1600');"></div>
+                <div class="p-slide-content">
+                    <span class="p-subtitle">Collection 2026</span>
+                    <h1 class="p-title">Modern <span>Minimalism</span></h1>
+                    <p class="p-desc">Discover zebra blinds with a calmer silhouette, layered light control, and a more refined finish for contemporary interiors.</p>
+                    <div class="p-actions">
+                        <a href="zebra-collection.html" class="p-btn-gold">Shop Now</a>
+                        <a href="#products" class="p-btn-outline">View Details</a>
                     </div>
-                </div>
-                <div class="hero-image">
-                    <img src="https://images.unsplash.com/photo-1617325247661-675ab4b64ae2?w=800"
-                        alt="Luxury velvet curtains">
                 </div>
             </div>
 
-            <div class="hero-slide dark">
-                <div class="hero-content">
-                    <span class="hero-tag">Limited Offer</span>
-                    <h1 class="hero-title">Modern <span>Layered</span><br>Window Solutions</h1>
-                    <p class="hero-desc">Sheer + blackout combinations - Energy efficient - Designer textures at
-                        exceptional value</p>
-                    <div class="hero-buttons">
-                        <a href="#products" class="btn-primary">
-                            Shop Now <i class="fas fa-arrow-left"></i>
-                        </a>
+            <div class="p-slide">
+                <div class="p-slide-bg" style="background-image: url('https://images.unsplash.com/photo-1513694203232-719a280e022f?w=1600');"></div>
+                <div class="p-slide-content">
+                    <span class="p-subtitle">Luxury Texture</span>
+                    <h1 class="p-title">Royal <span>Velvet</span></h1>
+                    <p class="p-desc">Bring dramatic depth to bedrooms and lounges with rich fabric textures, darker palettes, and a softer cinematic atmosphere.</p>
+                    <div class="p-actions">
+                        <a href="#products" class="p-btn-gold">Explore More</a>
+                        <a href="showroom-3d.html" class="p-btn-outline">3D Showroom</a>
                     </div>
-                </div>
-                <div class="hero-image">
-                    <img src="https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800"
-                        alt="Modern layered curtains">
                 </div>
             </div>
 
-            <div class="hero-slide">
-                <div class="hero-content">
-                    <span class="hero-tag">Sustainable Luxury</span>
-                    <h1 class="hero-title">Eco <span>Conscious</span><br>Curtains 2025</h1>
-                    <p class="hero-desc">Organic linen, recycled velvet, bamboo sheers - beauty that respects the
-                        planet.</p>
-                    <div class="hero-buttons">
-                        <a href="#products" class="btn-primary">
-                            Discover Eco Line <i class="fas fa-arrow-left"></i>
-                        </a>
+            <div class="p-slide">
+                <div class="p-slide-bg" style="background-image: url('https://images.unsplash.com/photo-1600565193348-f74a4d160a86?w=1600');"></div>
+                <div class="p-slide-content">
+                    <span class="p-subtitle">Custom Comfort</span>
+                    <h1 class="p-title">Light <span>Perfected</span></h1>
+                    <p class="p-desc">From privacy to daylight balance, we tailor every layer to the room, the mood, and the exact dimensions of your home.</p>
+                    <div class="p-actions">
+                        <a href="#contact" class="p-btn-gold">Book Consultation</a>
+                        <a href="#about" class="p-btn-outline">Our Story</a>
                     </div>
-                </div>
-                <div class="hero-image">
-                    <img src="https://images.unsplash.com/photo-1600565193348-f74a4d160a86?w=800"
-                        alt="Sustainable linen curtains">
                 </div>
             </div>
         </div>
 
-        <div class="slider-dots">
-            <span class="slider-dot active" data-slide="0"></span>
-            <span class="slider-dot" data-slide="1"></span>
-            <span class="slider-dot" data-slide="2"></span>
+        <div class="p-slider-nav">
+            <button type="button" class="nav-arrow premium-prev" aria-label="Previous slide"><i class="fas fa-chevron-left"></i></button>
+            <div class="nav-count"><span id="curr-idx">01</span> / <span id="total-idx">03</span></div>
+            <button type="button" class="nav-arrow premium-next" aria-label="Next slide"><i class="fas fa-chevron-right"></i></button>
+        </div>
+
+        <div class="p-progress-bar">
+            <div class="p-progress-fill"></div>
         </div>
     </section>
 
@@ -536,8 +523,12 @@
             return `${origin}/api`;
         })();
 
-        const slider = document.querySelector('.hero-slider');
-        const dots = document.querySelectorAll('.slider-dot');
+        const premiumSlides = Array.from(document.querySelectorAll('.hero-premium .p-slide'));
+        const premiumNextBtn = document.querySelector('.premium-next');
+        const premiumPrevBtn = document.querySelector('.premium-prev');
+        const progressFill = document.querySelector('.p-progress-fill');
+        const currIdxTxt = document.getElementById('curr-idx');
+        const totalIdxTxt = document.getElementById('total-idx');
         const header = document.querySelector('header');
         const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
         const mobileMenuIcon = mobileMenuBtn?.querySelector('i');
@@ -569,6 +560,7 @@
         const cartPanelTotal = document.getElementById('cart-panel-total');
         const actionToast = document.getElementById('action-toast');
         let currentSlide = 0;
+        let heroAutoplayTimer = null;
         let activeProductKey = '';
         let toastTimer = null;
         let activePanel = null;
@@ -898,21 +890,56 @@
             });
         }
 
-        const goToSlide = (index) => {
-            currentSlide = index;
-            slider.style.transform = `translateX(-${currentSlide * 100}%)`;
-            dots.forEach((dot) => dot.classList.remove('active'));
-            dots[currentSlide].classList.add('active');
+        const autoPlayTime = 6000;
+
+        const restartHeroProgress = () => {
+            if (!progressFill) return;
+            progressFill.style.transition = 'none';
+            progressFill.style.width = '0%';
+            window.requestAnimationFrame(() => {
+                window.requestAnimationFrame(() => {
+                    progressFill.style.transition = `width ${autoPlayTime}ms linear`;
+                    progressFill.style.width = '100%';
+                });
+            });
         };
 
-        dots.forEach((dot, index) => {
-            dot.addEventListener('click', () => goToSlide(index));
+        const queueHeroAutoplay = () => {
+            clearTimeout(heroAutoplayTimer);
+            heroAutoplayTimer = window.setTimeout(() => {
+                showPremiumSlide(currentSlide + 1);
+            }, autoPlayTime);
+        };
+
+        const showPremiumSlide = (index) => {
+            if (!premiumSlides.length) return;
+            if (index >= premiumSlides.length) currentSlide = 0;
+            else if (index < 0) currentSlide = premiumSlides.length - 1;
+            else currentSlide = index;
+
+            premiumSlides.forEach((slide, slideIndex) => {
+                slide.classList.toggle('active', slideIndex === currentSlide);
+            });
+
+            if (currIdxTxt) {
+                currIdxTxt.textContent = String(currentSlide + 1).padStart(2, '0');
+            }
+
+            if (totalIdxTxt) {
+                totalIdxTxt.textContent = String(premiumSlides.length).padStart(2, '0');
+            }
+
+            restartHeroProgress();
+            queueHeroAutoplay();
+        };
+
+        premiumNextBtn?.addEventListener('click', () => {
+            showPremiumSlide(currentSlide + 1);
         });
 
-        setInterval(() => {
-            currentSlide = (currentSlide + 1) % dots.length;
-            goToSlide(currentSlide);
-        }, 7000);
+        premiumPrevBtn?.addEventListener('click', () => {
+            showPremiumSlide(currentSlide - 1);
+        });
 
         window.addEventListener('scroll', () => {
             header.classList.toggle('scrolled', window.scrollY > 50);
@@ -1080,6 +1107,10 @@
                 });
             });
         };
+
+        if (premiumSlides.length) {
+            showPremiumSlide(0);
+        }
 
         bindProductButtons();
         applyMobileProductLayout();
