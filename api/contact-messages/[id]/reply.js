@@ -32,11 +32,9 @@ module.exports = async (req, res) => {
 
   const payload = await readJson(req);
   const existing = getMessages().find((item) => item.id === id);
-
-  if (!existing) {
-    sendJson(res, 404, { error: 'Message not found' });
-    return;
-  }
+  const fallbackMessage = payload.messageData && typeof payload.messageData === 'object'
+    ? payload.messageData
+    : null;
 
   const replyMessage = String(payload.reply || '').trim();
   if (!replyMessage) {
@@ -44,7 +42,14 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const recipient = String(existing.email || '').trim();
+  const sourceMessage = existing || fallbackMessage;
+
+  if (!sourceMessage) {
+    sendJson(res, 404, { error: 'Message not found' });
+    return;
+  }
+
+  const recipient = String(sourceMessage.email || sourceMessage.phone || '').trim();
   if (!recipient || !recipient.includes('@')) {
     sendJson(res, 400, { error: 'Recipient email is missing or invalid' });
     return;
@@ -52,18 +57,18 @@ module.exports = async (req, res) => {
 
   const replySubject = payload.subject
     ? String(payload.subject).trim()
-    : `Reply from Luxe Drapes for ${existing.roomType}`;
+    : `Reply from Luxe Drapes for ${sourceMessage.roomType || 'your request'}`;
 
   const replyHtml = `
     <div style="font-family: Arial, sans-serif; line-height: 1.7; color: #222;">
       <h2 style="margin: 0 0 16px;">Luxe Drapes</h2>
-      <p>Hello ${escapeHtml(existing.name)},</p>
+      <p>Hello ${escapeHtml(sourceMessage.name)},</p>
       <p>${escapeHtml(replyMessage).replace(/\n/g, '<br>')}</p>
       <p style="margin-top: 24px;">Best regards,<br>Luxe Drapes team</p>
     </div>
   `;
 
-  const replyText = `Hello ${existing.name},\n\n${replyMessage}\n\nBest regards,\nLuxe Drapes team`;
+  const replyText = `Hello ${sourceMessage.name},\n\n${replyMessage}\n\nBest regards,\nLuxe Drapes team`;
   const emailWarning = getMailConfigError();
   let emailDelivered = false;
 
@@ -83,7 +88,13 @@ module.exports = async (req, res) => {
   }
 
   const updated = {
-    ...existing,
+    ...(existing || fallbackMessage || {}),
+    id,
+    name: sourceMessage.name || 'Unknown',
+    email: recipient,
+    phone: sourceMessage.phone || recipient,
+    roomType: sourceMessage.roomType || sourceMessage.room_type || '',
+    message: sourceMessage.message || '',
     status: 'Replied',
     replyMessage,
     repliedAt: new Date().toISOString(),
