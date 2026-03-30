@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=1774736117586">
+    <link rel="stylesheet" href="style.css?v=1774905697487">
 
 </head>
 
@@ -26,11 +26,12 @@
                 <li><a href="zebra-collection.html">Collections</a></li>
                 <li><a href="wishlist.html">Wishlist</a></li>
                 <li><a href="cart.html">Cart</a></li>
+                <li><a href="checkout.html">Checkout</a></li>
                 <li><a href="#about">About</a></li>
                 <li><a href="#contact">Contact</a></li>
             </ul>
 
-            <button class="header-btn" type="button">Free Consultation</button>
+            <button class="header-btn" type="button">Start Checkout</button>
             <button class="mobile-menu-btn" type="button" aria-label="Open menu" aria-expanded="false">
                 <i class="fas fa-bars"></i>
             </button>
@@ -345,15 +346,15 @@
             your free consultation today.</p>
 
         <div class="cta-buttons">
-            <a href="#contact" class="cta-btn light">Get Free Consultation</a>
+            <a href="checkout.html" class="cta-btn light">Start Checkout</a>
             <a href="zebra-collection.html" class="cta-btn outline">View Full Catalog</a>
         </div>
     </section>
     <section class="contact" id="contact">
         <div class="section-header">
-            <span class="section-tag">CONTACT</span>
-            <h2 class="section-title">Book Your Free Consultation</h2>
-            <p class="section-desc">Share your room details and we will get back to you within one business day.</p>
+            <span class="section-tag">CHECKOUT</span>
+            <h2 class="section-title">Send Your Quote Request</h2>
+            <p class="section-desc">Use checkout when you already know what you want. It keeps your cart, measurements, and notes in one place.</p>
         </div>
 
         <div class="contact-grid">
@@ -362,28 +363,19 @@
                 <p><i class="fas fa-phone"></i> +98 21 1234 5678</p>
                 <p><i class="fas fa-envelope"></i> hello@luxedrapes.ir</p>
                 <p><i class="fas fa-location-dot"></i> Tehran, Jordan St.</p>
+                <p style="margin-top:16px; color: var(--gray); line-height:1.8;">If you already have items in your cart, open checkout to finish the quote request. If you just want to browse, keep exploring the collection.</p>
             </div>
 
-            <form class="contact-form" id="contact-form">
-                <input type="text" name="name" placeholder="Your Name" required>
-                <input type="email" name="email" placeholder="Gmail Address" required title="Only Gmail addresses are allowed">
-                <input type="text" name="roomType" placeholder="Room Type (Bedroom, Living Room, ...)" required>
-                <textarea name="message" rows="4" placeholder="Tell us your preferred style, color, and dimensions" required></textarea>
-                <button type="submit" class="btn-primary">Send Request</button>
-                <p id="contact-status" class="contact-status" aria-live="polite"></p>
-            </form>
+            <div class="contact-card">
+                <h3>Start from checkout</h3>
+                <p>That page is where we collect the project details, confirm the selected items, and send the request to the admin panel.</p>
+                <div style="display:flex; flex-wrap: wrap; gap: 10px; margin-top: 18px;">
+                    <a href="checkout.html" class="btn-primary">Open Checkout</a>
+                    <a href="cart.html" class="btn-secondary">Review Cart</a>
+                </div>
+            </div>
         </div>
     </section>
-
-    <div id="contact-success-modal" class="contact-success-modal" aria-hidden="true">
-        <div class="contact-success-content" role="dialog" aria-modal="true" aria-labelledby="contact-success-title">
-            <button type="button" class="contact-success-close" id="contact-success-close" aria-label="Close success dialog">&times;</button>
-            <div class="contact-success-icon"><i class="fas fa-circle-check"></i></div>
-            <h3 id="contact-success-title">Request sent successfully</h3>
-            <p>Your message has been saved and sent to the admin panel for follow-up.</p>
-            <button type="button" id="contact-success-ok" class="btn-primary">OK</button>
-        </div>
-    </div>
 
     <div id="quick-view-modal" class="quick-view-modal" aria-hidden="true">
         <div class="quick-view-backdrop" aria-hidden="true"></div>
@@ -441,7 +433,7 @@
             </div>
             <div class="saved-panel-foot">
                 <button type="button" class="btn-secondary" data-close-saved-panel>Close</button>
-                <a href="#contact" class="btn-primary">Request quote</a>
+                <a href="checkout.html" class="btn-primary">Checkout</a>
             </div>
         </aside>
     </div>
@@ -470,6 +462,7 @@
                     <a href="zebra-collection.html">Collection</a>
                     <a href="wishlist.html">Wishlist</a>
                     <a href="cart.html">Cart</a>
+                    <a href="checkout.html">Checkout</a>
                     <a href="#about">About Us</a>
                     <a href="#">Blog</a>
                 </div>
@@ -536,11 +529,6 @@
         const filterButtons = document.querySelectorAll('.products-filter .filter-btn');
         const productCards = Array.from(document.querySelectorAll('.products-grid .product-card:not(.explore-card)'));
         const productsGrid = document.querySelector('.products-grid');
-        const contactForm = document.getElementById('contact-form');
-        const contactStatus = document.getElementById('contact-status');
-        const contactSuccessModal = document.getElementById('contact-success-modal');
-        const contactSuccessClose = document.getElementById('contact-success-close');
-        const contactSuccessOk = document.getElementById('contact-success-ok');
         const modal = document.getElementById('quick-view-modal');
         const modalClose = document.getElementById('quick-view-close');
         const modalImage = document.getElementById('quick-view-image');
@@ -700,15 +688,6 @@
             window.location.href = `cart.html?focus=${encodeURIComponent(key || '')}`;
         };
 
-        const setContactStatus = (message, type = '') => {
-            if (!contactStatus) return;
-            contactStatus.textContent = message;
-            contactStatus.classList.remove('is-success', 'is-error');
-            if (type) {
-                contactStatus.classList.add(type);
-            }
-        };
-
         const showActionToast = (message) => {
             if (!actionToast) return;
             actionToast.textContent = message;
@@ -817,20 +796,6 @@
         const syncPanels = () => {
             renderFavoritesPanel();
             renderCartPanel();
-        };
-
-        const openContactSuccessModal = () => {
-            if (!contactSuccessModal) return;
-            contactSuccessModal.classList.add('is-open');
-            contactSuccessModal.setAttribute('aria-hidden', 'false');
-            document.body.classList.add('modal-open');
-        };
-
-        const closeContactSuccessModal = () => {
-            if (!contactSuccessModal) return;
-            contactSuccessModal.classList.remove('is-open');
-            contactSuccessModal.setAttribute('aria-hidden', 'true');
-            document.body.classList.remove('modal-open');
         };
 
         const closeMobileMenu = () => {
@@ -963,12 +928,6 @@
         });
 
         mobileMenuBtn?.addEventListener('click', toggleMobileMenu);
-        headerConsultBtn?.addEventListener('click', () => {
-            const contactSection = document.getElementById('contact');
-            if (!contactSection) return;
-            contactSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            closeMobileMenu();
-        });
         window.addEventListener('resize', () => {
             if (window.innerWidth > 768) closeMobileMenu();
             applyMobileProductLayout();
@@ -1124,7 +1083,6 @@
             if (event.key === 'Escape') {
                 closeQuickView();
                 closeSavedPanels();
-                closeContactSuccessModal();
             }
         });
 
@@ -1144,58 +1102,8 @@
             button.addEventListener('click', closeSavedPanels);
         });
 
-        if (contactForm) {
-            contactForm.addEventListener('submit', async (event) => {
-                event.preventDefault();
-
-                const formData = new FormData(contactForm);
-                const payload = {
-                    name: String(formData.get('name') || '').trim(),
-                    email: String(formData.get('email') || '').trim(),
-                    roomType: String(formData.get('roomType') || '').trim(),
-                    message: String(formData.get('message') || '').trim(),
-                    source: 'website-homepage'
-                };
-
-                if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/i.test(payload.email)) {
-                    setContactStatus('Please use a Gmail address only.', 'is-error');
-                    return;
-                }
-
-                setContactStatus('Sending your request...');
-
-                try {
-                    const response = await fetch(`${API_BASE}/contact-messages`, {
-                        method: 'POST',
-                        cache: 'no-store',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (!response.ok) {
-                        console.error('[contact-form] request failed', {
-                            url: `${API_BASE}/contact-messages`,
-                            status: response.status,
-                            statusText: response.statusText
-                        });
-                        throw new Error('Failed to send message');
-                    }
-
-                    contactForm.reset();
-                    setContactStatus('Your request was sent successfully. We will review it in the admin panel.', 'is-success');
-                    openContactSuccessModal();
-                } catch (error) {
-                    setContactStatus('Could not send the request. The hosted API is not reachable yet.', 'is-error');
-                }
-            });
-        }
-
-        contactSuccessClose?.addEventListener('click', closeContactSuccessModal);
-        contactSuccessOk?.addEventListener('click', closeContactSuccessModal);
-        contactSuccessModal?.addEventListener('click', (event) => {
-            if (event.target === contactSuccessModal) {
-                closeContactSuccessModal();
-            }
+        headerConsultBtn?.addEventListener('click', () => {
+            window.location.href = 'checkout.html';
         });
 
         syncPanels();

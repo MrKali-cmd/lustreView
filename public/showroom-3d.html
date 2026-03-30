@@ -206,7 +206,7 @@
             background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(7, 7, 7, 0.96));
             border: 1px solid rgba(201, 169, 98, 0.22);
             box-shadow: 0 20px 42px rgba(0, 0, 0, 0.6);
-            -webkit-box-reflect: below 10px linear-gradient(transparent 68%, rgba(0, 0, 0, 0.28));
+            -webkit-box-reflect: below 8px linear-gradient(transparent 76%, rgba(0, 0, 0, 0.22));
             transition:
                 transform 1.45s cubic-bezier(0.22, 1, 0.36, 1),
                 box-shadow 0.45s ease;
@@ -452,7 +452,6 @@
             panel.className = 'panel';
             const finalTransform = `rotateY(${theta * i}deg) translateZ(${radius + 74}px)`;
             const entryShift = i % 2 === 0 ? -introShift : introShift;
-            shell.dataset.baseAngle = String(theta * i);
             panel.dataset.finalTransform = finalTransform;
             panel.style.transform = finalTransform;
             shell.dataset.finalTransform = 'translateX(0) scale(1)';
@@ -524,20 +523,6 @@
             }
             currentX += (targetX - currentX) * 0.12;
             carousel.style.transform = `translateZ(${-radius - 230}px) rotateX(-4deg) rotateY(${currentX}deg)`;
-
-            document.querySelectorAll('.panel-shell').forEach((shell) => {
-                const baseAngle = Number(shell.dataset.baseAngle || 0);
-                const relativeAngle = ((baseAngle + currentX) % 360 + 360) % 360;
-                const proximity = Math.abs(180 - Math.abs(relativeAngle - 180));
-                const visibility = 0.52 + (Math.abs(Math.cos((proximity * Math.PI) / 180)) * 0.42);
-                shell.style.opacity = visibility.toFixed(3);
-                const panel = shell.querySelector('.panel');
-                if (panel) {
-                    const brightness = 0.84 + (visibility * 0.18);
-                    panel.style.filter = `brightness(${brightness.toFixed(3)})`;
-                }
-            });
-
             requestAnimationFrame(animate);
         }
 

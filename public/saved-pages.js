@@ -19,14 +19,14 @@
         cart: {
             kicker: 'Shopping Cart',
             title: 'Cart',
-            desc: 'Review the items you are ready to request. You can remove pieces, move them back to your wishlist, or continue to the quote form.',
+            desc: 'Review the pieces you are ready to request. You can remove items, move them back to your wishlist, or continue to checkout.',
             countLabel: 'cart item',
             empty: 'Your cart is empty. Tap the cart icon on any product to add it here.',
             summaryTitle: 'Cart summary',
-            summaryText: 'Use the cart to keep a clean shortlist before sending a request.',
+            summaryText: 'Use the cart to keep a clean shortlist before checking out.',
             summaryValueLabel: 'Subtotal',
-            primaryLabel: 'Request Quote',
-            primaryHref: 'index.html#contact'
+            primaryLabel: 'Proceed to checkout',
+            primaryHref: 'checkout.html'
         }
     };
 

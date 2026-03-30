@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | Luxe Drapes</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="saved-pages.css">
+    <style>
+        :root {
+            --checkout-bg: #f6f1e8;
+            --checkout-surface: rgba(255, 255, 255, 0.88);
+            --checkout-surface-strong: #ffffff;
+            --checkout-text: #181512;
+            --checkout-muted: #6d655d;
+            --checkout-border: rgba(30, 24, 18, 0.09);
+            --checkout-dark: #111111;
+            --checkout-shadow: 0 24px 64px rgba(17, 15, 10, 0.12);
+        }
+
+        body {
+            background:
+                radial-gradient(circle at 12% 14%, rgba(201, 169, 98, 0.18), transparent 24%),
+                radial-gradient(circle at 86% 12%, rgba(30, 44, 62, 0.16), transparent 26%),
+                linear-gradient(180deg, #fbf8f3 0%, #f2ede6 100%);
+            color: var(--checkout-text);
+        }
+
+        .checkout-shell {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 118px 5% 82px;
+        }
+
+        .checkout-hero {
+            display: grid;
+            gap: 16px;
+            max-width: 940px;
+            margin-bottom: 32px;
+        }
+
+        .checkout-kicker {
+            display: inline-flex;
+            width: fit-content;
+            padding: 10px 16px;
+            border-radius: 999px;
+            background: rgba(201, 169, 98, 0.14);
+            color: var(--primary-dark);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        .checkout-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.6rem, 5vw, 4.8rem);
+            line-height: 1;
+            margin: 0;
+        }
+
+        .checkout-desc {
+            max-width: 760px;
+            color: var(--gray);
+            font-size: 18px;
+            line-height: 1.8;
+        }
+
+        .checkout-steps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 6px;
+        }
+
+        .checkout-step {
+            padding: 11px 16px;
+            border-radius: 999px;
+            border: 1px solid var(--checkout-border);
+            background: rgba(255, 255, 255, 0.76);
+            color: var(--checkout-muted);
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .checkout-step.is-active {
+            color: var(--checkout-dark);
+            background: rgba(201, 169, 98, 0.14);
+            border-color: rgba(201, 169, 98, 0.28);
+        }
+
+        .checkout-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.4fr) 420px;
+            gap: 28px;
+            align-items: start;
+        }
+
+        .checkout-card {
+            background: var(--checkout-surface);
+            border: 1px solid var(--checkout-border);
+            border-radius: 30px;
+            box-shadow: var(--checkout-shadow);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .checkout-form-card {
+            padding: 30px;
+        }
+
+        .checkout-section-title {
+            font-size: 1.4rem;
+            margin: 0 0 12px;
+        }
+
+        .checkout-section-copy {
+            color: var(--gray);
+            line-height: 1.75;
+            margin-bottom: 22px;
+        }
+
+        .checkout-form {
+            display: grid;
+            gap: 16px;
+        }
+
+        .checkout-grid-fields {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .checkout-field {
+            display: grid;
+            gap: 8px;
+        }
+
+        .checkout-field.full {
+            grid-column: 1 / -1;
+        }
+
+        .checkout-field label {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--checkout-text);
+        }
+
+        .checkout-field input,
+        .checkout-field select,
+        .checkout-field textarea {
+            width: 100%;
+            border: 1px solid rgba(17, 17, 17, 0.1);
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 16px;
+            padding: 14px 16px;
+            color: var(--checkout-text);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        .checkout-field textarea {
+            min-height: 140px;
+            resize: vertical;
+        }
+
+        .checkout-field input:focus,
+        .checkout-field select:focus,
+        .checkout-field textarea:focus {
+            border-color: rgba(201, 169, 98, 0.75);
+            box-shadow: 0 0 0 3px rgba(201, 169, 98, 0.16);
+            transform: translateY(-1px);
+        }
+
+        .checkout-note {
+            color: var(--gray);
+            font-size: 0.92rem;
+            line-height: 1.65;
+        }
+
+        .checkout-summary {
+            position: sticky;
+            top: 118px;
+            padding: 28px;
+            background: linear-gradient(180deg, rgba(17, 17, 17, 0.98), rgba(26, 26, 26, 0.94));
+            color: #fff;
+            border-radius: 30px;
+            box-shadow: 0 24px 54px rgba(0, 0, 0, 0.22);
+            display: grid;
+            gap: 18px;
+        }
+
+        .checkout-summary h2 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .checkout-summary p {
+            margin: 0;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.72);
+        }
+
+        .checkout-summary-list {
+            display: grid;
+            gap: 12px;
+            max-height: 420px;
+            overflow: auto;
+            padding-right: 6px;
+        }
+
+        .checkout-summary-item {
+            display: grid;
+            grid-template-columns: 74px minmax(0, 1fr);
+            gap: 12px;
+            align-items: center;
+            padding: 12px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .checkout-summary-item img {
+            width: 74px;
+            height: 74px;
+            border-radius: 16px;
+            object-fit: cover;
+        }
+
+        .checkout-summary-item h4 {
+            margin: 0 0 5px;
+            font-size: 1rem;
+        }
+
+        .checkout-summary-item p {
+            font-size: 0.88rem;
+            line-height: 1.6;
+        }
+
+        .checkout-summary-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 8px;
+            color: rgba(255, 255, 255, 0.82);
+            font-size: 0.92rem;
+        }
+
+        .checkout-summary-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.82);
+        }
+
+        .checkout-summary-row strong {
+            font-size: 1.2rem;
+            color: #fff;
+        }
+
+        .checkout-summary-total {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .checkout-summary-actions {
+            display: grid;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .checkout-summary-actions .btn-secondary {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+        }
+
+        .checkout-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: 18px;
+            background: rgba(201, 169, 98, 0.14);
+            color: #fff;
+            font-size: 0.92rem;
+            line-height: 1.6;
+            border: 1px solid rgba(201, 169, 98, 0.18);
+        }
+
+        .checkout-status {
+            min-height: 24px;
+            font-size: 0.95rem;
+            line-height: 1.55;
+            color: var(--gray);
+        }
+
+        .checkout-status.is-success {
+            color: #2f8f5a;
+        }
+
+        .checkout-status.is-error {
+            color: #cc5d5d;
+        }
+
+        .checkout-empty {
+            padding: 18px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.72);
+            line-height: 1.7;
+        }
+
+        @media (max-width: 1100px) {
+            .checkout-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .checkout-summary {
+                position: static;
+            }
+        }
+
+        @media (max-width: 800px) {
+            .checkout-shell {
+                padding-top: 102px;
+                padding-bottom: 68px;
+            }
+
+            .checkout-grid-fields {
+                grid-template-columns: 1fr;
+            }
+
+            .checkout-form-card,
+            .checkout-summary {
+                padding: 22px;
+                border-radius: 24px;
+            }
+
+            .checkout-title {
+                font-size: clamp(2.1rem, 10vw, 3.4rem);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav class="nav-container">
+            <a href="index.html" class="logo">
+                <i class="fas fa-feather-pointed"></i>
+                Luxe <span>Drapes</span>
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html#products">Collections</a></li>
+                <li><a href="wishlist.html">Wishlist</a></li>
+                <li><a href="cart.html">Cart</a></li>
+                <li><a href="checkout.html">Checkout</a></li>
+                <li><a href="index.html#contact">Contact</a></li>
+            </ul>
+
+            <button class="mobile-menu-btn" type="button" aria-label="Open menu" aria-expanded="false">
+                <i class="fas fa-bars"></i>
+            </button>
+        </nav>
+    </header>
+
+    <main class="checkout-shell">
+        <section class="checkout-hero">
+            <span class="checkout-kicker">Secure Checkout</span>
+            <h1 class="checkout-title">Review your cart and send a tailored quote request.</h1>
+            <p class="checkout-desc">Use this page to confirm the items you chose, add room and measurement details, and send everything to the design team in one clean step.</p>
+            <div class="checkout-steps">
+                <span class="checkout-step">1. Review items</span>
+                <span class="checkout-step is-active">2. Add project details</span>
+                <span class="checkout-step">3. Send request</span>
+            </div>
+        </section>
+
+        <section class="checkout-grid">
+            <section class="checkout-card checkout-form-card">
+                <h2 class="checkout-section-title">Project details</h2>
+                <p class="checkout-section-copy">Fill in the information below. We use this to prepare the first quote and reply directly to your Gmail inbox.</p>
+
+                <form id="checkout-form" class="checkout-form" novalidate>
+                    <div class="checkout-grid-fields">
+                        <label class="checkout-field">
+                            <span>Full name</span>
+                            <input id="checkout-name" name="name" type="text" autocomplete="name" placeholder="Haroon Shirzad" required>
+                        </label>
+
+                        <label class="checkout-field">
+                            <span>Gmail address</span>
+                            <input id="checkout-email" name="email" type="email" autocomplete="email" placeholder="yourname@gmail.com" required>
+                        </label>
+
+                        <label class="checkout-field">
+                            <span>Room type</span>
+                            <select id="checkout-room" name="roomType" required>
+                                <option value="">Choose a room</option>
+                                <option>Living room</option>
+                                <option>Bedroom</option>
+                                <option>Dining room</option>
+                                <option>Office</option>
+                                <option>Kitchen</option>
+                            </select>
+                        </label>
+
+                        <label class="checkout-field">
+                            <span>Phone or WhatsApp</span>
+                            <input id="checkout-phone" name="phone" type="tel" autocomplete="tel" placeholder="+93 700 000 000">
+                        </label>
+
+                        <label class="checkout-field">
+                            <span>City / area</span>
+                            <input id="checkout-location" name="location" type="text" placeholder="Kabul, Shahr-e-Naw">
+                        </label>
+
+                        <label class="checkout-field">
+                            <span>Timeline</span>
+                            <select id="checkout-timeline" name="timeline">
+                                <option>Standard quote</option>
+                                <option>Priority within 24h</option>
+                                <option>Urgent project</option>
+                            </select>
+                        </label>
+
+                        <label class="checkout-field full">
+                            <span>Measurements and notes</span>
+                            <textarea id="checkout-notes" name="notes" placeholder="Window width, height, fabric preference, motorized request, installation notes..."></textarea>
+                        </label>
+                    </div>
+
+                    <div class="checkout-badge">
+                        <i class="fas fa-shield-heart"></i>
+                        Your request is sent as a private quote, not a public order. We review it and reply by email.
+                    </div>
+
+                    <div id="checkout-status" class="checkout-status" aria-live="polite"></div>
+
+                    <button type="submit" class="btn-primary" id="checkout-submit">Send request</button>
+                </form>
+            </section>
+
+            <aside class="checkout-summary">
+                <div>
+                    <h2>Order review</h2>
+                    <p>These are the items currently saved in your cart.</p>
+                </div>
+
+                <div id="checkout-items" class="checkout-summary-list"></div>
+
+                <div class="checkout-summary-row">
+                    <span>Items</span>
+                    <strong id="checkout-count">0 items</strong>
+                </div>
+                <div class="checkout-summary-row">
+                    <span>Subtotal</span>
+                    <strong id="checkout-total" class="checkout-summary-total">$0.00</strong>
+                </div>
+
+                <div class="checkout-summary-actions">
+                    <a href="cart.html" class="btn-secondary">Back to cart</a>
+                    <a href="index.html#products" class="btn-primary">Continue browsing</a>
+                </div>
+            </aside>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <a href="index.html" class="logo">
+                    <i class="fas fa-feather-pointed"></i>
+                    Luxe <span>Drapes</span>
+                </a>
+                <p>Premium custom curtains & drapery - crafted with passion and precision since 2010.</p>
+                <div class="footer-social">
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-whatsapp"></i></a>
+                    <a href="#"><i class="fab fa-telegram"></i></a>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="footer-title">Quick Links</h3>
+                <div class="footer-links">
+                    <a href="index.html">Home</a>
+                    <a href="index.html#products">Collections</a>
+                    <a href="wishlist.html">Wishlist</a>
+                    <a href="cart.html">Cart</a>
+                    <a href="checkout.html">Checkout</a>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="footer-title">Support</h3>
+                <div class="footer-links">
+                    <a href="index.html#contact">FAQ</a>
+                    <a href="index.html#contact">Shipping & Returns</a>
+                    <a href="index.html#contact">Privacy Policy</a>
+                    <a href="index.html#contact">Terms of Service</a>
+                </div>
+            </div>
+
+            <div class="footer-contact">
+                <h3 class="footer-title">Contact Us</h3>
+                <ul>
+                    <li><i class="fas fa-phone"></i> +98 21 1234 5678</li>
+                    <li><i class="fas fa-envelope"></i> hello@luxedrapes.ir</li>
+                    <li><i class="fas fa-map-marker-alt"></i> Tehran, Jordan St.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2026 Luxe Drapes - All Rights Reserved.</p>
+            <div class="footer-bottom-links">
+                <a href="#">Privacy</a>
+                <a href="#">Terms</a>
+                <a href="#">Cookies</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="catalog-data.js"></script>
+    <script>
+        (function () {
+            const storageKey = 'luxeCart';
+            const cart = new Set(JSON.parse(localStorage.getItem(storageKey) || '[]'));
+            const catalog = Array.isArray(window.LUXE_CATALOG) ? window.LUXE_CATALOG : [];
+            const USD_RATE = 42000;
+            const checkoutItems = document.getElementById('checkout-items');
+            const checkoutCount = document.getElementById('checkout-count');
+            const checkoutTotal = document.getElementById('checkout-total');
+            const checkoutStatus = document.getElementById('checkout-status');
+            const checkoutSubmit = document.getElementById('checkout-submit');
+            const checkoutForm = document.getElementById('checkout-form');
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const header = document.querySelector('header');
+            const mobileMenuIcon = mobileMenuBtn?.querySelector('i');
+            const gmailPattern = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
+
+            const formatUsd = (value) => `$${(Number(value || 0) / USD_RATE).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })}`;
+
+            const getItems = () => Array.from(cart)
+                .map((key) => catalog.find((item) => item.key === key))
+                .filter(Boolean);
+
+            const setStatus = (message, kind = '') => {
+                checkoutStatus.textContent = message || '';
+                checkoutStatus.className = `checkout-status ${kind}`.trim();
+            };
+
+            const closeMobileMenu = () => {
+                if (!header || !mobileMenuBtn) return;
+                header.classList.remove('menu-open');
+                mobileMenuBtn.setAttribute('aria-expanded', 'false');
+                mobileMenuBtn.setAttribute('aria-label', 'Open menu');
+                if (mobileMenuIcon) {
+                    mobileMenuIcon.className = 'fas fa-bars';
+                }
+            };
+
+            const toggleMobileMenu = () => {
+                if (!header || !mobileMenuBtn) return;
+                const isOpen = header.classList.toggle('menu-open');
+                mobileMenuBtn.setAttribute('aria-expanded', String(isOpen));
+                mobileMenuBtn.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+                if (mobileMenuIcon) {
+                    mobileMenuIcon.className = isOpen ? 'fas fa-xmark' : 'fas fa-bars';
+                }
+            };
+
+            const renderSummary = () => {
+                const items = getItems();
+                const total = items.reduce((sum, item) => sum + Number(item.price || 0), 0);
+
+                checkoutCount.textContent = `${items.length} item${items.length === 1 ? '' : 's'}`;
+                checkoutTotal.textContent = formatUsd(total);
+
+                if (!items.length) {
+                    checkoutItems.innerHTML = `
+                        <div class="checkout-empty">
+                            Your cart is empty. Add items from the collection first, then return here to send a quote request.
+                            <div style="margin-top:14px;">
+                                <a href="index.html#products" class="btn-primary">Browse collection</a>
+                            </div>
+                        </div>
+                    `;
+                    checkoutSubmit.disabled = true;
+                    checkoutSubmit.textContent = 'Add items to checkout';
+                    return;
+                }
+
+                checkoutSubmit.disabled = false;
+                checkoutSubmit.textContent = 'Send request';
+
+                checkoutItems.innerHTML = items.map((item) => `
+                    <article class="checkout-summary-item">
+                        <img src="${item.image}" alt="${item.name}">
+                        <div>
+                            <h4>${item.name}</h4>
+                            <p>${item.category}</p>
+                            <div class="checkout-summary-meta">
+                                <span>${formatUsd(item.price)}</span>
+                            </div>
+                        </div>
+                    </article>
+                `).join('');
+            };
+
+            checkoutForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const items = getItems();
+                if (!items.length) {
+                    setStatus('Add at least one item to your cart before sending a request.', 'is-error');
+                    return;
+                }
+
+                const name = document.getElementById('checkout-name').value.trim();
+                const email = document.getElementById('checkout-email').value.trim();
+                const roomType = document.getElementById('checkout-room').value.trim();
+                const phone = document.getElementById('checkout-phone').value.trim();
+                const location = document.getElementById('checkout-location').value.trim();
+                const timeline = document.getElementById('checkout-timeline').value.trim();
+                const notes = document.getElementById('checkout-notes').value.trim();
+
+                if (!name || !email || !roomType) {
+                    setStatus('Please complete the required fields.', 'is-error');
+                    return;
+                }
+
+                if (!gmailPattern.test(email)) {
+                    setStatus('Please use a Gmail address only.', 'is-error');
+                    return;
+                }
+
+                const subtotal = items.reduce((sum, item) => sum + Number(item.price || 0), 0);
+                const itemLines = items.map((item) => `- ${item.name} (${formatUsd(item.price)})`).join('\n');
+                const message = [
+                    `Cart subtotal: ${formatUsd(subtotal)}`,
+                    '',
+                    'Selected items:',
+                    itemLines,
+                    '',
+                    `Phone: ${phone || 'Not provided'}`,
+                    `Location: ${location || 'Not provided'}`,
+                    `Timeline: ${timeline || 'Not provided'}`,
+                    '',
+                    'Measurements and notes:',
+                    notes || 'No additional notes.'
+                ].join('\n');
+
+                checkoutSubmit.disabled = true;
+                setStatus('Sending your request...', '');
+
+                try {
+                    const response = await fetch('/api/contact-messages', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name,
+                            email,
+                            roomType,
+                            message,
+                            source: 'checkout'
+                        })
+                    });
+
+                    const raw = await response.text();
+                    let payload = {};
+                    if (raw) {
+                        try {
+                            payload = JSON.parse(raw);
+                        } catch {
+                            payload = { error: raw };
+                        }
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(payload.error || `Checkout request failed (${response.status})`);
+                    }
+
+                    checkoutForm.reset();
+                    setStatus('Your checkout request was sent successfully. We will review it in the admin panel.', 'is-success');
+                } catch (error) {
+                    setStatus(error.message || 'Could not send checkout request.', 'is-error');
+                } finally {
+                    renderSummary();
+                }
+            });
+
+            mobileMenuBtn?.addEventListener('click', toggleMobileMenu);
+            document.querySelectorAll('.nav-links a').forEach((link) => {
+                link.addEventListener('click', closeMobileMenu);
+            });
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 768) closeMobileMenu();
+            });
+
+            renderSummary();
+        })();
+    </script>
+</body>
+
+</html>
