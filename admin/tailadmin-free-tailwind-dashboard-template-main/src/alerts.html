@@ -205,6 +205,7 @@
       let activeReplySnapshot = null;
       let currentMessages = [];
       const LOCAL_STATE_KEY = 'luxe_admin_message_overrides_v1';
+      const MESSAGE_CACHE_KEY = 'luxe_admin_message_cache_v1';
 
       const readLocalState = () => {
         try {
@@ -232,6 +233,39 @@
             ...item,
             status: localState.statusById[item.id] || item.status
           }));
+      };
+
+      const readMessageCache = () => {
+        try {
+          const value = localStorage.getItem(MESSAGE_CACHE_KEY);
+          if (!value) return [];
+          const parsed = JSON.parse(value);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch {
+          return [];
+        }
+      };
+
+      const writeMessageCache = (messages) => {
+        localStorage.setItem(MESSAGE_CACHE_KEY, JSON.stringify(messages));
+      };
+
+      const mergeMessages = (freshMessages, cachedMessages) => {
+        const localState = readLocalState();
+        const map = new Map();
+
+        [...cachedMessages, ...freshMessages].forEach((item) => {
+          if (!item || !item.id) return;
+          map.set(item.id, {
+            ...map.get(item.id),
+            ...item,
+            status: localState.statusById[item.id] || item.status
+          });
+        });
+
+        return Array.from(map.values())
+          .filter((item) => !localState.deletedIds.includes(item.id))
+          .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
       };
 
       const formatDate = (value) => {
@@ -303,13 +337,21 @@
 
       const loadMessages = async () => {
         listEl.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400">Loading messages...</p>';
-        const response = await fetch(`${API_BASE}/contact-messages`, {
-          cache: 'no-store'
-        });
-        if (!response.ok) {
-          throw new Error('Failed to load messages');
+        let freshMessages = [];
+        try {
+          const response = await fetch(`${API_BASE}/contact-messages`, {
+            cache: 'no-store'
+          });
+          if (response.ok) {
+            freshMessages = applyLocalOverrides(await response.json());
+          }
+        } catch {
+          freshMessages = [];
         }
-        const messages = applyLocalOverrides(await response.json());
+
+        const cachedMessages = readMessageCache();
+        const messages = mergeMessages(freshMessages, cachedMessages);
+        writeMessageCache(messages);
         currentMessages = messages;
         renderStats(messages);
         renderMessages(messages);
@@ -333,6 +375,11 @@
         const localState = readLocalState();
         localState.statusById[id] = status;
         writeLocalState(localState);
+
+        const cachedMessages = readMessageCache().map((item) =>
+          item.id === id ? { ...item, status } : item
+        );
+        writeMessageCache(cachedMessages);
       };
 
       const openReplyModal = (message) => {
@@ -399,6 +446,9 @@
         localState.deletedIds = Array.from(new Set([...localState.deletedIds, id]));
         delete localState.statusById[id];
         writeLocalState(localState);
+
+        const cachedMessages = readMessageCache().filter((item) => item.id !== id);
+        writeMessageCache(cachedMessages);
       };
 
       listEl.addEventListener('click', async (event) => {
