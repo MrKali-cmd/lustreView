@@ -82,7 +82,7 @@
         overflow: hidden;
       }
     </style>
-  <link rel="icon" href="favicon.ico"><link href="style.css?v=1774991201153" rel="stylesheet"></head>
+  <link rel="icon" href="favicon.ico"><link href="style.css?v=1774991897879" rel="stylesheet"></head>
   <body
     x-data="{ page: 'contact', 'loaded': true, 'darkMode': false, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
     x-init="
@@ -1344,6 +1344,35 @@
       const replyStatus = document.getElementById('reply-status');
       let activeReplyId = '';
       let currentMessages = [];
+      const LOCAL_STATE_KEY = 'luxe_admin_message_overrides_v1';
+
+      const readLocalState = () => {
+        try {
+          const value = localStorage.getItem(LOCAL_STATE_KEY);
+          if (!value) return { statusById: {}, deletedIds: [] };
+          const parsed = JSON.parse(value);
+          return {
+            statusById: parsed.statusById && typeof parsed.statusById === 'object' ? parsed.statusById : {},
+            deletedIds: Array.isArray(parsed.deletedIds) ? parsed.deletedIds : []
+          };
+        } catch {
+          return { statusById: {}, deletedIds: [] };
+        }
+      };
+
+      const writeLocalState = (nextState) => {
+        localStorage.setItem(LOCAL_STATE_KEY, JSON.stringify(nextState));
+      };
+
+      const applyLocalOverrides = (messages) => {
+        const localState = readLocalState();
+        return messages
+          .filter((item) => !localState.deletedIds.includes(item.id))
+          .map((item) => ({
+            ...item,
+            status: localState.statusById[item.id] || item.status
+          }));
+      };
 
       const formatDate = (value) => {
         const date = new Date(value);
@@ -1420,7 +1449,7 @@
         if (!response.ok) {
           throw new Error('Failed to load messages');
         }
-        const messages = await response.json();
+        const messages = applyLocalOverrides(await response.json());
         currentMessages = messages;
         renderStats(messages);
         renderMessages(messages);
@@ -1440,6 +1469,10 @@
         if (!response.ok) {
           throw new Error('Failed to update message');
         }
+
+        const localState = readLocalState();
+        localState.statusById[id] = status;
+        writeLocalState(localState);
       };
 
       const openReplyModal = (message) => {
@@ -1491,6 +1524,11 @@
         if (!response.ok) {
           throw new Error('Failed to delete message');
         }
+
+        const localState = readLocalState();
+        localState.deletedIds = Array.from(new Set([...localState.deletedIds, id]));
+        delete localState.statusById[id];
+        writeLocalState(localState);
       };
 
       listEl.addEventListener('click', async (event) => {
@@ -1561,5 +1599,5 @@
         listEl.innerHTML = '<p class="text-sm text-red-600">Database is not reachable. Start the server first.</p>';
       });
     </script>
-  <script defer src="bundle.js?v=1774991201153"></script></body>
+  <script defer src="bundle.js?v=1774991897879"></script></body>
 </html>
