@@ -1343,6 +1343,7 @@
       const replyRecipient = document.getElementById('reply-recipient');
       const replyStatus = document.getElementById('reply-status');
       let activeReplyId = '';
+      let activeReplySnapshot = null;
       let currentMessages = [];
 
       const formatDate = (value) => {
@@ -1426,12 +1427,15 @@
         renderMessages(messages);
       };
 
-      const updateMessage = async (id, status) => {
+      const updateMessage = async (id, status, messageData = null) => {
         const response = await fetch(`${API_BASE}/contact-messages/${id}`, {
           method: 'PUT',
           cache: 'no-store',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status })
+          body: JSON.stringify({
+            status,
+            messageData
+          })
         });
 
         if (!response.ok) {
@@ -1441,6 +1445,14 @@
 
       const openReplyModal = (message) => {
         activeReplyId = message.id;
+        activeReplySnapshot = {
+          id: message.id,
+          name: message.name,
+          email: message.email || message.phone || '',
+          roomType: message.roomType || '',
+          message: message.message || '',
+          source: message.source || 'admin-panel'
+        };
         document.getElementById('reply-title').textContent = `Reply to ${message.name}`;
         replyRecipient.textContent = `To: ${message.name} <${message.email || message.phone}>`;
         replySubject.value = `Reply from Luxe Drapes for ${message.roomType || message.room_type || 'your request'}`;
@@ -1454,6 +1466,7 @@
 
       const closeReplyModal = () => {
         activeReplyId = '';
+        activeReplySnapshot = null;
         replyModal.style.display = 'none';
         replyModal.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('modal-open');
@@ -1467,7 +1480,8 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             subject: replySubject.value.trim(),
-            reply: replyBody.value.trim()
+            reply: replyBody.value.trim(),
+            messageData: activeReplySnapshot
           })
         });
 
@@ -1504,9 +1518,9 @@
             return;
           }
           if (action === 'progress') {
-            await updateMessage(id, 'In Progress');
+            await updateMessage(id, 'In Progress', message);
           } else if (action === 'resolve') {
-            await updateMessage(id, 'Resolved');
+            await updateMessage(id, 'Resolved', message);
           } else if (action === 'delete') {
             await deleteMessage(id);
           }

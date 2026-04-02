@@ -21,7 +21,7 @@ module.exports = async (req, res) => {
 
   if (req.method === 'GET') {
     if (!requireAdminAuth(req, res)) return;
-    const row = getMessages().find((item) => item.id === id);
+    const row = (await getMessages()).find((item) => item.id === id);
     if (!row) {
       sendJson(res, 404, { error: 'Message not found' });
       return;
@@ -33,7 +33,7 @@ module.exports = async (req, res) => {
   if (req.method === 'PUT' || req.method === 'PATCH') {
     if (!requireAdminAuth(req, res)) return;
     const payload = await readJson(req);
-    const existing = getMessages().find((item) => item.id === id);
+    const existing = (await getMessages()).find((item) => item.id === id);
     const messageData = payload.messageData && typeof payload.messageData === 'object' ? payload.messageData : null;
 
     if (!existing && !messageData) {
@@ -70,14 +70,14 @@ module.exports = async (req, res) => {
       updatedAt: new Date().toISOString()
     };
 
-    upsertMessage(row);
+    await upsertMessage(row);
     sendJson(res, 200, row);
     return;
   }
 
   if (req.method === 'DELETE') {
     if (!requireAdminAuth(req, res)) return;
-    deleteMessage(id);
+    await deleteMessage(id);
     sendJson(res, 204, {});
     return;
   }

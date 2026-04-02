@@ -13,7 +13,7 @@ module.exports = async (req, res) => {
   if (handleOptions(req, res)) return;
 
   if (req.method === 'GET') {
-    sendJson(res, 200, getCollections());
+    sendJson(res, 200, await getCollections());
     return;
   }
 
@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
       return;
     }
 
-    upsertCollection(row);
+    await upsertCollection(row);
     sendJson(res, 201, row);
     return;
   }

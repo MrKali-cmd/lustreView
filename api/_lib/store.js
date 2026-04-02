@@ -1,6 +1,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { neon } = require('@neondatabase/serverless');
 
 const STORE_PATH = path.join(os.tmpdir(), 'luxe-drapes-store.json');
 
@@ -73,8 +74,122 @@ const DEFAULT_STATE = {
 };
 
 let memoryState = null;
+let sqlClient = null;
+let initPromise = null;
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
+
+const getSqlClient = () => {
+  const databaseUrl = String(process.env.DATABASE_URL || '').trim();
+  if (!databaseUrl) return null;
+  if (!sqlClient) {
+    sqlClient = neon(databaseUrl);
+  }
+  return sqlClient;
+};
+
+const hasRemoteDatabase = () => Boolean(getSqlClient());
+
+const mapCollectionRow = (row) => ({
+  id: row.id,
+  name: row.name,
+  label: row.label,
+  tags: row.tags,
+  type: row.type,
+  status: row.status,
+  price: Number(row.price) || 0,
+  popular: Number(row.popular) || 0,
+  rating: Number(row.rating) || 0,
+  badge: row.badge || '',
+  image: row.image,
+  description: row.description,
+  updatedAt: row.updated_at || row.updatedAt || ''
+});
+
+const mapMessageRow = (row) => ({
+  id: row.id,
+  name: row.name,
+  phone: row.phone || '',
+  email: row.email || row.phone || '',
+  roomType: row.room_type || row.roomType || '',
+  message: row.message || '',
+  status: row.status,
+  source: row.source || '',
+  replyMessage: row.reply_message || row.replyMessage || '',
+  repliedAt: row.replied_at || row.repliedAt || '',
+  createdAt: row.created_at || row.createdAt || '',
+  updatedAt: row.updated_at || row.updatedAt || ''
+});
+
+const ensureRemoteDatabase = async () => {
+  const sql = getSqlClient();
+  if (!sql) return false;
+  if (initPromise) return initPromise;
+
+  initPromise = (async () => {
+    await sql`
+      CREATE TABLE IF NOT EXISTS collections (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        label TEXT NOT NULL,
+        tags TEXT NOT NULL,
+        type TEXT NOT NULL,
+        status TEXT NOT NULL,
+        price INTEGER NOT NULL DEFAULT 0,
+        popular INTEGER NOT NULL DEFAULT 0,
+        rating REAL NOT NULL DEFAULT 0,
+        badge TEXT NOT NULL DEFAULT '',
+        image TEXT NOT NULL,
+        description TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS contact_messages (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        email TEXT NOT NULL,
+        room_type TEXT NOT NULL,
+        message TEXT NOT NULL,
+        status TEXT NOT NULL,
+        source TEXT NOT NULL,
+        reply_message TEXT NOT NULL DEFAULT '',
+        replied_at TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    `;
+
+    const collectionCount = await sql`SELECT COUNT(*)::int AS count FROM collections`;
+    if (Number(collectionCount?.[0]?.count || 0) === 0) {
+      for (const row of DEFAULT_COLLECTIONS) {
+        await sql`
+          INSERT INTO collections (
+            id, name, label, tags, type, status, price, popular, rating, badge, image, description, updated_at
+          ) VALUES (
+            ${row.id},
+            ${row.name},
+            ${row.label},
+            ${row.tags},
+            ${row.type},
+            ${row.status},
+            ${Number(row.price) || 0},
+            ${Number(row.popular) || 0},
+            ${Number(row.rating) || 0},
+            ${row.badge || ''},
+            ${row.image},
+            ${row.description},
+            ${row.updatedAt || new Date().toISOString()}
+          )
+        `;
+      }
+    }
+  })();
+
+  return initPromise;
+};
 
 const normalizeState = (state) => ({
   collections: Array.isArray(state?.collections) ? state.collections : clone(DEFAULT_COLLECTIONS),
@@ -104,62 +219,231 @@ const saveState = (state) => {
   return memoryState;
 };
 
-const getCollections = () => clone(loadState().collections).sort((a, b) => {
-  const left = new Date(b.updatedAt || 0).getTime();
-  const right = new Date(a.updatedAt || 0).getTime();
-  return left - right;
-});
+const getCollections = async () => {
+  if (!hasRemoteDatabase()) {
+    return clone(loadState().collections).sort((a, b) => {
+      const left = new Date(b.updatedAt || 0).getTime();
+      const right = new Date(a.updatedAt || 0).getTime();
+      return left - right;
+    });
+  }
 
-const setCollections = (collections) => {
-  const state = loadState();
-  state.collections = clone(collections);
-  saveState(state);
+  const sql = getSqlClient();
+  await ensureRemoteDatabase();
+  const rows = await sql`
+    SELECT id, name, label, tags, type, status, price, popular, rating, badge, image, description, updated_at
+    FROM collections
+    ORDER BY updated_at DESC
+  `;
+  return rows.map(mapCollectionRow);
+};
+
+const setCollections = async (collections) => {
+  if (!hasRemoteDatabase()) {
+    const state = loadState();
+    state.collections = clone(collections);
+    saveState(state);
+    return getCollections();
+  }
+
+  const sql = getSqlClient();
+  await ensureRemoteDatabase();
+  await sql`DELETE FROM collections`;
+  for (const row of collections) {
+    await sql`
+      INSERT INTO collections (
+        id, name, label, tags, type, status, price, popular, rating, badge, image, description, updated_at
+      ) VALUES (
+        ${row.id},
+        ${row.name},
+        ${row.label},
+        ${row.tags},
+        ${row.type},
+        ${row.status},
+        ${Number(row.price) || 0},
+        ${Number(row.popular) || 0},
+        ${Number(row.rating) || 0},
+        ${row.badge || ''},
+        ${row.image},
+        ${row.description},
+        ${row.updatedAt || new Date().toISOString()}
+      )
+    `;
+  }
   return getCollections();
 };
 
-const upsertCollection = (row) => {
-  const collections = loadState().collections.slice();
-  const index = collections.findIndex((item) => item.id === row.id);
-  if (index >= 0) {
-    collections[index] = row;
-  } else {
-    collections.unshift(row);
+const upsertCollection = async (row) => {
+  if (!hasRemoteDatabase()) {
+    const collections = loadState().collections.slice();
+    const index = collections.findIndex((item) => item.id === row.id);
+    if (index >= 0) {
+      collections[index] = row;
+    } else {
+      collections.unshift(row);
+    }
+    return setCollections(collections);
   }
-  return setCollections(collections);
+
+  const sql = getSqlClient();
+  await ensureRemoteDatabase();
+  await sql`
+    INSERT INTO collections (
+      id, name, label, tags, type, status, price, popular, rating, badge, image, description, updated_at
+    ) VALUES (
+      ${row.id},
+      ${row.name},
+      ${row.label},
+      ${row.tags},
+      ${row.type},
+      ${row.status},
+      ${Number(row.price) || 0},
+      ${Number(row.popular) || 0},
+      ${Number(row.rating) || 0},
+      ${row.badge || ''},
+      ${row.image},
+      ${row.description},
+      ${row.updatedAt || new Date().toISOString()}
+    )
+    ON CONFLICT (id) DO UPDATE SET
+      name = EXCLUDED.name,
+      label = EXCLUDED.label,
+      tags = EXCLUDED.tags,
+      type = EXCLUDED.type,
+      status = EXCLUDED.status,
+      price = EXCLUDED.price,
+      popular = EXCLUDED.popular,
+      rating = EXCLUDED.rating,
+      badge = EXCLUDED.badge,
+      image = EXCLUDED.image,
+      description = EXCLUDED.description,
+      updated_at = EXCLUDED.updated_at
+  `;
+  return row;
 };
 
-const deleteCollection = (id) => {
-  const collections = loadState().collections.filter((item) => item.id !== id);
-  setCollections(collections);
+const deleteCollection = async (id) => {
+  if (!hasRemoteDatabase()) {
+    const collections = loadState().collections.filter((item) => item.id !== id);
+    setCollections(collections);
+    return;
+  }
+
+  const sql = getSqlClient();
+  await ensureRemoteDatabase();
+  await sql`DELETE FROM collections WHERE id = ${id}`;
 };
 
-const getMessages = () => clone(loadState().contactMessages).sort((a, b) => {
-  const left = new Date(b.createdAt || 0).getTime();
-  const right = new Date(a.createdAt || 0).getTime();
-  return left - right;
-});
+const getMessages = async () => {
+  if (!hasRemoteDatabase()) {
+    return clone(loadState().contactMessages).sort((a, b) => {
+      const left = new Date(b.createdAt || 0).getTime();
+      const right = new Date(a.createdAt || 0).getTime();
+      return left - right;
+    });
+  }
 
-const setMessages = (messages) => {
-  const state = loadState();
-  state.contactMessages = clone(messages);
-  saveState(state);
+  const sql = getSqlClient();
+  await ensureRemoteDatabase();
+  const rows = await sql`
+    SELECT id, name, phone, email, room_type, message, status, source, reply_message, replied_at, created_at, updated_at
+    FROM contact_messages
+    ORDER BY created_at DESC
+  `;
+  return rows.map(mapMessageRow);
+};
+
+const setMessages = async (messages) => {
+  if (!hasRemoteDatabase()) {
+    const state = loadState();
+    state.contactMessages = clone(messages);
+    saveState(state);
+    return getMessages();
+  }
+
+  const sql = getSqlClient();
+  await ensureRemoteDatabase();
+  await sql`DELETE FROM contact_messages`;
+  for (const row of messages) {
+    await sql`
+      INSERT INTO contact_messages (
+        id, name, phone, email, room_type, message, status, source, reply_message, replied_at, created_at, updated_at
+      ) VALUES (
+        ${row.id},
+        ${row.name},
+        ${row.phone},
+        ${row.email},
+        ${row.roomType},
+        ${row.message},
+        ${row.status},
+        ${row.source},
+        ${row.replyMessage || ''},
+        ${row.repliedAt || ''},
+        ${row.createdAt || new Date().toISOString()},
+        ${row.updatedAt || new Date().toISOString()}
+      )
+    `;
+  }
   return getMessages();
 };
 
-const upsertMessage = (row) => {
-  const messages = loadState().contactMessages.slice();
-  const index = messages.findIndex((item) => item.id === row.id);
-  if (index >= 0) {
-    messages[index] = row;
-  } else {
-    messages.unshift(row);
+const upsertMessage = async (row) => {
+  if (!hasRemoteDatabase()) {
+    const messages = loadState().contactMessages.slice();
+    const index = messages.findIndex((item) => item.id === row.id);
+    if (index >= 0) {
+      messages[index] = row;
+    } else {
+      messages.unshift(row);
+    }
+    return setMessages(messages);
   }
-  return setMessages(messages);
+
+  const sql = getSqlClient();
+  await ensureRemoteDatabase();
+  await sql`
+    INSERT INTO contact_messages (
+      id, name, phone, email, room_type, message, status, source, reply_message, replied_at, created_at, updated_at
+    ) VALUES (
+      ${row.id},
+      ${row.name},
+      ${row.phone},
+      ${row.email},
+      ${row.roomType},
+      ${row.message},
+      ${row.status},
+      ${row.source},
+      ${row.replyMessage || ''},
+      ${row.repliedAt || ''},
+      ${row.createdAt || new Date().toISOString()},
+      ${row.updatedAt || new Date().toISOString()}
+    )
+    ON CONFLICT (id) DO UPDATE SET
+      name = EXCLUDED.name,
+      phone = EXCLUDED.phone,
+      email = EXCLUDED.email,
+      room_type = EXCLUDED.room_type,
+      message = EXCLUDED.message,
+      status = EXCLUDED.status,
+      source = EXCLUDED.source,
+      reply_message = EXCLUDED.reply_message,
+      replied_at = EXCLUDED.replied_at,
+      created_at = COALESCE(contact_messages.created_at, EXCLUDED.created_at),
+      updated_at = EXCLUDED.updated_at
+  `;
+  return row;
 };
 
-const deleteMessage = (id) => {
-  const messages = loadState().contactMessages.filter((item) => item.id !== id);
-  setMessages(messages);
+const deleteMessage = async (id) => {
+  if (!hasRemoteDatabase()) {
+    const messages = loadState().contactMessages.filter((item) => item.id !== id);
+    setMessages(messages);
+    return;
+  }
+
+  const sql = getSqlClient();
+  await ensureRemoteDatabase();
+  await sql`DELETE FROM contact_messages WHERE id = ${id}`;
 };
 
 const readJson = async (req) => new Promise((resolve, reject) => {

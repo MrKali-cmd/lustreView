@@ -31,7 +31,7 @@ module.exports = async (req, res) => {
   }
 
   const payload = await readJson(req);
-  const existing = getMessages().find((item) => item.id === id);
+  const existing = (await getMessages()).find((item) => item.id === id);
   const fallbackMessage = payload.messageData && typeof payload.messageData === 'object'
     ? payload.messageData
     : null;
@@ -101,7 +101,7 @@ module.exports = async (req, res) => {
     updatedAt: new Date().toISOString()
   };
 
-  upsertMessage(updated);
+  await upsertMessage(updated);
 
   sendJson(res, 200, {
     ...updated,

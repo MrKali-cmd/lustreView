@@ -20,7 +20,7 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'GET') {
-    const row = getCollections().find((item) => item.id === id);
+    const row = (await getCollections()).find((item) => item.id === id);
     if (!row) {
       sendJson(res, 404, { error: 'Collection not found' });
       return;
@@ -32,7 +32,7 @@ module.exports = async (req, res) => {
   if (req.method === 'PUT' || req.method === 'PATCH') {
     if (!requireAdminAuth(req, res)) return;
     const payload = await readJson(req);
-    const existing = getCollections().find((item) => item.id === id) || {};
+    const existing = (await getCollections()).find((item) => item.id === id) || {};
     const now = new Date().toISOString().slice(0, 10);
     const row = {
       id,
@@ -50,14 +50,14 @@ module.exports = async (req, res) => {
       updatedAt: payload.updatedAt || now
     };
 
-    upsertCollection(row);
+    await upsertCollection(row);
     sendJson(res, 200, row);
     return;
   }
 
   if (req.method === 'DELETE') {
     if (!requireAdminAuth(req, res)) return;
-    deleteCollection(id);
+    await deleteCollection(id);
     sendJson(res, 204, {});
     return;
   }

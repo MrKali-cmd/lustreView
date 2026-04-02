@@ -20,7 +20,7 @@ module.exports = async (req, res) => {
 
   if (req.method === 'GET') {
     if (!requireAdminAuth(req, res)) return;
-    sendJson(res, 200, getMessages());
+    sendJson(res, 200, await getMessages());
     return;
   }
 
@@ -58,7 +58,7 @@ module.exports = async (req, res) => {
       updatedAt: now
     };
 
-    upsertMessage(row);
+    await upsertMessage(row);
 
     const shouldNotifyAdmin = source !== 'checkout';
     const mailWarning = shouldNotifyAdmin ? getMailConfigError() : '';
