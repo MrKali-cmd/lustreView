@@ -7,7 +7,7 @@
     <title>Order Confirmed | Luxe Drapes</title>
     <meta name="robots" content="noindex, nofollow">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=1775341815735">
+    <link rel="stylesheet" href="style.css?v=1775343983642">
     <style>
         :root {
             --success-bg: #f6f1e8;
@@ -220,9 +220,16 @@
 
             if (!lastOrder) return;
 
+            if (params.get('payment') === 'success') {
+                localStorage.removeItem('luxeCart');
+            }
+
             const orderId = params.get('order') || lastOrder.id || 'Pending';
             document.getElementById('success-order-id').textContent = orderId;
-            document.getElementById('success-payment').textContent = lastOrder.paymentMethod || 'Pending';
+            document.getElementById('success-payment').textContent =
+                params.get('payment') === 'success'
+                    ? 'Stripe payment received'
+                    : (lastOrder.paymentMethod || 'Pending');
             document.getElementById('success-city').textContent = lastOrder.city || 'Pending';
             document.getElementById('success-total').textContent = formatUsd(lastOrder.total || 0);
         })();

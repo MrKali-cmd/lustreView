@@ -220,9 +220,16 @@
 
             if (!lastOrder) return;
 
+            if (params.get('payment') === 'success') {
+                localStorage.removeItem('luxeCart');
+            }
+
             const orderId = params.get('order') || lastOrder.id || 'Pending';
             document.getElementById('success-order-id').textContent = orderId;
-            document.getElementById('success-payment').textContent = lastOrder.paymentMethod || 'Pending';
+            document.getElementById('success-payment').textContent =
+                params.get('payment') === 'success'
+                    ? 'Stripe payment received'
+                    : (lastOrder.paymentMethod || 'Pending');
             document.getElementById('success-city').textContent = lastOrder.city || 'Pending';
             document.getElementById('success-total').textContent = formatUsd(lastOrder.total || 0);
         })();

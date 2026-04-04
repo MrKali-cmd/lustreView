@@ -3,7 +3,8 @@
   "private": true,
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
-    "nodemailer": "^6.9.15"
+    "nodemailer": "^6.9.15",
+    "stripe": "^22.0.0"
   },
   "scripts": {
     "build": "npm --prefix admin/tailadmin-free-tailwind-dashboard-template-main install && npm --prefix admin/tailadmin-free-tailwind-dashboard-template-main run build && node scripts/sync-admin-build.js && node scripts/prepare-public.js",
