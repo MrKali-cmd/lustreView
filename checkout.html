@@ -411,7 +411,7 @@
 
                         <label class="checkout-field">
                             <span>City / area</span>
-                            <input id="checkout-city" name="city" type="text" placeholder="Kabul, Shahr-e-Naw" required>
+                            <input id="checkout-city" name="city" type="text" placeholder="New York, Manhattan" required>
                         </label>
 
                         <label class="checkout-field full">
@@ -425,7 +425,7 @@
                                 <option value="">Choose a payment method</option>
                                 <option>Cash on delivery</option>
                                 <option>Bank transfer</option>
-                                <option>Pay online by card (Stripe)</option>
+                                <option>Card payment on confirmation</option>
                             </select>
                         </label>
 
@@ -543,7 +543,6 @@
             const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
             const header = document.querySelector('header');
             const mobileMenuIcon = mobileMenuBtn?.querySelector('i');
-            const queryParams = new URLSearchParams(window.location.search);
             const formatUsd = (value) => `$${(Number(value || 0) / USD_RATE).toLocaleString('en-US', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
@@ -556,16 +555,6 @@
             const setStatus = (message, kind = '') => {
                 checkoutStatus.textContent = message || '';
                 checkoutStatus.className = `checkout-status ${kind}`.trim();
-            };
-
-            const parseResponse = async (response) => {
-                const raw = await response.text();
-                if (!raw) return {};
-                try {
-                    return JSON.parse(raw);
-                } catch {
-                    return { error: raw };
-                }
             };
 
             const closeMobileMenu = () => {
@@ -678,35 +667,24 @@
                 };
 
                 checkoutSubmit.disabled = true;
-                setStatus(
-                    paymentMethod === 'Pay online by card (Stripe)'
-                        ? 'Redirecting to secure payment...'
-                        : 'Placing your order...',
-                    ''
-                );
+                setStatus('Placing your order...', '');
 
                 try {
-                    if (paymentMethod === 'Pay online by card (Stripe)') {
-                        const response = await fetch('/api/checkout/session', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(orderPayload)
-                        });
-                        const payload = await parseResponse(response);
-                        if (!response.ok) {
-                            throw new Error(payload.error || `Stripe checkout failed (${response.status})`);
-                        }
-                        localStorage.setItem('luxeLastOrder', JSON.stringify(payload.order || orderPayload));
-                        window.location.href = payload.url;
-                        return;
-                    }
-
                     const response = await fetch('/api/orders', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(orderPayload)
                     });
-                    const payload = await parseResponse(response);
+
+                    const raw = await response.text();
+                    let payload = {};
+                    if (raw) {
+                        try {
+                            payload = JSON.parse(raw);
+                        } catch {
+                            payload = { error: raw };
+                        }
+                    }
 
                     if (!response.ok) {
                         throw new Error(payload.error || `Order placement failed (${response.status})`);
@@ -720,9 +698,7 @@
                 } catch (error) {
                     setStatus(error.message || 'Could not place your order.', 'is-error');
                 } finally {
-                    if (paymentMethod !== 'Pay online by card (Stripe)') {
-                        cart.clear();
-                    }
+                    cart.clear();
                     renderSummary();
                 }
             });
@@ -734,10 +710,6 @@
             window.addEventListener('resize', () => {
                 if (window.innerWidth > 768) closeMobileMenu();
             });
-
-            if (queryParams.get('payment') === 'cancelled') {
-                setStatus('Payment was cancelled. Your cart is still here if you want to try again.', 'is-error');
-            }
 
             renderSummary();
         })();
