@@ -743,33 +743,10 @@
     </style>
 </head>
 
-<body>
+<body data-site-page="collection">
 
-    <header>
-        <nav class="nav-container">
-            <a href="index.html" class="logo">
-                <i class="fas fa-feather-pointed"></i>
-                Luxe <span>Drapes</span>
-            </a>
-
-            <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="index.html#products">Collections</a></li>
-                <li><a href="wishlist.html">Wishlist</a></li>
-                <li><a href="checkout.html">Checkout</a></li>
-                <li><a href="index.html#contact">Contact</a></li>
-            </ul>
-
-            <a href="cart.html" class="header-cart-link" aria-label="Open cart">
-                <i class="fas fa-shopping-bag"></i>
-                <span class="header-cart-count" data-cart-count>0</span>
-            </a>
-            <button class="header-btn" type="button">Start Checkout</button>
-            <button class="mobile-menu-btn" type="button" aria-label="Open menu" aria-expanded="false">
-                <i class="fas fa-bars"></i>
-            </button>
-        </nav>
-    </header>
+    <div data-site-header></div>
+    <script src="site-header.js"></script>
 
     <section class="collection-hero">
         <div class="video-bg">
@@ -907,6 +884,7 @@
         const headerConsultBtn = document.querySelector('header .header-btn');
         const headerCartLink = document.querySelector('.header-cart-link');
         const headerCartCount = document.querySelector('[data-cart-count]');
+        const headerWishlistCount = document.querySelector('[data-wishlist-count]');
 
         const USD_RATE = 42000;
         const wishlistKey = 'luxeFavorites';
@@ -932,6 +910,12 @@
             const count = readSet(cartKey).size;
             headerCartCount.textContent = String(count);
             headerCartCount.classList.toggle('has-items', count > 0);
+        };
+        const syncHeaderWishlist = () => {
+            if (!headerWishlistCount) return;
+            const count = readSet(wishlistKey).size;
+            headerWishlistCount.textContent = String(count);
+            headerWishlistCount.classList.toggle('has-items', count > 0);
         };
         const bumpHeaderCart = () => {
             if (!headerCartLink) return;
@@ -960,6 +944,9 @@
             writeSet(storageKey, values);
             if (storageKey === cartKey) {
                 syncHeaderCart();
+            }
+            if (storageKey === wishlistKey) {
+                syncHeaderWishlist();
             }
             return !alreadyExists;
         };
@@ -1082,17 +1069,7 @@
             mobileMenuBtn.setAttribute('aria-expanded', 'false');
             mobileMenuBtn.setAttribute('aria-label', 'Open menu');
             if (mobileMenuIcon) {
-                mobileMenuIcon.className = 'fas fa-bars';
-            }
-        };
-
-        const toggleMobileMenu = () => {
-            if (!header || !mobileMenuBtn) return;
-            const isOpen = header.classList.toggle('menu-open');
-            mobileMenuBtn.setAttribute('aria-expanded', String(isOpen));
-            mobileMenuBtn.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
-            if (mobileMenuIcon) {
-                mobileMenuIcon.className = isOpen ? 'fas fa-xmark' : 'fas fa-bars';
+                mobileMenuIcon.className = 'fa-solid fa-bars-staggered';
             }
         };
 
@@ -1193,10 +1170,10 @@
             header.classList.toggle('scrolled', window.scrollY > 50);
         });
 
-        mobileMenuBtn?.addEventListener('click', toggleMobileMenu);
         headerConsultBtn?.addEventListener('click', () => {
             window.location.href = 'index.html#contact';
         });
+        syncHeaderWishlist();
         syncHeaderCart();
         document.querySelectorAll('.nav-links a').forEach((link) => {
             link.addEventListener('click', () => {

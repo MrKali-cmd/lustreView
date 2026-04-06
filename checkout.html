@@ -352,31 +352,9 @@
     </style>
 </head>
 
-<body>
-    <header>
-        <nav class="nav-container">
-            <a href="index.html" class="logo">
-                <i class="fas fa-feather-pointed"></i>
-                Luxe <span>Drapes</span>
-            </a>
-
-            <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="index.html#products">Collections</a></li>
-                <li><a href="wishlist.html">Wishlist</a></li>
-                <li><a href="checkout.html">Checkout</a></li>
-                <li><a href="index.html#contact">Contact</a></li>
-            </ul>
-
-            <a href="cart.html" class="header-cart-link" aria-label="Open cart">
-                <i class="fas fa-shopping-bag"></i>
-                <span class="header-cart-count" data-cart-count>0</span>
-            </a>
-            <button class="mobile-menu-btn" type="button" aria-label="Open menu" aria-expanded="false">
-                <i class="fas fa-bars"></i>
-            </button>
-        </nav>
-    </header>
+<body data-site-page="checkout">
+    <div data-site-header></div>
+    <script src="site-header.js"></script>
 
     <main class="checkout-shell">
         <section class="checkout-hero">
@@ -547,6 +525,7 @@
             const header = document.querySelector('header');
             const mobileMenuIcon = mobileMenuBtn?.querySelector('i');
             const headerCartCount = document.querySelector('[data-cart-count]');
+            const headerWishlistCount = document.querySelector('[data-wishlist-count]');
             const formatUsd = (value) => `$${(Number(value || 0) / USD_RATE).toLocaleString('en-US', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
@@ -567,17 +546,7 @@
                 mobileMenuBtn.setAttribute('aria-expanded', 'false');
                 mobileMenuBtn.setAttribute('aria-label', 'Open menu');
                 if (mobileMenuIcon) {
-                    mobileMenuIcon.className = 'fas fa-bars';
-                }
-            };
-
-            const toggleMobileMenu = () => {
-                if (!header || !mobileMenuBtn) return;
-                const isOpen = header.classList.toggle('menu-open');
-                mobileMenuBtn.setAttribute('aria-expanded', String(isOpen));
-                mobileMenuBtn.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
-                if (mobileMenuIcon) {
-                    mobileMenuIcon.className = isOpen ? 'fas fa-xmark' : 'fas fa-bars';
+                    mobileMenuIcon.className = 'fa-solid fa-bars-staggered';
                 }
             };
 
@@ -588,6 +557,11 @@
                 if (headerCartCount) {
                     headerCartCount.textContent = String(items.length);
                     headerCartCount.classList.toggle('has-items', items.length > 0);
+                }
+                if (headerWishlistCount) {
+                    const wishlistCount = new Set(JSON.parse(localStorage.getItem('luxeFavorites') || '[]')).size;
+                    headerWishlistCount.textContent = String(wishlistCount);
+                    headerWishlistCount.classList.toggle('has-items', wishlistCount > 0);
                 }
 
                 checkoutCount.textContent = `${items.length} item${items.length === 1 ? '' : 's'}`;
@@ -712,7 +686,6 @@
                 }
             });
 
-            mobileMenuBtn?.addEventListener('click', toggleMobileMenu);
             document.querySelectorAll('.nav-links a').forEach((link) => {
                 link.addEventListener('click', closeMobileMenu);
             });

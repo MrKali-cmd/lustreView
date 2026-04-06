@@ -11,29 +11,9 @@
     <link rel="stylesheet" href="saved-pages.css">
 </head>
 
-<body data-saved-page="wishlist">
-    <header>
-        <nav class="nav-container">
-            <a href="index.html" class="logo">
-                <i class="fas fa-feather-pointed"></i>
-                Luxe <span>Drapes</span>
-            </a>
-            <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="index.html#products">Collections</a></li>
-                <li><a href="wishlist.html">Wishlist</a></li>
-                <li><a href="checkout.html">Checkout</a></li>
-                <li><a href="index.html#contact">Contact</a></li>
-            </ul>
-            <a href="cart.html" class="header-cart-link" aria-label="Open cart">
-                <i class="fas fa-shopping-bag"></i>
-                <span class="header-cart-count" data-cart-count>0</span>
-            </a>
-            <button class="mobile-menu-btn" type="button" aria-label="Open menu" aria-expanded="false" onclick="console.log('[mobile-menu] inline click', window.location.pathname)">
-                <i class="fas fa-bars"></i>
-            </button>
-        </nav>
-    </header>
+<body data-saved-page="wishlist" data-site-page="wishlist">
+    <div data-site-header></div>
+    <script src="site-header.js"></script>
 
     <main class="saved-page-shell">
         <section class="saved-page-hero">

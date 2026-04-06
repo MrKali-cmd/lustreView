@@ -47,6 +47,7 @@
     const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
     const mobileMenuIcon = mobileMenuBtn?.querySelector('i');
     const headerCartCount = document.querySelector('[data-cart-count]');
+    const headerWishlistCount = document.querySelector('[data-wishlist-count]');
     let focusTimer = null;
     const USD_RATE = 42000;
 
@@ -109,6 +110,11 @@
             headerCartCount.textContent = String(cartSet.size);
             headerCartCount.classList.toggle('has-items', cartSet.size > 0);
         }
+        if (headerWishlistCount) {
+            const wishlistSet = readSet(storageKeys.wishlist);
+            headerWishlistCount.textContent = String(wishlistSet.size);
+            headerWishlistCount.classList.toggle('has-items', wishlistSet.size > 0);
+        }
 
         renderSummary(items);
 
@@ -161,24 +167,8 @@
         mobileMenuBtn.setAttribute('aria-expanded', 'false');
         mobileMenuBtn.setAttribute('aria-label', 'Open menu');
         if (mobileMenuIcon) {
-            mobileMenuIcon.className = 'fas fa-bars';
+            mobileMenuIcon.className = 'fa-solid fa-bars-staggered';
         }
-    };
-
-    const toggleMobileMenu = () => {
-        if (!header || !mobileMenuBtn) return;
-        const isOpen = header.classList.toggle('menu-open');
-        mobileMenuBtn.setAttribute('aria-expanded', String(isOpen));
-        mobileMenuBtn.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
-        if (mobileMenuIcon) {
-            mobileMenuIcon.className = isOpen ? 'fas fa-xmark' : 'fas fa-bars';
-        }
-        console.log('[mobile-menu] toggle', {
-            page: window.location.pathname,
-            isOpen,
-            headerClass: header.className,
-            buttonAriaExpanded: mobileMenuBtn.getAttribute('aria-expanded')
-        });
     };
 
     const moveBetweenLists = (sourceKey, targetKey, itemKey) => {
@@ -224,37 +214,6 @@
         }
     });
 
-    mobileMenuBtn?.addEventListener('click', toggleMobileMenu);
-    if (mobileMenuBtn) {
-        console.log('[mobile-menu] init', {
-            page: window.location.pathname,
-            buttonFound: true,
-            headerClass: header?.className || '',
-            buttonRect: mobileMenuBtn.getBoundingClientRect()
-        });
-        document.addEventListener('click', (event) => {
-            const clickedMenu = event.target.closest('.mobile-menu-btn');
-            const clickedHeader = event.target.closest('header');
-            if (!clickedMenu && !clickedHeader) return;
-            const topElement = document.elementFromPoint(event.clientX, event.clientY);
-            console.log('[mobile-menu] click', {
-                page: window.location.pathname,
-                targetTag: event.target.tagName,
-                targetClass: event.target.className,
-                clickedMenu: Boolean(clickedMenu),
-                clickedHeader: Boolean(clickedHeader),
-                topElementTag: topElement?.tagName || null,
-                topElementClass: topElement?.className || null,
-                headerClass: header?.className || '',
-                buttonRect: mobileMenuBtn.getBoundingClientRect()
-            });
-        }, true);
-    } else {
-        console.warn('[mobile-menu] init failed', {
-            page: window.location.pathname,
-            buttonFound: false
-        });
-    }
     document.querySelectorAll('.nav-links a').forEach((link) => {
         link.addEventListener('click', () => {
             closeMobileMenu();

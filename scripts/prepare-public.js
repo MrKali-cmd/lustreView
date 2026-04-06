@@ -21,6 +21,7 @@ const filesToCopy = [
   'admin/index.html',
   'admin/login.html',
   'style.css',
+  'site-header.js',
   'saved-pages.css',
   'saved-pages.js',
   'catalog-data.js'
@@ -88,6 +89,7 @@ const htmlFilesToVersion = [
 
 const versionedAssets = [
   [/style\.css(?:\?v=[^"]*)?/g, `style.css?v=${buildVersion}`],
+  [/site-header\.js(?:\?v=[^"]*)?/g, `site-header.js?v=${buildVersion}`],
   [/saved-pages\.css(?:\?v=[^"]*)?/g, `saved-pages.css?v=${buildVersion}`],
   [/saved-pages\.js(?:\?v=[^"]*)?/g, `saved-pages.js?v=${buildVersion}`],
   [/catalog-data\.js(?:\?v=[^"]*)?/g, `catalog-data.js?v=${buildVersion}`],

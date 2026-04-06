@@ -12,34 +12,10 @@
 
 </head>
 
-<body>
+<body data-site-page="home">
 
-    <header>
-        <nav class="nav-container">
-            <a href="#" class="logo">
-                <i class="fas fa-feather-pointed"></i>
-                Luxe <span>Drapes</span>
-            </a>
-
-            <ul class="nav-links">
-                <li><a href="#home">Home</a></li>
-                <li><a href="zebra-collection.html">Collections</a></li>
-                <li><a href="wishlist.html">Wishlist</a></li>
-                <li><a href="checkout.html">Checkout</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-
-            <a href="cart.html" class="header-cart-link" aria-label="Open cart">
-                <i class="fas fa-shopping-bag"></i>
-                <span class="header-cart-count" data-cart-count>0</span>
-            </a>
-            <button class="header-btn" type="button">Start Checkout</button>
-            <button class="mobile-menu-btn" type="button" aria-label="Open menu" aria-expanded="false">
-                <i class="fas fa-bars"></i>
-            </button>
-        </nav>
-    </header>
+    <div data-site-header></div>
+    <script src="site-header.js"></script>
 
     <section class="hero-premium" id="home">
         <div class="hero-inner">
@@ -531,6 +507,7 @@
         const headerConsultBtn = document.querySelector('header .header-btn');
         const headerCartCount = document.querySelector('[data-cart-count]');
         const headerCartLink = document.querySelector('.header-cart-link');
+        const headerWishlistCount = document.querySelector('[data-wishlist-count]');
         const filterButtons = document.querySelectorAll('.products-filter .filter-btn');
         const productCards = Array.from(document.querySelectorAll('.products-grid .product-card:not(.explore-card)'));
         const productsGrid = document.querySelector('.products-grid');
@@ -621,6 +598,12 @@
                 const count = cart.size;
                 headerCartCount.textContent = String(count);
                 headerCartCount.classList.toggle('has-items', count > 0);
+            }
+
+            if (headerWishlistCount) {
+                const count = favorites.size;
+                headerWishlistCount.textContent = String(count);
+                headerWishlistCount.classList.toggle('has-items', count > 0);
             }
         };
 
@@ -822,56 +805,9 @@
             mobileMenuBtn.setAttribute('aria-expanded', 'false');
             mobileMenuBtn.setAttribute('aria-label', 'Open menu');
             if (mobileMenuIcon) {
-                mobileMenuIcon.className = 'fas fa-bars';
+                mobileMenuIcon.className = 'fa-solid fa-bars-staggered';
             }
         };
-
-        const toggleMobileMenu = () => {
-            if (!header || !mobileMenuBtn) return;
-            const isOpen = header.classList.toggle('menu-open');
-            mobileMenuBtn.setAttribute('aria-expanded', String(isOpen));
-            mobileMenuBtn.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
-            if (mobileMenuIcon) {
-                mobileMenuIcon.className = isOpen ? 'fas fa-xmark' : 'fas fa-bars';
-            }
-            console.log('[mobile-menu] toggle', {
-                page: window.location.pathname,
-                isOpen,
-                headerClass: header.className,
-                buttonAriaExpanded: mobileMenuBtn.getAttribute('aria-expanded')
-            });
-        };
-
-        if (mobileMenuBtn) {
-            console.log('[mobile-menu] init', {
-                page: window.location.pathname,
-                buttonFound: true,
-                headerClass: header?.className || '',
-                buttonRect: mobileMenuBtn.getBoundingClientRect()
-            });
-            document.addEventListener('click', (event) => {
-                const clickedMenu = event.target.closest('.mobile-menu-btn');
-                const clickedHeader = event.target.closest('header');
-                if (!clickedMenu && !clickedHeader) return;
-                const topElement = document.elementFromPoint(event.clientX, event.clientY);
-                console.log('[mobile-menu] click', {
-                    page: window.location.pathname,
-                    targetTag: event.target.tagName,
-                    targetClass: event.target.className,
-                    clickedMenu: Boolean(clickedMenu),
-                    clickedHeader: Boolean(clickedHeader),
-                    topElementTag: topElement?.tagName || null,
-                    topElementClass: topElement?.className || null,
-                    headerClass: header?.className || '',
-                    buttonRect: mobileMenuBtn.getBoundingClientRect()
-                });
-            }, true);
-        } else {
-            console.warn('[mobile-menu] init failed', {
-                page: window.location.pathname,
-                buttonFound: false
-            });
-        }
 
         const autoPlayTime = 6000;
 
@@ -945,7 +881,6 @@
             });
         });
 
-        mobileMenuBtn?.addEventListener('click', toggleMobileMenu);
         window.addEventListener('resize', () => {
             if (window.innerWidth > 768) closeMobileMenu();
             applyMobileProductLayout();
