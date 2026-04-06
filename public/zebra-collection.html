@@ -9,7 +9,7 @@
         href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=1775508059306">
+    <link rel="stylesheet" href="style.css?v=1775508386185">
     <style>
         :root {
             --collection-bg: #f4f2ee;
@@ -326,9 +326,13 @@
             z-index: 2000;
             inset: 0;
             background-color: rgba(10, 10, 10, 0.6);
-            align-items: center;
-            justify-content: center;
             padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal.is-open {
+            display: grid;
+            place-items: center;
         }
 
         .modal-content {
@@ -339,6 +343,9 @@
             width: min(950px, 100%);
             position: relative;
             box-shadow: 0 24px 48px rgba(17, 15, 10, 0.22);
+            margin: auto;
+            max-height: calc(100dvh - 40px);
+            overflow-y: auto;
         }
 
         .collection-toast {
@@ -361,6 +368,10 @@
         .collection-toast.is-visible {
             opacity: 1;
             transform: translateY(0);
+        }
+
+        body.modal-open {
+            overflow: hidden;
         }
 
         .close-modal {
@@ -933,6 +944,15 @@
         const goToSavedPage = (page, itemKey) => {
             window.location.href = `${page}.html?focus=${encodeURIComponent(itemKey)}`;
         };
+        const openModal = () => {
+            modal.classList.add('is-open');
+            document.body.classList.add('modal-open');
+        };
+        const hideModal = () => {
+            modal.classList.remove('is-open');
+            document.body.classList.remove('modal-open');
+            activeModalKey = '';
+        };
         const truncate = (text, max = 90) => {
             const value = String(text || '');
             return value.length > max ? `${value.slice(0, max).trim()}...` : value;
@@ -1117,7 +1137,7 @@
                 modalRating.innerHTML = '';
                 modalRating.style.display = 'none';
             }
-            modal.style.display = 'flex';
+            openModal();
         });
 
         modalPrimaryBtn.addEventListener('click', () => {
@@ -1125,8 +1145,7 @@
             addToSavedList(cartKey, activeModalKey);
             showToast('Added to cart');
             const nextKey = activeModalKey;
-            modal.style.display = 'none';
-            activeModalKey = '';
+            hideModal();
             setTimeout(() => goToSavedPage('cart', nextKey), 180);
         });
 
@@ -1135,20 +1154,17 @@
             addToSavedList(wishlistKey, activeModalKey);
             showToast('Added to wishlist');
             const nextKey = activeModalKey;
-            modal.style.display = 'none';
-            activeModalKey = '';
+            hideModal();
             setTimeout(() => goToSavedPage('wishlist', nextKey), 180);
         });
 
         closeModal.addEventListener('click', () => {
-            modal.style.display = 'none';
-            activeModalKey = '';
+            hideModal();
         });
 
         window.addEventListener('click', (e) => {
             if (e.target === modal) {
-                modal.style.display = 'none';
-                activeModalKey = '';
+                hideModal();
             }
         });
 
