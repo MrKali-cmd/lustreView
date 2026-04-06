@@ -77,6 +77,13 @@
         border-color: rgba(201, 169, 98, 0.42);
         color: #d4af37;
       }
+
+      .order-help {
+        display: inline-flex;
+        margin-top: 6px;
+        font-size: 12px;
+        color: #94a3b8;
+      }
     </style>
   </head>
   <body
@@ -221,6 +228,19 @@
           return `${first} + ${list.length - 1} more`;
         };
 
+        const paymentHint = (order) => {
+          if (order.paymentMethod === "Cash on delivery") {
+            return "Collect payment at delivery.";
+          }
+          if (order.paymentMethod === "Bank transfer") {
+            return "Share bank details or verify incoming transfer.";
+          }
+          if (order.paymentMethod === "Stripe card payment" || order.paymentMethod === "Pay online by card (Stripe)") {
+            return "Payment already completed online.";
+          }
+          return "Review payment flow for this order.";
+        };
+
         const renderMetrics = (orders) => {
           metrics.total.textContent = String(orders.length);
           metrics.pending.textContent = String(orders.filter((item) => item.status === "Pending").length);
@@ -252,7 +272,10 @@
                 <div>${escapeHtml(order.city)}</div>
                 <div class="mt-1">${escapeHtml(order.shippingAddress)}</div>
               </td>
-              <td class="px-5 py-4 align-top text-sm text-gray-500 dark:text-gray-400">${escapeHtml(order.paymentMethod)}</td>
+              <td class="px-5 py-4 align-top text-sm text-gray-500 dark:text-gray-400">
+                <div>${escapeHtml(order.paymentMethod)}</div>
+                <span class="order-help">${escapeHtml(paymentHint(order))}</span>
+              </td>
               <td class="px-5 py-4 align-top text-sm font-semibold text-gray-800 dark:text-white/90">${formatUsd(order.total)}</td>
               <td class="px-5 py-4 align-top">
                 <span class="order-pill ${statusClass(order.status)}">${escapeHtml(order.status || "Pending")}</span>
@@ -292,6 +315,7 @@
               <div class="order-line"><span class="text-gray-500 dark:text-gray-400">Items</span><strong class="text-right text-gray-800 dark:text-white/90">${escapeHtml(orderItemsPreview(order.items))}</strong></div>
               <div class="order-line"><span class="text-gray-500 dark:text-gray-400">Delivery</span><strong class="text-right text-gray-800 dark:text-white/90">${escapeHtml(order.city)}</strong></div>
               <div class="order-line"><span class="text-gray-500 dark:text-gray-400">Payment</span><strong class="text-right text-gray-800 dark:text-white/90">${escapeHtml(order.paymentMethod)}</strong></div>
+              <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">${escapeHtml(paymentHint(order))}</div>
               <div class="order-line"><span class="text-gray-500 dark:text-gray-400">Total</span><strong class="text-right text-gray-800 dark:text-white/90">${formatUsd(order.total)}</strong></div>
 
               <div class="order-actions">

@@ -85,6 +85,21 @@
             margin-top: 6px;
         }
 
+        .success-next-step {
+            padding: 18px 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(201, 169, 98, 0.2);
+            background: rgba(201, 169, 98, 0.1);
+            color: #3b3228;
+            line-height: 1.8;
+        }
+
+        .success-next-step strong {
+            display: block;
+            margin-bottom: 6px;
+            color: #171411;
+        }
+
         .success-meta {
             display: grid;
             gap: 14px;
@@ -174,6 +189,11 @@
                 <h1 class="success-title">Your order is now in the Luxe Drapes queue.</h1>
                 <p class="success-desc">We received your order details successfully. Our team can now review the items, confirm availability, and contact you for the next step if needed.</p>
 
+                <div class="success-next-step" id="success-next-step">
+                    <strong>Next step</strong>
+                    We are reviewing your order now.
+                </div>
+
                 <div class="success-actions">
                     <a href="zebra-collection.html" class="btn-primary">Back to collection</a>
                     <a href="index.html" class="btn-secondary">Return home</a>
@@ -217,6 +237,7 @@
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             })}`;
+            const nextStep = document.getElementById('success-next-step');
 
             if (!lastOrder) return;
 
@@ -225,13 +246,40 @@
             }
 
             const orderId = params.get('order') || lastOrder.id || 'Pending';
+            const paymentLabel = params.get('payment') === 'success'
+                ? 'Stripe payment received'
+                : (lastOrder.paymentMethod || 'Pending');
+
             document.getElementById('success-order-id').textContent = orderId;
-            document.getElementById('success-payment').textContent =
-                params.get('payment') === 'success'
-                    ? 'Stripe payment received'
-                    : (lastOrder.paymentMethod || 'Pending');
+            document.getElementById('success-payment').textContent = paymentLabel;
             document.getElementById('success-city').textContent = lastOrder.city || 'Pending';
             document.getElementById('success-total').textContent = formatUsd(lastOrder.total || 0);
+
+            if (!nextStep) return;
+
+            if (paymentLabel === 'Cash on delivery') {
+                nextStep.innerHTML = `
+                    <strong>Next step</strong>
+                    Your order is confirmed. Payment will be collected when the order is delivered.
+                `;
+                return;
+            }
+
+            if (paymentLabel === 'Bank transfer') {
+                nextStep.innerHTML = `
+                    <strong>Next step</strong>
+                    Your order is waiting for transfer confirmation. The admin team should now contact you with bank transfer details or verify your transfer manually.
+                `;
+                return;
+            }
+
+            if (paymentLabel === 'Stripe payment received') {
+                nextStep.innerHTML = `
+                    <strong>Next step</strong>
+                    Your online card payment was completed successfully. The order can now move forward for processing and fulfillment.
+                `;
+                return;
+            }
         })();
     </script>
 </body>
