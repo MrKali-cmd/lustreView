@@ -9,7 +9,7 @@
         href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=1775435622515">
+    <link rel="stylesheet" href="style.css?v=1775436033598">
     <style>
         :root {
             --collection-bg: #f4f2ee;
@@ -339,6 +339,28 @@
             width: min(950px, 100%);
             position: relative;
             box-shadow: 0 24px 48px rgba(17, 15, 10, 0.22);
+        }
+
+        .collection-toast {
+            position: fixed;
+            right: 18px;
+            bottom: 20px;
+            z-index: 2500;
+            padding: 12px 16px;
+            border-radius: 14px;
+            background: rgba(17, 17, 17, 0.94);
+            color: #fff;
+            font-size: 0.92rem;
+            box-shadow: 0 18px 36px rgba(0, 0, 0, 0.25);
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+            transition: opacity 0.24s ease, transform 0.24s ease;
+        }
+
+        .collection-toast.is-visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .close-modal {
@@ -693,16 +715,51 @@
         const grid = document.querySelector('.products-grid');
         const modal = document.getElementById('quick-view-modal');
         const closeModal = document.querySelector('.close-modal');
+        const modalPrimaryBtn = modal.querySelector('.btn-primary');
+        const modalSecondaryBtn = modal.querySelector('.btn-secondary');
         const header = document.querySelector('header');
         const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
         const mobileMenuIcon = mobileMenuBtn?.querySelector('i');
         const headerConsultBtn = document.querySelector('header .header-btn');
 
         const USD_RATE = 42000;
+        const wishlistKey = 'luxeFavorites';
+        const cartKey = 'luxeCart';
+        let activeModalKey = '';
+        let toastTimer = null;
         const formatPrice = (value) => `$${(Number(value || 0) / USD_RATE).toLocaleString('en-US', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         })}`;
+        const readSet = (key) => {
+            try {
+                return new Set(JSON.parse(localStorage.getItem(key) || '[]'));
+            } catch {
+                return new Set();
+            }
+        };
+        const writeSet = (key, values) => {
+            localStorage.setItem(key, JSON.stringify(Array.from(values)));
+        };
+        const showToast = (message) => {
+            let toast = document.querySelector('.collection-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.className = 'collection-toast';
+                document.body.appendChild(toast);
+            }
+            toast.textContent = message;
+            toast.classList.add('is-visible');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('is-visible');
+            }, 2200);
+        };
+        const addToSavedList = (storageKey, itemKey) => {
+            const values = readSet(storageKey);
+            values.add(itemKey);
+            writeSet(storageKey, values);
+        };
         const truncate = (text, max = 90) => {
             const value = String(text || '');
             return value.length > max ? `${value.slice(0, max).trim()}...` : value;
@@ -736,13 +793,13 @@
             grid.innerHTML = visible.map((item) => {
                 const dateKey = formatDateKey(item.updatedAt);
                 return `
-                <div class="product-card" data-category="${item.tags}" data-price="${item.price}" data-date="${dateKey}" data-popular="${item.popular}" data-rating="${item.rating || ''}">
+                <div class="product-card" data-key="${item.name}" data-category="${item.tags}" data-price="${item.price}" data-date="${dateKey}" data-popular="${item.popular}" data-rating="${item.rating || ''}">
                     <div class="product-image">
                         ${item.badge ? `<span class=\"product-badge\">${item.badge}</span>` : ''}
                         <img src="${item.image}" alt="${item.name}" loading="lazy">
                         <div class="product-actions">
-                            <button class="product-action" aria-label="Favorite"><i class="fas fa-heart"></i></button>
-                            <button class="product-action" aria-label="Add to cart"><i class="fas fa-shopping-cart"></i></button>
+                            <button class="product-action favorite-btn" aria-label="Favorite"><i class="fas fa-heart"></i></button>
+                            <button class="product-action cart-btn" aria-label="Add to cart"><i class="fas fa-shopping-cart"></i></button>
                             <button class="product-action quick-view-btn" aria-label="Quick view"><i class="fas fa-eye"></i></button>
                         </div>
                     </div>
@@ -802,6 +859,7 @@
         };
 
         let allItems = [];
+        const getItemByKey = (itemKey) => allItems.find((item) => item.name === itemKey);
 
         const closeMobileMenu = () => {
             if (!header || !mobileMenuBtn) return;
@@ -851,9 +909,26 @@
         });
 
         grid.addEventListener('click', (event) => {
+            const card = event.target.closest('.product-card');
+            if (!card) return;
+            const itemKey = card.dataset.key;
+            if (!itemKey || !getItemByKey(itemKey)) return;
+
+            if (event.target.closest('.favorite-btn')) {
+                addToSavedList(wishlistKey, itemKey);
+                showToast('Added to wishlist');
+                return;
+            }
+
+            if (event.target.closest('.cart-btn')) {
+                addToSavedList(cartKey, itemKey);
+                showToast('Added to cart');
+                return;
+            }
+
             const btn = event.target.closest('.quick-view-btn');
             if (!btn) return;
-            const card = btn.closest('.product-card');
+            activeModalKey = itemKey;
             document.getElementById('modal-image').src = card.querySelector('img').src;
             document.getElementById('modal-name').textContent = card.querySelector('h3').textContent;
             document.getElementById('modal-desc').textContent = card.querySelector('p').textContent;
@@ -870,13 +945,31 @@
             modal.style.display = 'flex';
         });
 
+        modalPrimaryBtn.addEventListener('click', () => {
+            if (!activeModalKey || !getItemByKey(activeModalKey)) return;
+            addToSavedList(cartKey, activeModalKey);
+            showToast('Added to cart');
+            modal.style.display = 'none';
+            activeModalKey = '';
+        });
+
+        modalSecondaryBtn.addEventListener('click', () => {
+            if (!activeModalKey || !getItemByKey(activeModalKey)) return;
+            addToSavedList(wishlistKey, activeModalKey);
+            showToast('Added to wishlist');
+            modal.style.display = 'none';
+            activeModalKey = '';
+        });
+
         closeModal.addEventListener('click', () => {
             modal.style.display = 'none';
+            activeModalKey = '';
         });
 
         window.addEventListener('click', (e) => {
             if (e.target === modal) {
                 modal.style.display = 'none';
+                activeModalKey = '';
             }
         });
 
