@@ -651,9 +651,12 @@
 
                 checkoutSubmit.disabled = true;
                 setStatus('Placing your order...', '');
+                let shouldClearCart = false;
 
                 try {
-                    const response = await fetch('/api/orders', {
+                    const wantsStripeCheckout = paymentMethod === 'Card payment on confirmation';
+                    const endpoint = wantsStripeCheckout ? '/api/checkout/session' : '/api/orders';
+                    const response = await fetch(endpoint, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(orderPayload)
@@ -673,15 +676,25 @@
                         throw new Error(payload.error || `Order placement failed (${response.status})`);
                     }
 
+                    if (wantsStripeCheckout) {
+                        localStorage.setItem('luxeLastOrder', JSON.stringify(payload.order || orderPayload));
+                        shouldClearCart = true;
+                        window.location.href = payload.url;
+                        return;
+                    }
+
                     localStorage.setItem('luxeLastOrder', JSON.stringify(payload));
                     localStorage.removeItem(storageKey);
                     checkoutForm.reset();
+                    shouldClearCart = true;
                     setStatus('Your order was placed successfully.', 'is-success');
                     window.location.href = `order-success.html?order=${encodeURIComponent(payload.id)}`;
                 } catch (error) {
                     setStatus(error.message || 'Could not place your order.', 'is-error');
                 } finally {
-                    cart.clear();
+                    if (shouldClearCart) {
+                        cart.clear();
+                    }
                     renderSummary();
                 }
             });
