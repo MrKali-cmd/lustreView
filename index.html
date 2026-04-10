@@ -15,6 +15,7 @@
 <body data-site-page="home">
 
     <div data-site-header></div>
+    <script src="site-state.js"></script>
     <script src="site-header.js"></script>
 
     <section class="hero-premium" id="home">
@@ -651,25 +652,8 @@
             maximumFractionDigits: 2
         })}`;
 
-        const storage = {
-            favorites: 'luxeFavorites',
-            cart: 'luxeCart'
-        };
-
-        const safeReadSet = (key) => {
-            try {
-                return new Set(JSON.parse(localStorage.getItem(key) || '[]'));
-            } catch {
-                return new Set();
-            }
-        };
-
-        const safeWriteSet = (key, set) => {
-            localStorage.setItem(key, JSON.stringify(Array.from(set)));
-        };
-
-        const favorites = safeReadSet(storage.favorites);
-        const cart = safeReadSet(storage.cart);
+        const getSavedState = () => (window.LuxeState?.getSnapshot ? window.LuxeState.getSnapshot() : { cart: [], wishlist: [], lastOrder: null });
+        const getSavedSet = (key) => new Set(Array.isArray(getSavedState()[key]) ? getSavedState()[key] : []);
 
         const getCardKey = (card) => card.querySelector('.product-name')?.textContent.trim() || '';
         const getCardData = (card) => ({
@@ -683,6 +667,8 @@
         });
 
         const updateActionState = () => {
+            const favorites = getSavedSet('wishlist');
+            const cart = getSavedSet('cart');
             productCards.forEach((card) => {
                 const key = getCardKey(card);
                 const favoriteBtn = card.querySelector('[data-action="favorite"]');
@@ -699,17 +685,6 @@
                 }
             });
 
-            if (headerCartCount) {
-                const count = cart.size;
-                headerCartCount.textContent = String(count);
-                headerCartCount.classList.toggle('has-items', count > 0);
-            }
-
-            if (headerWishlistCount) {
-                const count = favorites.size;
-                headerWishlistCount.textContent = String(count);
-                headerWishlistCount.classList.toggle('has-items', count > 0);
-            }
         };
 
         const bumpHeaderCart = () => {
@@ -772,17 +747,21 @@
 
         const findCardByKey = (key) => productCards.find((card) => getCardKey(card) === key);
 
-        const addToFavorites = (key) => {
+        const addToFavorites = async (key) => {
+            const favorites = getSavedSet('wishlist');
             if (!key || favorites.has(key)) return false;
-            favorites.add(key);
-            safeWriteSet(storage.favorites, favorites);
+            if (window.LuxeState?.addToWishlist) {
+                await window.LuxeState.addToWishlist(key);
+            }
             return true;
         };
 
-        const addToCart = (key) => {
+        const addToCart = async (key) => {
+            const cart = getSavedSet('cart');
             if (!key || cart.has(key)) return false;
-            cart.add(key);
-            safeWriteSet(storage.cart, cart);
+            if (window.LuxeState?.addToCart) {
+                await window.LuxeState.addToCart(key);
+            }
             return true;
         };
 
@@ -829,6 +808,7 @@
 
         const renderFavoritesPanel = () => {
             if (!favoritesPanelBody || !favoritesPanelCount) return;
+            const favorites = getSavedSet('wishlist');
             const items = productCards
                 .map(getCardData)
                 .filter((item) => favorites.has(item.key));
@@ -864,10 +844,11 @@
 
         const renderCartPanel = () => {
             if (!cartPanelBody || !cartPanelCount || !cartPanelTotal) return;
+            const cart = getSavedSet('cart');
             const items = productCards
                 .map(getCardData)
                 .filter((item) => cart.has(item.key));
-                const total = items.reduce((sum, item) => sum + item.priceValue, 0);
+            const total = items.reduce((sum, item) => sum + item.priceValue, 0);
 
             cartPanelCount.textContent = `${items.length} item${items.length === 1 ? '' : 's'}`;
             cartPanelTotal.textContent = formatUsdAmount(total);
@@ -1024,38 +1005,42 @@
             const { panelAction, itemKey } = button.dataset;
             const card = findCardByKey(itemKey);
 
-            if (panelAction === 'remove-favorite') {
-                favorites.delete(itemKey);
-                safeWriteSet(storage.favorites, favorites);
-                updateActionState();
-                syncPanels();
-                showActionToast('Removed from favorites');
-                return;
-            }
+            (async () => {
+                if (panelAction === 'remove-favorite') {
+                    if (window.LuxeState?.removeFromWishlist) {
+                        await window.LuxeState.removeFromWishlist(itemKey);
+                    }
+                    updateActionState();
+                    syncPanels();
+                    showActionToast('Removed from favorites');
+                    return;
+                }
 
-            if (panelAction === 'remove-cart') {
-                cart.delete(itemKey);
-                safeWriteSet(storage.cart, cart);
-                updateActionState();
-                syncPanels();
-                showActionToast('Removed from cart');
-                return;
-            }
+                if (panelAction === 'remove-cart') {
+                    if (window.LuxeState?.removeFromCart) {
+                        await window.LuxeState.removeFromCart(itemKey);
+                    }
+                    updateActionState();
+                    syncPanels();
+                    showActionToast('Removed from cart');
+                    return;
+                }
 
-            if (panelAction === 'move-to-cart') {
-                const added = addToCart(itemKey);
-                updateActionState();
-                syncPanels();
-                showActionToast(added ? 'Moved to cart' : 'Already in cart');
-                openCartPanel();
-                return;
-            }
+                if (panelAction === 'move-to-cart') {
+                    const added = await addToCart(itemKey);
+                    updateActionState();
+                    syncPanels();
+                    showActionToast(added ? 'Moved to cart' : 'Already in cart');
+                    openCartPanel();
+                    return;
+                }
 
-            if (panelAction === 'view-product' && card) {
-                closeSavedPanels();
-                openQuickView(card);
-                showActionToast('Preview opened');
-            }
+                if (panelAction === 'view-product' && card) {
+                    closeSavedPanels();
+                    openQuickView(card);
+                    showActionToast('Preview opened');
+                }
+            })();
         };
 
         const bindProductButtons = () => {
@@ -1071,20 +1056,24 @@
                         const action = button.dataset.action;
 
                         if (action === 'favorite') {
-                            const added = addToFavorites(key);
-                            updateActionState();
-                            syncPanels();
-                            showActionToast(added ? 'Saved to favorites' : 'Already in favorites');
-                            setTimeout(() => gotoWishlistPage(key), 140);
+                            (async () => {
+                                const added = await addToFavorites(key);
+                                updateActionState();
+                                syncPanels();
+                                showActionToast(added ? 'Saved to favorites' : 'Already in favorites');
+                                setTimeout(() => gotoWishlistPage(key), 140);
+                            })();
                             return;
                         }
 
                         if (action === 'cart') {
-                            const added = addToCart(key);
-                            updateActionState();
-                            syncPanels();
-                            showActionToast(added ? 'Added to cart' : 'Already in cart');
-                            if (added) bumpHeaderCart();
+                            (async () => {
+                                const added = await addToCart(key);
+                                updateActionState();
+                                syncPanels();
+                                showActionToast(added ? 'Added to cart' : 'Already in cart');
+                                if (added) bumpHeaderCart();
+                            })();
                             return;
                         }
 
@@ -1118,12 +1107,14 @@
 
         modalAddCart.addEventListener('click', () => {
             if (!activeProductKey) return;
-            const added = addToCart(activeProductKey);
-            updateActionState();
-            syncPanels();
-            showActionToast(added ? 'Added to cart' : 'Already in cart');
-            if (added) bumpHeaderCart();
-            closeQuickView();
+            (async () => {
+                const added = await addToCart(activeProductKey);
+                updateActionState();
+                syncPanels();
+                showActionToast(added ? 'Added to cart' : 'Already in cart');
+                if (added) bumpHeaderCart();
+                closeQuickView();
+            })();
         });
 
         favoritesPanel?.addEventListener('click', handlePanelAction);
@@ -1136,8 +1127,28 @@
             window.location.href = 'checkout.html';
         });
 
-        syncPanels();
-        updateActionState();
+        window.addEventListener('luxe-state-changed', () => {
+            updateActionState();
+            syncPanels();
+        });
+
+        window.addEventListener('pageshow', () => {
+            updateActionState();
+            syncPanels();
+        });
+
+        if (window.LuxeState?.ready) {
+            window.LuxeState.ready().then(() => {
+                syncPanels();
+                updateActionState();
+            }).catch(() => {
+                syncPanels();
+                updateActionState();
+            });
+        } else {
+            syncPanels();
+            updateActionState();
+        }
     </script>
 </body>
 

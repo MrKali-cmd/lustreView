@@ -746,6 +746,7 @@
 <body data-site-page="collection">
 
     <div data-site-header></div>
+    <script src="site-state.js"></script>
     <script src="site-header.js"></script>
 
     <section class="collection-hero">
@@ -887,33 +888,23 @@
         const headerWishlistCount = document.querySelector('[data-wishlist-count]');
 
         const USD_RATE = 42000;
-        const wishlistKey = 'luxeFavorites';
-        const cartKey = 'luxeCart';
         let activeModalKey = '';
         let toastTimer = null;
         const formatPrice = (value) => `$${(Number(value || 0) / USD_RATE).toLocaleString('en-US', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         })}`;
-        const readSet = (key) => {
-            try {
-                return new Set(JSON.parse(localStorage.getItem(key) || '[]'));
-            } catch {
-                return new Set();
-            }
-        };
-        const writeSet = (key, values) => {
-            localStorage.setItem(key, JSON.stringify(Array.from(values)));
-        };
+        const getSavedState = () => (window.LuxeState?.getSnapshot ? window.LuxeState.getSnapshot() : { cart: [], wishlist: [], lastOrder: null });
+        const getSavedSet = (key) => new Set(Array.isArray(getSavedState()[key]) ? getSavedState()[key] : []);
         const syncHeaderCart = () => {
             if (!headerCartCount) return;
-            const count = readSet(cartKey).size;
+            const count = getSavedSet('cart').size;
             headerCartCount.textContent = String(count);
             headerCartCount.classList.toggle('has-items', count > 0);
         };
         const syncHeaderWishlist = () => {
             if (!headerWishlistCount) return;
-            const count = readSet(wishlistKey).size;
+            const count = getSavedSet('wishlist').size;
             headerWishlistCount.textContent = String(count);
             headerWishlistCount.classList.toggle('has-items', count > 0);
         };
@@ -924,8 +915,8 @@
             headerCartLink.classList.add('is-bump');
         };
         const updateActionState = () => {
-            const wishlist = readSet(wishlistKey);
-            const cart = readSet(cartKey);
+            const wishlist = getSavedSet('wishlist');
+            const cart = getSavedSet('cart');
 
             Array.from(grid.querySelectorAll('.product-card')).forEach((card) => {
                 const key = card.dataset.key;
@@ -955,18 +946,12 @@
                 toast.classList.remove('is-visible');
             }, 2200);
         };
-        const addToSavedList = (storageKey, itemKey) => {
-            const values = readSet(storageKey);
+        const addToSavedList = async (storageKey, itemKey) => {
+            const values = storageKey === 'cart' ? getSavedSet('cart') : getSavedSet('wishlist');
             const alreadyExists = values.has(itemKey);
-            values.add(itemKey);
-            writeSet(storageKey, values);
-            if (storageKey === cartKey) {
-                syncHeaderCart();
+            if (window.LuxeState?.[storageKey === 'cart' ? 'addToCart' : 'addToWishlist']) {
+                await window.LuxeState[storageKey === 'cart' ? 'addToCart' : 'addToWishlist'](itemKey);
             }
-            if (storageKey === wishlistKey) {
-                syncHeaderWishlist();
-            }
-            window.dispatchEvent(new Event(storageKey === cartKey ? 'cart-updated' : 'wishlist-updated'));
             return !alreadyExists;
         };
         const goToSavedPage = (page, itemKey) => {
@@ -1127,18 +1112,22 @@
             if (!itemKey || !getItemByKey(itemKey)) return;
 
             if (event.target.closest('.favorite-btn')) {
-                const added = addToSavedList(wishlistKey, itemKey);
-                showToast(added ? 'Added to wishlist' : 'Already in wishlist');
-                updateActionState();
-                setTimeout(() => goToSavedPage('wishlist', itemKey), 180);
+                (async () => {
+                    const added = await addToSavedList('wishlist', itemKey);
+                    showToast(added ? 'Added to wishlist' : 'Already in wishlist');
+                    updateActionState();
+                    setTimeout(() => goToSavedPage('wishlist', itemKey), 180);
+                })();
                 return;
             }
 
             if (event.target.closest('.cart-btn')) {
-                const added = addToSavedList(cartKey, itemKey);
-                showToast(added ? 'Added to cart' : 'Already in cart');
-                if (added) bumpHeaderCart();
-                updateActionState();
+                (async () => {
+                    const added = await addToSavedList('cart', itemKey);
+                    showToast(added ? 'Added to cart' : 'Already in cart');
+                    if (added) bumpHeaderCart();
+                    updateActionState();
+                })();
                 return;
             }
 
@@ -1163,21 +1152,25 @@
 
         modalPrimaryBtn.addEventListener('click', () => {
             if (!activeModalKey || !getItemByKey(activeModalKey)) return;
-            const added = addToSavedList(cartKey, activeModalKey);
-            showToast(added ? 'Added to cart' : 'Already in cart');
-            if (added) bumpHeaderCart();
-            updateActionState();
-            hideModal();
+            (async () => {
+                const added = await addToSavedList('cart', activeModalKey);
+                showToast(added ? 'Added to cart' : 'Already in cart');
+                if (added) bumpHeaderCart();
+                updateActionState();
+                hideModal();
+            })();
         });
 
         modalSecondaryBtn.addEventListener('click', () => {
             if (!activeModalKey || !getItemByKey(activeModalKey)) return;
-            const added = addToSavedList(wishlistKey, activeModalKey);
-            showToast(added ? 'Added to wishlist' : 'Already in wishlist');
-            updateActionState();
-            const nextKey = activeModalKey;
-            hideModal();
-            setTimeout(() => goToSavedPage('wishlist', nextKey), 180);
+            (async () => {
+                const added = await addToSavedList('wishlist', activeModalKey);
+                showToast(added ? 'Added to wishlist' : 'Already in wishlist');
+                updateActionState();
+                const nextKey = activeModalKey;
+                hideModal();
+                setTimeout(() => goToSavedPage('wishlist', nextKey), 180);
+            })();
         });
 
         closeModal.addEventListener('click', () => {
@@ -1200,22 +1193,15 @@
             syncHeaderCart();
             updateActionState();
         });
-        window.addEventListener('storage', (event) => {
-            if (event.key === wishlistKey) {
-                syncHeaderWishlist();
-                updateActionState();
-            }
-            if (event.key === cartKey) {
-                syncHeaderCart();
-                updateActionState();
-            }
+        window.addEventListener('luxe-state-changed', () => {
+            syncHeaderWishlist();
+            syncHeaderCart();
+            updateActionState();
         });
 
         headerConsultBtn?.addEventListener('click', () => {
             window.location.href = 'index.html#contact';
         });
-        syncHeaderWishlist();
-        syncHeaderCart();
         document.querySelectorAll('.nav-links a').forEach((link) => {
             link.addEventListener('click', () => {
                 closeMobileMenu();
@@ -1226,7 +1212,24 @@
             applyMobileProductLayout();
         });
 
-        init();
+        if (window.LuxeState?.ready) {
+            window.LuxeState.ready().then(() => {
+                syncHeaderWishlist();
+                syncHeaderCart();
+                updateActionState();
+                init();
+            }).catch(() => {
+                syncHeaderWishlist();
+                syncHeaderCart();
+                updateActionState();
+                init();
+            });
+        } else {
+            syncHeaderWishlist();
+            syncHeaderCart();
+            updateActionState();
+            init();
+        }
     </script>
 </body>
 

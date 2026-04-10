@@ -1,8 +1,6 @@
 (function () {
     const catalog = Array.isArray(window.LUXE_CATALOG) ? window.LUXE_CATALOG : [];
     const pageType = document.body.dataset.savedPage || 'wishlist';
-    const storageKeys = { wishlist: 'luxeFavorites', cart: 'luxeCart' };
-    const otherKeys = { wishlist: 'luxeCart', cart: 'luxeFavorites' };
     const pageConfig = {
         wishlist: {
             kicker: 'Saved List',
@@ -51,18 +49,6 @@
     let focusTimer = null;
     const USD_RATE = 42000;
 
-    const readSet = (key) => {
-        try {
-            return new Set(JSON.parse(localStorage.getItem(key) || '[]'));
-        } catch {
-            return new Set();
-        }
-    };
-
-    const writeSet = (key, set) => {
-        localStorage.setItem(key, JSON.stringify(Array.from(set)));
-    };
-
     const toUsd = (value) => Number(value || 0) / USD_RATE;
     const formatPrice = (rawValue) => `$${toUsd(rawValue).toLocaleString('en-US', {
         minimumFractionDigits: 2,
@@ -70,6 +56,15 @@
     })}`;
 
     const getCatalogItem = (key) => catalog.find((item) => item.key === key) || null;
+
+    const getState = async () => {
+        if (window.LuxeState?.ready) {
+            return window.LuxeState.ready();
+        }
+        return { cart: [], wishlist: [], lastOrder: null };
+    };
+
+    const getCurrentState = () => (window.LuxeState?.getSnapshot ? window.LuxeState.getSnapshot() : { cart: [], wishlist: [], lastOrder: null });
 
     const renderSummary = (items) => {
         const total = items.reduce((sum, item) => sum + toUsd(Number(item.price) || 0), 0);
@@ -91,12 +86,10 @@
         focusTimer = setTimeout(() => target.classList.remove('is-focus'), 2200);
     };
 
-    const render = () => {
-        const activeSet = readSet(storageKeys[pageType] || storageKeys.wishlist);
-        const cartSet = readSet(storageKeys.cart);
-        const items = Array.from(activeSet)
-            .map(getCatalogItem)
-            .filter(Boolean);
+    const render = async () => {
+        const state = await getState();
+        const activeKeys = Array.isArray(state[pageType]) ? state[pageType] : [];
+        const items = activeKeys.map(getCatalogItem).filter(Boolean);
 
         titleEl.textContent = config.title;
         descEl.textContent = config.desc;
@@ -106,14 +99,17 @@
         primaryCtaEl.textContent = config.primaryLabel;
         primaryCtaEl.href = config.primaryHref;
         countEl.textContent = `${items.length} ${config.countLabel}${items.length === 1 ? '' : 's'}`;
+
         if (headerCartCount) {
-            headerCartCount.textContent = String(cartSet.size);
-            headerCartCount.classList.toggle('has-items', cartSet.size > 0);
+            const count = Array.isArray(state.cart) ? state.cart.length : 0;
+            headerCartCount.textContent = String(count);
+            headerCartCount.classList.toggle('has-items', count > 0);
         }
+
         if (headerWishlistCount) {
-            const wishlistSet = readSet(storageKeys.wishlist);
-            headerWishlistCount.textContent = String(wishlistSet.size);
-            headerWishlistCount.classList.toggle('has-items', wishlistSet.size > 0);
+            const count = Array.isArray(state.wishlist) ? state.wishlist.length : 0;
+            headerWishlistCount.textContent = String(count);
+            headerWishlistCount.classList.toggle('has-items', count > 0);
         }
 
         renderSummary(items);
@@ -171,45 +167,44 @@
         }
     };
 
-    const moveBetweenLists = (sourceKey, targetKey, itemKey) => {
-        const sourceSet = readSet(sourceKey);
-        const targetSet = readSet(targetKey);
-        sourceSet.delete(itemKey);
-        targetSet.add(itemKey);
-        writeSet(sourceKey, sourceSet);
-        writeSet(targetKey, targetSet);
+    const removeFromActiveList = async (itemKey) => {
+        if (pageType === 'wishlist' && window.LuxeState?.removeFromWishlist) {
+            await window.LuxeState.removeFromWishlist(itemKey);
+            return;
+        }
+
+        if (pageType === 'cart' && window.LuxeState?.removeFromCart) {
+            await window.LuxeState.removeFromCart(itemKey);
+        }
     };
 
-    const removeFromActiveList = (itemKey) => {
-        const activeKey = storageKeys[pageType] || storageKeys.wishlist;
-        const activeSet = readSet(activeKey);
-        activeSet.delete(itemKey);
-        writeSet(activeKey, activeSet);
-    };
-
-    listEl.addEventListener('click', (event) => {
+    listEl.addEventListener('click', async (event) => {
         const button = event.target.closest('[data-action]');
         if (!button) return;
 
         const itemKey = button.dataset.itemKey;
         const action = button.dataset.action;
-        const activeKey = storageKeys[pageType] || storageKeys.wishlist;
-        const oppositeKey = otherKeys[pageType] || otherKeys.wishlist;
+        const card = getCatalogItem(itemKey);
+        if (!itemKey || !card) return;
 
         if (action === 'remove') {
-            removeFromActiveList(itemKey);
-            render();
+            await removeFromActiveList(itemKey);
+            await render();
             return;
         }
 
         if (pageType === 'wishlist' && action === 'move-to-cart') {
-            moveBetweenLists(activeKey, oppositeKey, itemKey);
+            if (window.LuxeState?.moveToCart) {
+                await window.LuxeState.moveToCart(itemKey);
+            }
             window.location.href = `cart.html?focus=${encodeURIComponent(itemKey)}`;
             return;
         }
 
         if (pageType === 'cart' && action === 'save-for-later') {
-            moveBetweenLists(activeKey, oppositeKey, itemKey);
+            if (window.LuxeState?.moveToWishlist) {
+                await window.LuxeState.moveToWishlist(itemKey);
+            }
             window.location.href = `wishlist.html?focus=${encodeURIComponent(itemKey)}`;
         }
     });
@@ -219,9 +214,21 @@
             closeMobileMenu();
         });
     });
+
     window.addEventListener('resize', () => {
         if (window.innerWidth > 768) closeMobileMenu();
     });
 
-    render();
+    window.addEventListener('luxe-state-changed', () => {
+        render().catch(() => {});
+    });
+
+    window.addEventListener('pageshow', () => {
+        render().catch(() => {});
+    });
+
+    render().catch(() => {
+        if (!listEl) return;
+        listEl.innerHTML = '<div class="saved-empty">Could not load saved items.</div>';
+    });
 })();

@@ -1,9 +1,11 @@
+const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { neon } = require('@neondatabase/serverless');
 
 const STORE_PATH = path.join(os.tmpdir(), 'luxe-drapes-store.json');
+const SITE_SESSION_COOKIE = 'luxe_site_session';
 
 const DEFAULT_COLLECTIONS = [
   {
@@ -71,7 +73,8 @@ const DEFAULT_COLLECTIONS = [
 const DEFAULT_STATE = {
   collections: DEFAULT_COLLECTIONS,
   contactMessages: [],
-  orders: []
+  orders: [],
+  sessions: {}
 };
 
 let memoryState = null;
@@ -79,6 +82,80 @@ let sqlClient = null;
 let initPromise = null;
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
+
+const parseCookies = (headerValue) => {
+  const cookies = {};
+  String(headerValue || '')
+    .split(';')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .forEach((part) => {
+      const index = part.indexOf('=');
+      if (index < 0) return;
+      const name = part.slice(0, index).trim();
+      const value = part.slice(index + 1).trim();
+      cookies[name] = decodeURIComponent(value);
+    });
+
+  return cookies;
+};
+
+const getCookieValue = (req, name) => {
+  const cookies = parseCookies(req.headers?.cookie || req.headers?.Cookie || '');
+  return cookies[name] || '';
+};
+
+const appendSetCookie = (res, cookieValue) => {
+  if (!res || !cookieValue) return;
+  const current = res.getHeader('Set-Cookie');
+  if (!current) {
+    res.setHeader('Set-Cookie', cookieValue);
+    return;
+  }
+
+  if (Array.isArray(current)) {
+    res.setHeader('Set-Cookie', [...current, cookieValue]);
+    return;
+  }
+
+  res.setHeader('Set-Cookie', [current, cookieValue]);
+};
+
+const shouldUseSecureCookie = (req) => {
+  const configured = String(process.env.SITE_COOKIE_SECURE || '').trim().toLowerCase();
+  if (configured === 'true') return true;
+  if (configured === 'false') return false;
+
+  const forwardedProto = String(req?.headers?.['x-forwarded-proto'] || req?.headers?.['X-Forwarded-Proto'] || '').toLowerCase();
+  return forwardedProto.includes('https') || process.env.VERCEL === '1';
+};
+
+const buildSessionCookie = (req, sessionId) => {
+  const secure = shouldUseSecureCookie(req);
+  const maxAge = 60 * 60 * 24 * 30;
+  const parts = [
+    `${SITE_SESSION_COOKIE}=${encodeURIComponent(sessionId)}`,
+    'Path=/',
+    'HttpOnly',
+    'SameSite=Lax',
+    `Max-Age=${maxAge}`
+  ];
+
+  if (secure) {
+    parts.push('Secure');
+  }
+
+  return parts.join('; ');
+};
+
+const ensureSiteSessionId = (req, res) => {
+  const existing = getCookieValue(req, SITE_SESSION_COOKIE);
+  if (existing) return existing;
+
+  const sessionId = `sess-${crypto.randomUUID()}`;
+  appendSetCookie(res, buildSessionCookie(req, sessionId));
+  return sessionId;
+};
 
 const getSqlClient = () => {
   const databaseUrl = String(process.env.DATABASE_URL || '').trim();
@@ -150,6 +227,50 @@ const mapOrderRow = (row) => ({
   updatedAt: row.updated_at || row.updatedAt || ''
 });
 
+const mapSessionRow = (row) => ({
+  sessionId: row.session_id,
+  cart: (() => {
+    const raw = row.cart_json || row.cartJson || row.cart;
+    if (Array.isArray(raw)) return raw;
+    if (!raw) return [];
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  })(),
+  wishlist: (() => {
+    const raw = row.wishlist_json || row.wishlistJson || row.wishlist;
+    if (Array.isArray(raw)) return raw;
+    if (!raw) return [];
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  })(),
+  lastOrder: (() => {
+    const raw = row.last_order_json || row.lastOrderJson || row.lastOrder;
+    if (!raw) return null;
+    if (typeof raw === 'object') return raw;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  })(),
+  createdAt: row.created_at || row.createdAt || '',
+  updatedAt: row.updated_at || row.updatedAt || ''
+});
+
+const normalizeSessionState = (state) => ({
+  cart: Array.isArray(state?.cart) ? state.cart : [],
+  wishlist: Array.isArray(state?.wishlist) ? state.wishlist : [],
+  lastOrder: state?.lastOrder && typeof state.lastOrder === 'object' ? state.lastOrder : null,
+  createdAt: state?.createdAt || '',
+  updatedAt: state?.updatedAt || ''
+});
+
 const ensureRemoteDatabase = async () => {
   const sql = getSqlClient();
   if (!sql) return false;
@@ -212,6 +333,17 @@ const ensureRemoteDatabase = async () => {
       )
     `;
 
+    await sql`
+      CREATE TABLE IF NOT EXISTS browser_sessions (
+        session_id TEXT PRIMARY KEY,
+        cart_json TEXT NOT NULL DEFAULT '[]',
+        wishlist_json TEXT NOT NULL DEFAULT '[]',
+        last_order_json TEXT NOT NULL DEFAULT 'null',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    `;
+
     const collectionCount = await sql`SELECT COUNT(*)::int AS count FROM collections`;
     if (Number(collectionCount?.[0]?.count || 0) === 0) {
       for (const row of DEFAULT_COLLECTIONS) {
@@ -244,7 +376,8 @@ const ensureRemoteDatabase = async () => {
 const normalizeState = (state) => ({
   collections: Array.isArray(state?.collections) ? state.collections : clone(DEFAULT_COLLECTIONS),
   contactMessages: Array.isArray(state?.contactMessages) ? state.contactMessages : [],
-  orders: Array.isArray(state?.orders) ? state.orders : []
+  orders: Array.isArray(state?.orders) ? state.orders : [],
+  sessions: state?.sessions && typeof state.sessions === 'object' ? state.sessions : {}
 });
 
 const loadState = () => {
@@ -621,6 +754,124 @@ const deleteOrder = async (id) => {
   await sql`DELETE FROM orders WHERE id = ${id}`;
 };
 
+const getSessionState = async (sessionId) => {
+  const normalizedSessionId = String(sessionId || '').trim();
+  if (!normalizedSessionId) {
+    return normalizeSessionState();
+  }
+
+  if (!hasRemoteDatabase()) {
+    const state = loadState();
+    if (!state.sessions || typeof state.sessions !== 'object') {
+      state.sessions = {};
+    }
+
+    if (!state.sessions[normalizedSessionId]) {
+      state.sessions[normalizedSessionId] = normalizeSessionState({
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+      saveState(state);
+    }
+
+    return normalizeSessionState(state.sessions[normalizedSessionId]);
+  }
+
+  const sql = getSqlClient();
+  await ensureRemoteDatabase();
+  const rows = await sql`
+    SELECT session_id, cart_json, wishlist_json, last_order_json, created_at, updated_at
+    FROM browser_sessions
+    WHERE session_id = ${normalizedSessionId}
+    LIMIT 1
+  `;
+
+  if (rows.length) {
+    return mapSessionRow(rows[0]);
+  }
+
+  const now = new Date().toISOString();
+  await sql`
+    INSERT INTO browser_sessions (
+      session_id, cart_json, wishlist_json, last_order_json, created_at, updated_at
+    ) VALUES (
+      ${normalizedSessionId},
+      ${'[]'},
+      ${'[]'},
+      ${'null'},
+      ${now},
+      ${now}
+    )
+  `;
+
+  return normalizeSessionState({
+    cart: [],
+    wishlist: [],
+    lastOrder: null,
+    createdAt: now,
+    updatedAt: now
+  });
+};
+
+const setSessionState = async (sessionId, nextState) => {
+  const normalizedSessionId = String(sessionId || '').trim();
+  if (!normalizedSessionId) {
+    return normalizeSessionState(nextState);
+  }
+
+  const state = normalizeSessionState(nextState);
+  const now = new Date().toISOString();
+  const sessionRecord = {
+    ...state,
+    createdAt: state.createdAt || now,
+    updatedAt: now
+  };
+
+  if (!hasRemoteDatabase()) {
+    const appState = loadState();
+    if (!appState.sessions || typeof appState.sessions !== 'object') {
+      appState.sessions = {};
+    }
+
+    appState.sessions[normalizedSessionId] = sessionRecord;
+    saveState(appState);
+    return normalizeSessionState(appState.sessions[normalizedSessionId]);
+  }
+
+  const sql = getSqlClient();
+  await ensureRemoteDatabase();
+  await sql`
+    INSERT INTO browser_sessions (
+      session_id, cart_json, wishlist_json, last_order_json, created_at, updated_at
+    ) VALUES (
+      ${normalizedSessionId},
+      ${JSON.stringify(state.cart)},
+      ${JSON.stringify(state.wishlist)},
+      ${JSON.stringify(state.lastOrder)},
+      ${state.createdAt || now},
+      ${now}
+    )
+    ON CONFLICT (session_id) DO UPDATE SET
+      cart_json = EXCLUDED.cart_json,
+      wishlist_json = EXCLUDED.wishlist_json,
+      last_order_json = EXCLUDED.last_order_json,
+      created_at = COALESCE(browser_sessions.created_at, EXCLUDED.created_at),
+      updated_at = EXCLUDED.updated_at
+  `;
+
+  return normalizeSessionState({
+    ...state,
+    createdAt: state.createdAt || now,
+    updatedAt: now
+  });
+};
+
+const updateSessionState = async (sessionId, updater) => {
+  const current = await getSessionState(sessionId);
+  const next = typeof updater === 'function' ? updater(current) : { ...current, ...updater };
+  return setSessionState(sessionId, next);
+};
+
 const readJson = async (req) => new Promise((resolve, reject) => {
   let raw = '';
   req.on('data', (chunk) => {
@@ -688,6 +939,7 @@ module.exports = {
   getCollections,
   getMessages,
   getOrders,
+  getSessionState,
   handleOptions,
   loadState,
   readJson,
@@ -697,7 +949,10 @@ module.exports = {
   setCollections,
   setMessages,
   setOrders,
+  setSessionState,
   upsertCollection,
   upsertMessage,
-  upsertOrder
+  upsertOrder,
+  updateSessionState,
+  ensureSiteSessionId
 };

@@ -354,6 +354,7 @@
 
 <body data-site-page="checkout">
     <div data-site-header></div>
+    <script src="site-state.js"></script>
     <script src="site-header.js"></script>
 
     <main class="checkout-shell">
@@ -511,8 +512,6 @@
     <script src="catalog-data.js"></script>
     <script>
         (function () {
-            const storageKey = 'luxeCart';
-            const cart = new Set(JSON.parse(localStorage.getItem(storageKey) || '[]'));
             const catalog = Array.isArray(window.LUXE_CATALOG) ? window.LUXE_CATALOG : [];
             const USD_RATE = 42000;
             const checkoutItems = document.getElementById('checkout-items');
@@ -526,14 +525,11 @@
             const mobileMenuIcon = mobileMenuBtn?.querySelector('i');
             const headerCartCount = document.querySelector('[data-cart-count]');
             const headerWishlistCount = document.querySelector('[data-wishlist-count]');
+
             const formatUsd = (value) => `$${(Number(value || 0) / USD_RATE).toLocaleString('en-US', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             })}`;
-
-            const getItems = () => Array.from(cart)
-                .map((key) => catalog.find((item) => item.key === key))
-                .filter(Boolean);
 
             const setStatus = (message, kind = '') => {
                 checkoutStatus.textContent = message || '';
@@ -550,19 +546,38 @@
                 }
             };
 
-            const renderSummary = () => {
-                const items = getItems();
-                const total = items.reduce((sum, item) => sum + Number(item.price || 0), 0);
+            const getState = async () => {
+                if (window.LuxeState?.ready) {
+                    return window.LuxeState.ready();
+                }
+                return { cart: [], wishlist: [], lastOrder: null };
+            };
+
+            const getItems = (state) => Array.from(state?.cart || [])
+                .map((key) => catalog.find((item) => item.key === key))
+                .filter(Boolean);
+
+            const syncHeaderCounts = (state) => {
+                const cartCount = Array.isArray(state?.cart) ? state.cart.length : 0;
+                const wishlistCount = Array.isArray(state?.wishlist) ? state.wishlist.length : 0;
 
                 if (headerCartCount) {
-                    headerCartCount.textContent = String(items.length);
-                    headerCartCount.classList.toggle('has-items', items.length > 0);
+                    headerCartCount.textContent = String(cartCount);
+                    headerCartCount.classList.toggle('has-items', cartCount > 0);
                 }
+
                 if (headerWishlistCount) {
-                    const wishlistCount = new Set(JSON.parse(localStorage.getItem('luxeFavorites') || '[]')).size;
                     headerWishlistCount.textContent = String(wishlistCount);
                     headerWishlistCount.classList.toggle('has-items', wishlistCount > 0);
                 }
+            };
+
+            const renderSummary = async () => {
+                const state = await getState();
+                const items = getItems(state);
+                const total = items.reduce((sum, item) => sum + Number(item.price || 0), 0);
+
+                syncHeaderCounts(state);
 
                 checkoutCount.textContent = `${items.length} item${items.length === 1 ? '' : 's'}`;
                 checkoutTotal.textContent = formatUsd(total);
@@ -601,7 +616,8 @@
             checkoutForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
 
-                const items = getItems();
+                const state = await getState();
+                const items = getItems(state);
                 if (!items.length) {
                     setStatus('Add at least one item to your cart before placing an order.', 'is-error');
                     return;
@@ -651,7 +667,6 @@
 
                 checkoutSubmit.disabled = true;
                 setStatus('Placing your order...', '');
-                let shouldClearCart = false;
 
                 try {
                     const wantsStripeCheckout = paymentMethod === 'Card payment on confirmation';
@@ -676,26 +691,26 @@
                         throw new Error(payload.error || `Order placement failed (${response.status})`);
                     }
 
+                    if (window.LuxeState?.setLastOrder) {
+                        await window.LuxeState.setLastOrder(payload.order || payload);
+                    }
+
+                    if (window.LuxeState?.clearCart) {
+                        await window.LuxeState.clearCart();
+                    }
+
                     if (wantsStripeCheckout) {
-                        localStorage.setItem('luxeLastOrder', JSON.stringify(payload.order || orderPayload));
-                        shouldClearCart = true;
                         window.location.href = payload.url;
                         return;
                     }
 
-                    localStorage.setItem('luxeLastOrder', JSON.stringify(payload));
-                    localStorage.removeItem(storageKey);
                     checkoutForm.reset();
-                    shouldClearCart = true;
                     setStatus('Your order was placed successfully.', 'is-success');
                     window.location.href = `order-success.html?order=${encodeURIComponent(payload.id)}`;
                 } catch (error) {
                     setStatus(error.message || 'Could not place your order.', 'is-error');
                 } finally {
-                    if (shouldClearCart) {
-                        cart.clear();
-                    }
-                    renderSummary();
+                    await renderSummary();
                 }
             });
 
@@ -704,6 +719,9 @@
             });
             window.addEventListener('resize', () => {
                 if (window.innerWidth > 768) closeMobileMenu();
+            });
+            window.addEventListener('luxe-state-changed', (event) => {
+                syncHeaderCounts(event.detail || {});
             });
 
             renderSummary();

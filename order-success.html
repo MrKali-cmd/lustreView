@@ -163,6 +163,7 @@
 
 <body data-site-page="order-success">
     <div data-site-header></div>
+    <script src="site-state.js"></script>
     <script src="site-header.js"></script>
 
     <main class="success-shell">
@@ -212,20 +213,37 @@
     </main>
 
     <script>
-        (function () {
+        (async function () {
             const USD_RATE = 42000;
             const params = new URLSearchParams(window.location.search);
-            const lastOrder = JSON.parse(localStorage.getItem('luxeLastOrder') || 'null');
             const formatUsd = (value) => `$${(Number(value || 0) / USD_RATE).toLocaleString('en-US', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             })}`;
             const nextStep = document.getElementById('success-next-step');
 
-            if (!lastOrder) return;
+            const state = window.LuxeState?.ready ? await window.LuxeState.ready() : { lastOrder: null };
+            const lastOrder = state.lastOrder || null;
 
-            if (params.get('payment') === 'success') {
-                localStorage.removeItem('luxeCart');
+            if (params.get('payment') === 'success' && window.LuxeState?.clearCart) {
+                await window.LuxeState.clearCart();
+            }
+
+            if (!lastOrder) {
+                const fallbackOrderId = params.get('order') || 'Pending';
+                document.getElementById('success-order-id').textContent = fallbackOrderId;
+                document.getElementById('success-payment').textContent = params.get('payment') === 'success'
+                    ? 'Stripe payment received'
+                    : 'Pending';
+                document.getElementById('success-city').textContent = 'Pending';
+                document.getElementById('success-total').textContent = '$0.00';
+                if (nextStep) {
+                    nextStep.innerHTML = `
+                        <strong>Next step</strong>
+                        Your order was received, and our team will review it shortly.
+                    `;
+                }
+                return;
             }
 
             const orderId = params.get('order') || lastOrder.id || 'Pending';
