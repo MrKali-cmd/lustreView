@@ -118,15 +118,36 @@
         }
 
         .sort-filter {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.9fr);
+            align-items: end;
             margin: 40px 8% 22px;
-            flex-wrap: wrap;
-            gap: 16px;
+            gap: 18px;
             opacity: 0;
             transform: translateY(14px);
             animation: fadeInUp 0.8s ease forwards 0.35s;
+        }
+
+        .filters-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .filter-group {
+            min-width: 180px;
+            flex: 1 1 180px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 0.8rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--collection-muted);
+            margin-bottom: 8px;
+            font-weight: 700;
         }
 
         .section-kicker {
@@ -146,6 +167,7 @@
         }
 
         .sort-select {
+            width: 100%;
             padding: 13px 42px 13px 16px;
             border: 1px solid var(--collection-border);
             border-radius: 14px;
@@ -160,6 +182,28 @@
             background-position: right 16px center;
             transition: all 0.25s ease;
             box-shadow: 0 8px 24px rgba(25, 20, 10, 0.06);
+        }
+
+        .clear-filters-btn {
+            align-self: end;
+            min-height: 50px;
+            padding: 13px 18px;
+            border: 1px solid rgba(184, 138, 68, 0.28);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.75);
+            color: var(--collection-dark);
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+            box-shadow: 0 8px 24px rgba(25, 20, 10, 0.06);
+        }
+
+        .clear-filters-btn:hover,
+        .clear-filters-btn:focus {
+            outline: none;
+            transform: translateY(-1px);
+            border-color: rgba(184, 138, 68, 0.52);
+            box-shadow: 0 14px 34px rgba(30, 26, 16, 0.12);
         }
 
         .sort-select:hover,
@@ -519,6 +563,20 @@
                 width: min(640px, 100%);
                 padding: 20px;
             }
+
+            .sort-filter {
+                grid-template-columns: 1fr;
+                align-items: start;
+            }
+
+            .filters-bar {
+                justify-content: stretch;
+            }
+
+            .filter-group {
+                min-width: 0;
+                flex-basis: 100%;
+            }
         }
 
         @media (max-width: 700px) {
@@ -553,11 +611,8 @@
 
             .sort-filter {
                 margin: 28px 4.5% 16px;
-                align-items: flex-start;
-            }
-
-            .sort-select {
-                width: 100%;
+                grid-template-columns: 1fr;
+                gap: 12px;
             }
 
             .products-grid {
@@ -775,13 +830,43 @@
                 <p class="section-kicker">Premium Selection</p>
                 <h2 class="section-title">Find Your Perfect Zebra Shade</h2>
             </div>
-            <div class="products-filter">
-                <select class="sort-select" id="sort-select">
-                    <option value="newest">Newest First</option>
-                    <option value="popular">Most Popular</option>
-                    <option value="price-low">Price: Low to High</option>
-                    <option value="price-high">Price: High to Low</option>
-                </select>
+            <div class="filters-bar">
+                <div class="filter-group">
+                    <label for="type-filter">Curtain type</label>
+                    <select class="sort-select" id="type-filter">
+                        <option value="all">All types</option>
+                        <option value="Light Filtering">Light Filtering</option>
+                        <option value="Blackout">Blackout</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="color-filter">Color family</label>
+                    <select class="sort-select" id="color-filter">
+                        <option value="all">All colors</option>
+                        <option value="beige">Beige / Taupe</option>
+                        <option value="gray">Gray / Charcoal</option>
+                        <option value="cream">Cream / Ivory</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="price-filter">Price range</label>
+                    <select class="sort-select" id="price-filter">
+                        <option value="all">All prices</option>
+                        <option value="under-60">Under $60</option>
+                        <option value="60-75">$60 - $75</option>
+                        <option value="over-75">Over $75</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="sort-select">Sort by</label>
+                    <select class="sort-select" id="sort-select">
+                        <option value="newest">Newest First</option>
+                        <option value="popular">Most Popular</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                    </select>
+                </div>
+                <button type="button" class="clear-filters-btn" id="clear-filters">Clear</button>
             </div>
         </div>
 
@@ -874,6 +959,10 @@
             return `${origin}/api/collections`;
         })();
         const sortSelect = document.getElementById('sort-select');
+        const typeFilter = document.getElementById('type-filter');
+        const colorFilter = document.getElementById('color-filter');
+        const priceFilter = document.getElementById('price-filter');
+        const clearFiltersBtn = document.getElementById('clear-filters');
         const grid = document.querySelector('.products-grid');
         const modal = document.getElementById('quick-view-modal');
         const closeModal = document.querySelector('.close-modal');
@@ -890,12 +979,37 @@
         const USD_RATE = 42000;
         let activeModalKey = '';
         let toastTimer = null;
+        const currentFilters = {
+            type: 'all',
+            color: 'all',
+            price: 'all',
+            sort: sortSelect?.value || 'newest'
+        };
         const formatPrice = (value) => `$${(Number(value || 0) / USD_RATE).toLocaleString('en-US', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         })}`;
         const getSavedState = () => (window.LuxeState?.getSnapshot ? window.LuxeState.getSnapshot() : { cart: [], wishlist: [], lastOrder: null });
         const getSavedSet = (key) => new Set(Array.isArray(getSavedState()[key]) ? getSavedState()[key] : []);
+        const getUsdPrice = (item) => Number(item?.price || 0) / USD_RATE;
+        const getColorFamily = (item) => {
+            const source = `${item?.category || ''} ${item?.label || ''} ${item?.tags || ''} ${item?.name || ''}`.toLowerCase();
+            if (source.includes('gray') || source.includes('charcoal')) return 'gray';
+            if (source.includes('cream') || source.includes('ivory')) return 'cream';
+            if (source.includes('beige') || source.includes('taupe')) return 'beige';
+            return 'all';
+        };
+        const matchesCurrentFilters = (item) => {
+            if (!item || item.status === 'Hidden') return false;
+            if (currentFilters.type !== 'all' && String(item.type || '').trim() !== currentFilters.type) return false;
+            if (currentFilters.color !== 'all' && getColorFamily(item) !== currentFilters.color) return false;
+
+            const usd = getUsdPrice(item);
+            if (currentFilters.price === 'under-60' && !(usd < 60)) return false;
+            if (currentFilters.price === '60-75' && !(usd >= 60 && usd <= 75)) return false;
+            if (currentFilters.price === 'over-75' && !(usd > 75)) return false;
+            return true;
+        };
         const syncHeaderCart = () => {
             if (!headerCartCount) return;
             const count = getSavedSet('cart').size;
@@ -1078,31 +1192,53 @@
             }
         };
 
-        const sortAndRender = (value) => {
-            const items = [...allItems];
-            if (value === 'newest') {
+        const applyFiltersAndSort = () => {
+            const items = [...allItems].filter(matchesCurrentFilters);
+
+            if (currentFilters.sort === 'newest') {
                 items.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-            } else if (value === 'popular') {
+            } else if (currentFilters.sort === 'popular') {
                 items.sort((a, b) => (b.popular || 0) - (a.popular || 0));
-            } else if (value === 'price-low') {
+            } else if (currentFilters.sort === 'price-low') {
                 items.sort((a, b) => (a.price || 0) - (b.price || 0));
-            } else if (value === 'price-high') {
+            } else if (currentFilters.sort === 'price-high') {
                 items.sort((a, b) => (b.price || 0) - (a.price || 0));
             }
+
             renderCards(items);
         };
 
         const init = async () => {
             try {
                 allItems = await loadCollections();
-                renderCards(allItems);
+                applyFiltersAndSort();
             } catch (error) {
                 grid.innerHTML = '<div style="padding: 24px;">Database is not reachable. Start the server first.</div>';
             }
         };
 
-        sortSelect.addEventListener('change', () => {
-            sortAndRender(sortSelect.value);
+        const syncFiltersFromControls = () => {
+            currentFilters.type = typeFilter?.value || 'all';
+            currentFilters.color = colorFilter?.value || 'all';
+            currentFilters.price = priceFilter?.value || 'all';
+            currentFilters.sort = sortSelect?.value || 'newest';
+        };
+
+        const renderWithFilters = () => {
+            syncFiltersFromControls();
+            applyFiltersAndSort();
+        };
+
+        sortSelect?.addEventListener('change', renderWithFilters);
+        typeFilter?.addEventListener('change', renderWithFilters);
+        colorFilter?.addEventListener('change', renderWithFilters);
+        priceFilter?.addEventListener('change', renderWithFilters);
+        clearFiltersBtn?.addEventListener('click', () => {
+            if (typeFilter) typeFilter.value = 'all';
+            if (colorFilter) colorFilter.value = 'all';
+            if (priceFilter) priceFilter.value = 'all';
+            if (sortSelect) sortSelect.value = 'newest';
+            renderWithFilters();
         });
 
         grid.addEventListener('click', (event) => {
