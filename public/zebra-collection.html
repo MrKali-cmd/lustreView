@@ -9,7 +9,7 @@
         href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=1775858063996">
+    <link rel="stylesheet" href="style.css?v=1775859776411">
     <style>
         :root {
             --collection-bg: #f4f2ee;
@@ -121,8 +121,17 @@
             display: grid;
             grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.9fr);
             align-items: end;
-            margin: 40px 8% 22px;
+            margin: 34px 8% 22px;
             gap: 18px;
+            padding: 16px 18px;
+            border-radius: 26px;
+            border: 1px solid rgba(184, 138, 68, 0.16);
+            background: rgba(255, 252, 248, 0.72);
+            backdrop-filter: blur(18px);
+            box-shadow: 0 18px 34px rgba(27, 22, 14, 0.08);
+            position: sticky;
+            top: 84px;
+            z-index: 25;
             opacity: 0;
             transform: translateY(14px);
             animation: fadeInUp 0.8s ease forwards 0.35s;
@@ -132,12 +141,13 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: flex-end;
+            align-items: end;
             gap: 12px;
         }
 
         .filter-group {
-            min-width: 180px;
-            flex: 1 1 180px;
+            min-width: 0;
+            flex: 1 1 190px;
         }
 
         .filter-group label {
@@ -184,6 +194,212 @@
             box-shadow: 0 8px 24px rgba(25, 20, 10, 0.06);
         }
 
+        .sort-select-compact {
+            min-width: 142px;
+            background-color: transparent;
+            border: 0;
+            box-shadow: none;
+            padding: 0 24px 0 0;
+            font-size: 0.98rem;
+            font-weight: 800;
+            background-position: right 0 center;
+        }
+
+        .sort-mini {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 50px;
+            padding: 12px 16px;
+            border-radius: 16px;
+            border: 1px solid var(--collection-border);
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 8px 24px rgba(25, 20, 10, 0.06);
+        }
+
+        .sort-mini-icon {
+            font-size: 1rem;
+            color: var(--collection-accent);
+            font-weight: 900;
+        }
+
+        .pill-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .filter-pill {
+            border: 1px solid rgba(29, 27, 23, 0.14);
+            background: rgba(255, 255, 255, 0.72);
+            color: var(--collection-dark);
+            padding: 11px 16px;
+            border-radius: 999px;
+            font-size: 0.92rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.22s ease, box-shadow 0.22s ease, background-color 0.22s ease, color 0.22s ease, border-color 0.22s ease;
+            box-shadow: 0 8px 24px rgba(25, 20, 10, 0.06);
+        }
+
+        .filter-pill:hover,
+        .filter-pill:focus {
+            outline: none;
+            transform: translateY(-1px);
+            border-color: rgba(184, 138, 68, 0.5);
+        }
+
+        .filter-pill.is-active {
+            background: linear-gradient(135deg, #c79a4f, #9f7537);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 14px 30px rgba(159, 117, 55, 0.28);
+        }
+
+        .swatch-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .color-swatch {
+            width: 42px;
+            height: 42px;
+            padding: 0;
+            border: 0;
+            border-radius: 50%;
+            background: transparent;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            transition: transform 0.22s ease;
+        }
+
+        .color-swatch:hover,
+        .color-swatch:focus {
+            outline: none;
+            transform: translateY(-1px);
+        }
+
+        .color-swatch.is-active {
+            box-shadow: 0 0 0 2px rgba(201, 154, 72, 0.2);
+        }
+
+        .swatch {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.96);
+            box-shadow: 0 8px 16px rgba(23, 20, 14, 0.22);
+        }
+
+        .swatch.white { background: #f7f4ee; }
+        .swatch.gray { background: #7a7a7a; }
+        .swatch.beige { background: #d1b78e; }
+        .swatch.black { background: #1f1f1f; }
+        .swatch.all {
+            background: linear-gradient(135deg, #f6f2ea, #d8d1c5);
+        }
+
+        .color-swatch.is-active .swatch {
+            box-shadow: 0 0 0 2px #c99848, 0 0 0 5px rgba(201, 152, 72, 0.22);
+        }
+
+        .price-range-shell {
+            padding: 12px 14px 14px;
+            border-radius: 18px;
+            border: 1px solid var(--collection-border);
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 8px 24px rgba(25, 20, 10, 0.06);
+        }
+
+        .price-range-readout {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: var(--collection-dark);
+        }
+
+        .dual-range {
+            position: relative;
+            height: 36px;
+        }
+
+        .dual-range-track {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 5px;
+            transform: translateY(-50%);
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(202, 183, 158, 0.42), rgba(184, 138, 68, 0.2));
+            overflow: hidden;
+        }
+
+        .dual-range-fill {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(90deg, #c79a4f, #9f7537);
+            border-radius: inherit;
+        }
+
+        .dual-range input[type="range"] {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            margin: 0;
+            pointer-events: none;
+            background: transparent;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .dual-range input[type="range"]::-webkit-slider-runnable-track {
+            height: 5px;
+            background: transparent;
+        }
+
+        .dual-range input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            pointer-events: auto;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #c79a4f, #9f7537);
+            box-shadow: 0 8px 18px rgba(159, 117, 55, 0.34);
+            cursor: pointer;
+            margin-top: -8px;
+        }
+
+        .dual-range input[type="range"]::-moz-range-track {
+            height: 5px;
+            background: transparent;
+        }
+
+        .dual-range input[type="range"]::-moz-range-thumb {
+            pointer-events: auto;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #c79a4f, #9f7537);
+            box-shadow: 0 8px 18px rgba(159, 117, 55, 0.34);
+            cursor: pointer;
+        }
+
+        .dual-range input[type="range"].price-min {
+            z-index: 2;
+        }
+
         .clear-filters-btn {
             align-self: end;
             min-height: 50px;
@@ -220,6 +436,14 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
             gap: 22px;
+            transition: opacity 0.22s ease, transform 0.22s ease, filter 0.22s ease;
+            will-change: opacity, transform;
+        }
+
+        .products-grid.is-updating {
+            opacity: 0.55;
+            transform: translateY(4px);
+            filter: saturate(0.9);
         }
 
         .product-card {
@@ -567,6 +791,8 @@
             .sort-filter {
                 grid-template-columns: 1fr;
                 align-items: start;
+                position: static;
+                top: auto;
             }
 
             .filters-bar {
@@ -613,6 +839,8 @@
                 margin: 28px 4.5% 16px;
                 grid-template-columns: 1fr;
                 gap: 12px;
+                position: static;
+                top: auto;
             }
 
             .products-grid {
@@ -794,6 +1022,21 @@
                 height: 32px;
                 font-size: 12px;
             }
+
+            .filter-pill {
+                padding: 9px 13px;
+                font-size: 0.84rem;
+            }
+
+            .color-swatch {
+                width: 38px;
+                height: 38px;
+            }
+
+            .swatch {
+                width: 24px;
+                height: 24px;
+            }
         }
     </style>
 </head>
@@ -801,8 +1044,8 @@
 <body data-site-page="collection">
 
     <div data-site-header></div>
-    <script src="site-state.js?v=1775858063996"></script>
-    <script src="site-header.js?v=1775858063996"></script>
+    <script src="site-state.js?v=1775859776411"></script>
+    <script src="site-header.js?v=1775859776411"></script>
 
     <section class="collection-hero">
         <div class="video-bg">
@@ -832,39 +1075,50 @@
             </div>
             <div class="filters-bar">
                 <div class="filter-group">
-                    <label for="type-filter">Curtain type</label>
-                    <select class="sort-select" id="type-filter">
-                        <option value="all">All types</option>
-                        <option value="Light Filtering">Light Filtering</option>
-                        <option value="Blackout">Blackout</option>
-                    </select>
+                    <label>Curtain type</label>
+                    <div class="pill-group" id="type-filter">
+                        <button type="button" class="filter-pill is-active" data-type-pill="all">All</button>
+                        <button type="button" class="filter-pill" data-type-pill="zebra">Zebra</button>
+                        <button type="button" class="filter-pill" data-type-pill="blackout">Blackout</button>
+                        <button type="button" class="filter-pill" data-type-pill="sheer">Sheer</button>
+                        <button type="button" class="filter-pill" data-type-pill="luxury">Luxury</button>
+                    </div>
                 </div>
                 <div class="filter-group">
-                    <label for="color-filter">Color family</label>
-                    <select class="sort-select" id="color-filter">
-                        <option value="all">All colors</option>
-                        <option value="beige">Beige / Taupe</option>
-                        <option value="gray">Gray / Charcoal</option>
-                        <option value="cream">Cream / Ivory</option>
-                    </select>
+                    <label>Color family</label>
+                    <div class="swatch-group" id="color-filter">
+                        <button type="button" class="color-swatch is-active" data-color-swatch="all" aria-label="All colors"><span class="swatch all"></span></button>
+                        <button type="button" class="color-swatch" data-color-swatch="white" aria-label="White"><span class="swatch white"></span></button>
+                        <button type="button" class="color-swatch" data-color-swatch="gray" aria-label="Gray"><span class="swatch gray"></span></button>
+                        <button type="button" class="color-swatch" data-color-swatch="beige" aria-label="Beige"><span class="swatch beige"></span></button>
+                        <button type="button" class="color-swatch" data-color-swatch="black" aria-label="Black"><span class="swatch black"></span></button>
+                    </div>
                 </div>
                 <div class="filter-group">
-                    <label for="price-filter">Price range</label>
-                    <select class="sort-select" id="price-filter">
-                        <option value="all">All prices</option>
-                        <option value="under-60">Under $60</option>
-                        <option value="60-75">$60 - $75</option>
-                        <option value="over-75">Over $75</option>
-                    </select>
+                    <label>Price range</label>
+                    <div class="price-range-shell" id="price-filter">
+                        <div class="price-range-readout">
+                            <span id="price-min-label">$50</span>
+                            <span id="price-max-label">$300</span>
+                        </div>
+                        <div class="dual-range">
+                            <div class="dual-range-track"><span class="dual-range-fill" id="price-range-fill"></span></div>
+                            <input type="range" id="price-min" min="40" max="300" step="5" value="50" aria-label="Minimum price">
+                            <input type="range" id="price-max" min="40" max="300" step="5" value="300" aria-label="Maximum price">
+                        </div>
+                    </div>
                 </div>
                 <div class="filter-group">
-                    <label for="sort-select">Sort by</label>
-                    <select class="sort-select" id="sort-select">
-                        <option value="newest">Newest First</option>
-                        <option value="popular">Most Popular</option>
-                        <option value="price-low">Price: Low to High</option>
-                        <option value="price-high">Price: High to Low</option>
-                    </select>
+                    <label for="sort-select">Sort</label>
+                    <div class="sort-mini">
+                        <span class="sort-mini-icon">↕</span>
+                        <select class="sort-select sort-select-compact" id="sort-select">
+                            <option value="newest">Newest</option>
+                            <option value="popular">Popular</option>
+                            <option value="price-low">Price ↑</option>
+                            <option value="price-high">Price ↓</option>
+                        </select>
+                    </div>
                 </div>
                 <button type="button" class="clear-filters-btn" id="clear-filters">Clear</button>
             </div>
@@ -964,6 +1218,11 @@
         const priceFilter = document.getElementById('price-filter');
         const clearFiltersBtn = document.getElementById('clear-filters');
         const grid = document.querySelector('.products-grid');
+        const priceMinInput = document.getElementById('price-min');
+        const priceMaxInput = document.getElementById('price-max');
+        const priceMinLabel = document.getElementById('price-min-label');
+        const priceMaxLabel = document.getElementById('price-max-label');
+        const priceRangeFill = document.getElementById('price-range-fill');
         const modal = document.getElementById('quick-view-modal');
         const closeModal = document.querySelector('.close-modal');
         const modalPrimaryBtn = modal.querySelector('.btn-primary');
@@ -982,7 +1241,8 @@
         const currentFilters = {
             type: 'all',
             color: 'all',
-            price: 'all',
+            priceMin: 50,
+            priceMax: 300,
             sort: sortSelect?.value || 'newest'
         };
         const formatPrice = (value) => `$${(Number(value || 0) / USD_RATE).toLocaleString('en-US', {
@@ -999,15 +1259,46 @@
             if (source.includes('beige') || source.includes('taupe')) return 'beige';
             return 'all';
         };
+        const updatePriceRangeVisual = () => {
+            if (!priceMinInput || !priceMaxInput || !priceRangeFill) return;
+            const min = Number(priceMinInput.value || currentFilters.priceMin || 50);
+            const max = Number(priceMaxInput.value || currentFilters.priceMax || 300);
+            const left = Math.min(min, max);
+            const right = Math.max(min, max);
+            const minPercent = ((left - Number(priceMinInput.min || 0)) / (Number(priceMinInput.max || 300) - Number(priceMinInput.min || 0))) * 100;
+            const maxPercent = ((right - Number(priceMaxInput.min || 0)) / (Number(priceMaxInput.max || 300) - Number(priceMaxInput.min || 0))) * 100;
+            priceRangeFill.style.left = `${Math.max(0, Math.min(100, minPercent))}%`;
+            priceRangeFill.style.right = `${Math.max(0, Math.min(100, 100 - maxPercent))}%`;
+            if (priceMinLabel) priceMinLabel.textContent = `$${left}`;
+            if (priceMaxLabel) priceMaxLabel.textContent = `$${right}`;
+        };
+
+        const setActiveTypePill = (value) => {
+            document.querySelectorAll('[data-type-pill]').forEach((btn) => {
+                btn.classList.toggle('is-active', btn.dataset.typePill === value);
+            });
+        };
+
+        const setActiveColorSwatch = (value) => {
+            document.querySelectorAll('[data-color-swatch]').forEach((btn) => {
+                btn.classList.toggle('is-active', btn.dataset.colorSwatch === value);
+            });
+        };
+
         const matchesCurrentFilters = (item) => {
             if (!item || item.status === 'Hidden') return false;
-            if (currentFilters.type !== 'all' && String(item.type || '').trim() !== currentFilters.type) return false;
-            if (currentFilters.color !== 'all' && getColorFamily(item) !== currentFilters.color) return false;
+            const source = `${item?.name || ''} ${item?.category || ''} ${item?.tags || ''} ${item?.label || ''}`.toLowerCase();
+
+            if (currentFilters.type === 'blackout' && !source.includes('blackout')) return false;
+            if (currentFilters.type === 'sheer' && !(source.includes('sheer') || source.includes('light filtering'))) return false;
+            if (currentFilters.type === 'luxury' && !(getUsdPrice(item) >= 75 || source.includes('designer') || source.includes('best seller'))) return false;
+            if (currentFilters.type === 'zebra' && !source.includes('zebra')) return false;
+
+            const colorFamily = getColorFamily(item);
+            if (currentFilters.color !== 'all' && currentFilters.color !== colorFamily) return false;
 
             const usd = getUsdPrice(item);
-            if (currentFilters.price === 'under-60' && !(usd < 60)) return false;
-            if (currentFilters.price === '60-75' && !(usd >= 60 && usd <= 75)) return false;
-            if (currentFilters.price === 'over-75' && !(usd > 75)) return false;
+            if (usd < currentFilters.priceMin || usd > currentFilters.priceMax) return false;
             return true;
         };
         const syncHeaderCart = () => {
@@ -1135,6 +1426,7 @@
             }).join('');
             applyMobileProductLayout();
             updateActionState();
+            updatePriceRangeVisual();
         };
 
         const applyMobileProductLayout = () => {
@@ -1208,36 +1500,84 @@
             renderCards(items);
         };
 
+        const refreshResults = () => {
+            grid.classList.add('is-updating');
+            requestAnimationFrame(() => {
+                applyFiltersAndSort();
+                window.setTimeout(() => {
+                    grid.classList.remove('is-updating');
+                }, 180);
+            });
+        };
+
         const init = async () => {
             try {
                 allItems = await loadCollections();
-                applyFiltersAndSort();
+                refreshResults();
             } catch (error) {
                 grid.innerHTML = '<div style="padding: 24px;">Database is not reachable. Start the server first.</div>';
             }
         };
 
         const syncFiltersFromControls = () => {
-            currentFilters.type = typeFilter?.value || 'all';
-            currentFilters.color = colorFilter?.value || 'all';
-            currentFilters.price = priceFilter?.value || 'all';
+            currentFilters.color = colorFilter?.querySelector('.color-swatch.is-active')?.dataset.colorSwatch || 'all';
             currentFilters.sort = sortSelect?.value || 'newest';
+            currentFilters.priceMin = Math.min(
+                Number(priceMinInput?.value || 50),
+                Number(priceMaxInput?.value || 300)
+            );
+            currentFilters.priceMax = Math.max(
+                Number(priceMinInput?.value || 50),
+                Number(priceMaxInput?.value || 300)
+            );
         };
 
         const renderWithFilters = () => {
             syncFiltersFromControls();
-            applyFiltersAndSort();
+            refreshResults();
         };
 
         sortSelect?.addEventListener('change', renderWithFilters);
-        typeFilter?.addEventListener('change', renderWithFilters);
-        colorFilter?.addEventListener('change', renderWithFilters);
-        priceFilter?.addEventListener('change', renderWithFilters);
+        priceMinInput?.addEventListener('input', () => {
+            if (priceMaxInput && Number(priceMinInput.value) > Number(priceMaxInput.value)) {
+                priceMinInput.value = priceMaxInput.value;
+            }
+            updatePriceRangeVisual();
+            renderWithFilters();
+        });
+        priceMaxInput?.addEventListener('input', () => {
+            if (priceMinInput && Number(priceMaxInput.value) < Number(priceMinInput.value)) {
+                priceMaxInput.value = priceMinInput.value;
+            }
+            updatePriceRangeVisual();
+            renderWithFilters();
+        });
+        typeFilter?.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-type-pill]');
+            if (!button) return;
+            currentFilters.type = button.dataset.typePill || 'all';
+            setActiveTypePill(currentFilters.type);
+            renderWithFilters();
+        });
+        colorFilter?.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-color-swatch]');
+            if (!button) return;
+            const value = button.dataset.colorSwatch || 'all';
+            currentFilters.color = value;
+            setActiveColorSwatch(value);
+            renderWithFilters();
+        });
         clearFiltersBtn?.addEventListener('click', () => {
-            if (typeFilter) typeFilter.value = 'all';
-            if (colorFilter) colorFilter.value = 'all';
-            if (priceFilter) priceFilter.value = 'all';
+            currentFilters.type = 'all';
+            currentFilters.color = 'all';
+            currentFilters.priceMin = 50;
+            currentFilters.priceMax = 300;
             if (sortSelect) sortSelect.value = 'newest';
+            if (priceMinInput) priceMinInput.value = '50';
+            if (priceMaxInput) priceMaxInput.value = '300';
+            setActiveTypePill('all');
+            setActiveColorSwatch('all');
+            updatePriceRangeVisual();
             renderWithFilters();
         });
 
