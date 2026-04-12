@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" dir="ltr">
 
 <head>
@@ -8,8 +8,8 @@
     <meta name="robots" content="noindex, nofollow">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=1776032105740">
-    <link rel="stylesheet" href="saved-pages.css?v=1776032105740">
+    <link rel="stylesheet" href="style.css?v=1776032592504">
+    <link rel="stylesheet" href="saved-pages.css?v=1776032592504">
     <style>
         :root {
             --checkout-bg: #f6f1e8;
@@ -240,7 +240,38 @@
         .checkout-summary-item p {
             font-size: 0.88rem;
             line-height: 1.6;
-        }`r`n`r`n        .checkout-summary-meta-row {`r`n            display: flex;`r`n            flex-wrap: wrap;`r`n            gap: 10px;`r`n            margin-top: 8px;`r`n        }`r`n`r`n        .checkout-summary-pill {`r`n            display: inline-flex;`r`n            flex-direction: column;`r`n            gap: 4px;`r`n            padding: 9px 12px;`r`n            border-radius: 14px;`r`n            background: rgba(255, 255, 255, 0.08);`r`n            border: 1px solid rgba(255, 255, 255, 0.08);`r`n            min-width: 132px;`r`n        }`r`n`r`n        .checkout-summary-pill span {`r`n            font-size: 0.72rem;`r`n            letter-spacing: 0.12em;`r`n            text-transform: uppercase;`r`n            color: rgba(255, 255, 255, 0.62);`r`n            font-weight: 700;`r`n        }`r`n`r`n        .checkout-summary-pill strong {`r`n            font-size: 0.95rem;`r`n            color: #fff;`r`n        }
+        }
+
+        .checkout-summary-meta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .checkout-summary-pill {
+            display: inline-flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 9px 12px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            min-width: 132px;
+        }
+
+        .checkout-summary-pill span {
+            font-size: 0.72rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.62);
+            font-weight: 700;
+        }
+
+        .checkout-summary-pill strong {
+            font-size: 0.95rem;
+            color: #fff;
+        }
 
         .checkout-summary-meta {
             display: flex;
@@ -354,8 +385,8 @@
 
 <body data-site-page="checkout">
     <div data-site-header></div>
-    <script src="site-state.js?v=1776032105740"></script>
-    <script src="site-header.js?v=1776032105740"></script>
+    <script src="site-state.js?v=1776032592504"></script>
+    <script src="site-header.js?v=1776032592504"></script>
 
     <main class="checkout-shell">
         <section class="checkout-hero">
@@ -519,7 +550,7 @@
         </div>
     </footer>
 
-    <script src="catalog-data.js?v=1776032105740"></script>
+    <script src="catalog-data.js?v=1776032592504"></script>
     <script>
         (function () {
             const catalog = Array.isArray(window.LUXE_CATALOG) ? window.LUXE_CATALOG : [];
@@ -553,6 +584,11 @@
                 width: Number(widthInput?.value || 0),
                 height: Number(heightInput?.value || 0)
             });
+            const getItemMeasurements = (item) => {
+                const width = Number(item?.width || 0);
+                const height = Number(item?.height || 0);
+                return { width, height, hasMeasurements: Boolean(width && height) };
+            };
 
             const setStatus = (message, kind = '') => {
                 checkoutStatus.textContent = message || '';
@@ -610,15 +646,16 @@
                 const { width, height } = getMeasurementInputs();
                 const hasMeasurements = width > 0 && height > 0;
                 const total = items.reduce((sum, item) => {
-                    if (item.estimatedPrice && item.width && item.height) return sum + Number(item.estimatedPrice || 0);
+                    const measurement = getItemMeasurements(item);
+                    if (measurement.hasMeasurements) return sum + calculateItemTotal(item, measurement.width, measurement.height);
+                    if (item.estimatedPrice) return sum + Number(item.estimatedPrice || 0);
                     return sum + calculateItemTotal(item, width, height);
                 }, 0);
-                const sizeLabel = hasMeasurements ? `${width} cm x ${height} cm` : 'Enter size above';
 
                 syncHeaderCounts(state);
 
                 checkoutCount.textContent = `${items.length} item${items.length === 1 ? '' : 's'}`;
-                checkoutTotal.textContent = hasMeasurements ? formatUsd(total) : '$0.00';
+                checkoutTotal.textContent = items.length ? formatUsd(total) : '$0.00';
 
                 if (!items.length) {
                     checkoutItems.innerHTML = `
@@ -637,22 +674,35 @@
                 checkoutSubmit.disabled = false;
                 checkoutSubmit.textContent = 'Place order';
 
-                checkoutItems.innerHTML = items.map((item) => `
+                checkoutItems.innerHTML = items.map((item) => {
+                    const measurement = getItemMeasurements(item);
+                    const resolvedWidth = measurement.width || width;
+                    const resolvedHeight = measurement.height || height;
+                    const resolvedSize = (resolvedWidth && resolvedHeight) ? `${resolvedWidth} cm x ${resolvedHeight} cm` : 'Enter size above';
+                    const resolvedEstimated = measurement.hasMeasurements ? calculateItemTotal(item, measurement.width, measurement.height) : (item.estimatedPrice || (hasMeasurements ? calculateItemTotal(item, width, height) : 0));
+                    return `
                     <article class="checkout-summary-item">
                         <img src="${item.image}" alt="${item.name}">
                         <div>
                             <h4>${item.name}</h4>
                             <p>${item.category}</p>
-                            <div class="checkout-summary-meta">`r`n                                <div class="checkout-summary-meta-row">`r`n                                    <div class="checkout-summary-pill">`r`n                                        <span>Size</span>`r`n                                        <strong>${sizeLabel}</strong>`r`n                                    </div>`r`n                                    <div class="checkout-summary-pill">`r`n                                        <span>Estimated</span>`r`n                                        <strong>${item.estimatedPrice ? formatUsd(item.estimatedPrice) : (hasMeasurements ? formatUsd(calculateItemTotal(item, width, height)) : '<div class="checkout-summary-meta">
-                                <span>${sizeLabel}</span>
-                                <span>${item.estimatedPrice ? `Estimated ${formatUsd(item.estimatedPrice)}` : (hasMeasurements ? `Estimated ${formatUsd(calculateItemTotal(item, width, height))}` : 'Estimated $0.00')}</span>
+                            <div class="checkout-summary-meta-row">
+                                <div class="checkout-summary-pill">
+                                    <span>Size</span>
+                                    <strong>${resolvedSize}</strong>
+                                </div>
+                                <div class="checkout-summary-pill">
+                                    <span>Estimated</span>
+                                    <strong>${resolvedEstimated ? formatUsd(resolvedEstimated) : '$0.00'}</strong>
+                                </div>
                             </div>
                             <div style="margin-top:6px; font-size:0.85rem; color: rgba(255,255,255,0.72);">
                                 Base rate: ${formatUsd(item.price)} / m²
-                            </div>.00')}</strong>`r`n                                    </div>`r`n                                </div>`r`n                            </div>`r`n                            <div style="margin-top:6px; font-size:0.85rem; color: rgba(255,255,255,0.72);">`r`n                                Base rate: ${formatUsd(item.price)} / m�`r`n                            </div>
+                            </div>
                         </div>
                     </article>
-                `).join('');
+                `;
+                }).join('');
             };
 
             [widthInput, heightInput].forEach((input) => {
@@ -691,13 +741,10 @@
                     return;
                 }
 
-                if (!width || !height) {
-                    setStatus('Please fill in the measurement fields before continuing.', 'is-error');
-                    return;
-                }
-
                 const subtotal = items.reduce((sum, item) => {
-                    if (item.estimatedPrice && item.width && item.height) return sum + Number(item.estimatedPrice || 0);
+                    const measurement = getItemMeasurements(item);
+                    if (measurement.hasMeasurements) return sum + calculateItemTotal(item, measurement.width, measurement.height);
+                    if (item.estimatedPrice) return sum + Number(item.estimatedPrice || 0);
                     return sum + calculateItemTotal(item, width, height);
                 }, 0);
                 const shippingFee = 0;
@@ -793,4 +840,6 @@
 </body>
 
 </html>
+
+
 
