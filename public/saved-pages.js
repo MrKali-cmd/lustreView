@@ -66,8 +66,15 @@
 
     const getCurrentState = () => (window.LuxeState?.getSnapshot ? window.LuxeState.getSnapshot() : { cart: [], wishlist: [], lastOrder: null });
 
+    const getEntryKey = (entry) => (entry && typeof entry === 'object' ? entry.key : entry);
+
     const renderSummary = (items) => {
-        const total = items.reduce((sum, item) => sum + toUsd(Number(item.price) || 0), 0);
+        const total = items.reduce((sum, item) => {
+            if (pageType === 'cart' && Number(item.estimatedPrice || 0) > 0) {
+                return sum + Number(item.estimatedPrice || 0);
+            }
+            return sum + toUsd(Number(item.price) || 0);
+        }, 0);
         summaryCountEl.textContent = `${items.length} ${config.countLabel}${items.length === 1 ? '' : 's'}`;
         summaryValueLabelEl.textContent = config.summaryValueLabel;
         summaryValueEl.textContent = `$${total.toLocaleString('en-US', {
@@ -88,8 +95,17 @@
 
     const render = async () => {
         const state = await getState();
-        const activeKeys = Array.isArray(state[pageType]) ? state[pageType] : [];
-        const items = activeKeys.map(getCatalogItem).filter(Boolean);
+        const activeEntries = Array.isArray(state[pageType]) ? state[pageType] : [];
+        const items = activeEntries.map((entry) => {
+            const key = getEntryKey(entry);
+            const catalogItem = getCatalogItem(key);
+            if (!catalogItem) return null;
+            return {
+                ...catalogItem,
+                ...(entry && typeof entry === 'object' ? entry : {}),
+                key
+            };
+        }).filter(Boolean);
 
         titleEl.textContent = config.title;
         descEl.textContent = config.desc;
@@ -195,7 +211,7 @@
 
         if (pageType === 'wishlist' && action === 'move-to-cart') {
             if (window.LuxeState?.moveToCart) {
-                await window.LuxeState.moveToCart(itemKey);
+                await window.LuxeState.moveToCart({ key: itemKey });
             }
             window.location.href = `cart.html?focus=${encodeURIComponent(itemKey)}`;
             return;

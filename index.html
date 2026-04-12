@@ -741,7 +741,7 @@
         })}`;
 
         const getSavedState = () => (window.LuxeState?.getSnapshot ? window.LuxeState.getSnapshot() : { cart: [], wishlist: [], lastOrder: null });
-        const getSavedSet = (key) => new Set(Array.isArray(getSavedState()[key]) ? getSavedState()[key] : []);
+        const getSavedSet = (key) => new Set(Array.isArray(getSavedState()[key]) ? getSavedState()[key].map((entry) => (entry && typeof entry === 'object' ? entry.key : entry)).filter(Boolean) : []);
 
         const getCardKey = (card) => card.querySelector('.product-name')?.textContent.trim() || '';
         const getCardData = (card) => ({
@@ -760,6 +760,18 @@
             const heightM = Math.max(0, Number(heightCm || 0) / 100);
             if (!baseRate || !widthM || !heightM) return 0;
             return baseRate * widthM * heightM;
+        };
+        const getCartItemPayload = () => {
+            const widthValue = Number(modalWidth?.value || 0);
+            const heightValue = Number(modalHeight?.value || 0);
+            const baseRate = activeProductKey ? getBaseRate(findCardByKey(activeProductKey)) : 0;
+            return {
+                key: activeProductKey,
+                width: widthValue,
+                height: heightValue,
+                basePrice: baseRate ? baseRate * 1 : 0,
+                estimatedPrice: calculateEstimate(baseRate, widthValue, heightValue)
+            };
         };
         let quickViewEstimateHandler = null;
 
@@ -853,11 +865,12 @@
             return true;
         };
 
-        const addToCart = async (key) => {
+        const addToCart = async (item) => {
+            const key = typeof item === 'object' ? item?.key : item;
             const cart = getSavedSet('cart');
             if (!key || cart.has(key)) return false;
             if (window.LuxeState?.addToCart) {
-                await window.LuxeState.addToCart(key);
+                await window.LuxeState.addToCart(item);
             }
             return true;
         };
@@ -1179,7 +1192,7 @@
 
                         if (action === 'cart') {
                             (async () => {
-                                const added = await addToCart(key);
+                                const added = await addToCart({ key });
                                 updateActionState();
                                 syncPanels();
                                 showActionToast(added ? 'Added to cart' : 'Already in cart');
@@ -1225,7 +1238,7 @@
             }
             if (!activeProductKey) return;
             (async () => {
-                const added = await addToCart(activeProductKey);
+                const added = await addToCart(getCartItemPayload());
                 updateActionState();
                 syncPanels();
                 showActionToast(added ? 'Added to cart' : 'Already in cart');

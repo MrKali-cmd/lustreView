@@ -8,8 +8,8 @@
     <meta name="robots" content="noindex, nofollow">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=1776028949591">
-    <link rel="stylesheet" href="saved-pages.css?v=1776028949591">
+    <link rel="stylesheet" href="style.css?v=1776030215169">
+    <link rel="stylesheet" href="saved-pages.css?v=1776030215169">
     <style>
         :root {
             --checkout-bg: #f6f1e8;
@@ -354,8 +354,8 @@
 
 <body data-site-page="checkout">
     <div data-site-header></div>
-    <script src="site-state.js?v=1776028949591"></script>
-    <script src="site-header.js?v=1776028949591"></script>
+    <script src="site-state.js?v=1776030215169"></script>
+    <script src="site-header.js?v=1776030215169"></script>
 
     <main class="checkout-shell">
         <section class="checkout-hero">
@@ -519,7 +519,7 @@
         </div>
     </footer>
 
-    <script src="catalog-data.js?v=1776028949591"></script>
+    <script src="catalog-data.js?v=1776030215169"></script>
     <script>
         (function () {
             const catalog = Array.isArray(window.LUXE_CATALOG) ? window.LUXE_CATALOG : [];
@@ -577,7 +577,16 @@
             };
 
             const getItems = (state) => Array.from(state?.cart || [])
-                .map((key) => catalog.find((item) => item.key === key))
+                .map((entry) => {
+                    const key = typeof entry === 'object' && entry ? entry.key : entry;
+                    const catalogItem = catalog.find((item) => item.key === key);
+                    if (!catalogItem) return null;
+                    return {
+                        ...catalogItem,
+                        ...(typeof entry === 'object' && entry ? entry : {}),
+                        key
+                    };
+                })
                 .filter(Boolean);
 
             const syncHeaderCounts = (state) => {
@@ -600,7 +609,10 @@
                 const items = getItems(state);
                 const { width, height } = getMeasurementInputs();
                 const hasMeasurements = width > 0 && height > 0;
-                const total = items.reduce((sum, item) => sum + calculateItemTotal(item, width, height), 0);
+                const total = items.reduce((sum, item) => {
+                    if (item.estimatedPrice && item.width && item.height) return sum + Number(item.estimatedPrice || 0);
+                    return sum + calculateItemTotal(item, width, height);
+                }, 0);
                 const sizeLabel = hasMeasurements ? `${width} cm × ${height} cm` : 'Enter size above';
 
                 syncHeaderCounts(state);
@@ -633,7 +645,7 @@
                             <p>${item.category}</p>
                             <div class="checkout-summary-meta">
                                 <span>${sizeLabel}</span>
-                                <span>${hasMeasurements ? `Estimated ${formatUsd(calculateItemTotal(item, width, height))}` : 'Estimated $0.00'}</span>
+                                <span>${item.estimatedPrice ? `Estimated ${formatUsd(item.estimatedPrice)}` : (hasMeasurements ? `Estimated ${formatUsd(calculateItemTotal(item, width, height))}` : 'Estimated $0.00')}</span>
                             </div>
                             <div style="margin-top:6px; font-size:0.85rem; color: rgba(255,255,255,0.72);">
                                 Base rate: ${formatUsd(item.price)} / m²
@@ -684,7 +696,10 @@
                     return;
                 }
 
-                const subtotal = items.reduce((sum, item) => sum + calculateItemTotal(item, width, height), 0);
+                const subtotal = items.reduce((sum, item) => {
+                    if (item.estimatedPrice && item.width && item.height) return sum + Number(item.estimatedPrice || 0);
+                    return sum + calculateItemTotal(item, width, height);
+                }, 0);
                 const shippingFee = 0;
                 const total = subtotal + shippingFee;
                 const orderPayload = {
@@ -707,7 +722,9 @@
                         category: item.category,
                         image: item.image,
                         basePrice: Number(item.price || 0),
-                        estimatedPrice: calculateItemTotal(item, width, height)
+                        estimatedPrice: calculateItemTotal(item, width, height),
+                        width,
+                        height
                     }))
                 };
 

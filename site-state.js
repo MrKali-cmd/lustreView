@@ -88,16 +88,33 @@
         return syncState(next);
     };
 
+    const normalizeCartItem = (keyOrItem) => {
+        if (!keyOrItem) return null;
+        if (typeof keyOrItem === 'string') return { key: keyOrItem };
+        if (typeof keyOrItem === 'object') {
+            const key = String(keyOrItem.key || '').trim();
+            if (!key) return null;
+            return {
+                key,
+                width: Number(keyOrItem.width || 0),
+                height: Number(keyOrItem.height || 0),
+                estimatedPrice: Number(keyOrItem.estimatedPrice || 0),
+                basePrice: Number(keyOrItem.basePrice || 0)
+            };
+        }
+        return null;
+    };
+
     window.LuxeState = {
         ready,
         getSnapshot: () => currentState,
-        addToCart: (key) => mutate('add-cart', { key }),
+        addToCart: (item) => mutate('add-cart', { item: normalizeCartItem(item) }),
         removeFromCart: (key) => mutate('remove-cart', { key }),
         clearCart: () => mutate('clear-cart'),
         addToWishlist: (key) => mutate('add-wishlist', { key }),
         removeFromWishlist: (key) => mutate('remove-wishlist', { key }),
         clearWishlist: () => mutate('clear-wishlist'),
-        moveToCart: (key) => mutate('move-to-cart', { key }),
+        moveToCart: (item) => mutate('move-to-cart', { item: normalizeCartItem(item) }),
         moveToWishlist: (key) => mutate('move-to-wishlist', { key }),
         setLastOrder: (order) => mutate('set-last-order', { order }),
         clearLastOrder: () => mutate('clear-last-order')

@@ -8,6 +8,18 @@ const {
 } = require('./_lib/store');
 
 const normalizeKey = (value) => String(value || '').trim();
+const normalizeCartItem = (value, fallbackKey = '') => {
+  const key = normalizeKey(value?.key || value?.id || fallbackKey);
+  if (!key) return null;
+  return {
+    key,
+    width: Number(value?.width || 0),
+    height: Number(value?.height || 0),
+    estimatedPrice: Number(value?.estimatedPrice || 0),
+    basePrice: Number(value?.basePrice || 0)
+  };
+};
+const getItemKey = (value) => (typeof value === 'object' && value ? normalizeKey(value.key) : normalizeKey(value));
 
 module.exports = async (req, res) => {
   if (handleOptions(req, res)) return;
@@ -23,6 +35,7 @@ module.exports = async (req, res) => {
     const payload = await readJson(req);
     const action = String(payload.action || '').trim();
     const key = normalizeKey(payload.key || payload.itemKey);
+    const item = normalizeCartItem(payload.item, key);
     const supportedActions = new Set([
       'add-cart',
       'remove-cart',
@@ -47,12 +60,18 @@ module.exports = async (req, res) => {
     }
 
     const nextState = await updateSessionState(sessionId, (current) => {
-      const cart = new Set(Array.isArray(current.cart) ? current.cart : []);
+      const cartEntries = Array.isArray(current.cart) ? current.cart : [];
+      const cart = cartEntries.reduce((map, entry) => {
+        const entryKey = getItemKey(entry);
+        if (entryKey) map.set(entryKey, typeof entry === 'object' && entry ? entry : { key: entryKey });
+        return map;
+      }, new Map());
       const wishlist = new Set(Array.isArray(current.wishlist) ? current.wishlist : []);
       let lastOrder = current.lastOrder && typeof current.lastOrder === 'object' ? current.lastOrder : null;
 
       const addItem = (set) => {
-        if (key) set.add(key);
+        if (item) set.set(item.key, item);
+        else if (key) set.set(key, { key });
       };
 
       const removeItem = (set) => {
@@ -96,7 +115,7 @@ module.exports = async (req, res) => {
 
       return {
         ...current,
-        cart: Array.from(cart),
+        cart: Array.from(cart.values()),
         wishlist: Array.from(wishlist),
         lastOrder
       };
