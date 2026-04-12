@@ -8,15 +8,78 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=1775954931740">
+    <link rel="stylesheet" href="style.css?v=1776025312442">
+    <style>
+        .quick-view-measurements {
+            display: grid;
+            gap: 12px;
+            padding: 16px;
+            border-radius: 20px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(247, 242, 233, 0.9));
+            border: 1px solid rgba(17, 17, 17, 0.08);
+            box-shadow: 0 16px 30px rgba(17, 17, 17, 0.05);
+        }
+
+        .quick-view-measurements h4 {
+            margin: 0;
+            font-size: 0.98rem;
+            letter-spacing: 0.04em;
+        }
+
+        .quick-view-measurement-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .quick-view-measurements label {
+            display: grid;
+            gap: 6px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .quick-view-measurements input {
+            width: 100%;
+            padding: 13px 14px;
+            border-radius: 16px;
+            border: 1px solid rgba(17, 17, 17, 0.12);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(249, 245, 238, 0.96));
+            font-size: 1rem;
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.9), 0 8px 18px rgba(17, 17, 17, 0.04);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        }
+
+        .quick-view-measurements input:focus {
+            outline: none;
+            border-color: rgba(201, 169, 98, 0.8);
+            box-shadow: 0 0 0 3px rgba(201, 169, 98, 0.16), 0 12px 20px rgba(17, 17, 17, 0.06);
+            transform: translateY(-1px);
+        }
+
+        .quick-view-estimate {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center;
+            padding: 12px 14px;
+            border-radius: 16px;
+            background: rgba(201, 169, 98, 0.12);
+            color: var(--primary-dark);
+            font-weight: 800;
+        }
+    </style>
 
 </head>
 
 <body data-site-page="home">
 
     <div data-site-header></div>
-    <script src="site-state.js?v=1775954931740"></script>
-    <script src="site-header.js?v=1775954931740"></script>
+    <script src="site-state.js?v=1776025312442"></script>
+    <script src="site-header.js?v=1776025312442"></script>
 
     <section class="hero-premium" id="home">
         <div class="hero-inner">
@@ -103,7 +166,7 @@
                         kitchens.
                     </p>
                     <div class="product-price">
-                        <span class="price">$67.86</span>
+                        <span class="price">From $67.86 / m²</span>
                         <div class="product-rating">
                             <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
                                 class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
@@ -132,7 +195,7 @@
                     <h3 class="product-name">Charcoal Gray Zebra Blackout</h3>
                     <p>Full blackout capability with charcoal tones - perfect privacy and darkness for bedrooms.</p>
                     <div class="product-price">
-                        <span class="price">$82.14</span>
+                        <span class="price">From $82.14 / m²</span>
                         <div class="product-rating">
                             <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
                                 class="fas fa-star"></i><i class="fas fa-star"></i>
@@ -161,7 +224,7 @@
                     <h3 class="product-name">Ivory Cream Zebra Shades</h3>
                     <p>Bright cream tones with soft sheer bands - creates a calm, airy feel in bright spaces.</p>
                     <div class="product-price">
-                        <span class="price">$63.10</span>
+                        <span class="price">From $63.10 / m²</span>
                         <div class="product-rating">
                             <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
                                 class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
@@ -191,7 +254,7 @@
                     <p>Cozy warm beige with complete light blocking - great for large living areas and home theaters.
                     </p>
                     <div class="product-price">
-                        <span class="price">$75.00</span>
+                        <span class="price">From $75.00 / m²</span>
                         <div class="product-rating">
                             <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
                                 class="fas fa-star"></i><i class="fas fa-star"></i>
@@ -220,7 +283,7 @@
                     <h3 class="product-name">Sandstone Zebra Light Control</h3>
                     <p>Soft layered bands that keep the room bright while filtering harsh midday glare.</p>
                     <div class="product-price">
-                        <span class="price">$58.50</span>
+                        <span class="price">From $58.50 / m²</span>
                         <div class="product-rating">
                             <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
                                 class="fas fa-star"></i><i class="fa-regular fa-star"></i>
@@ -249,7 +312,7 @@
                     <h3 class="product-name">Pearl White Zebra Sheer</h3>
                     <p>Clean ivory tones with gentle transparency for kitchens, studios, and bright lounges.</p>
                     <div class="product-price">
-                        <span class="price">$54.90</span>
+                        <span class="price">From $54.90 / m²</span>
                         <div class="product-rating">
                             <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
                                 class="fas fa-star-half-alt"></i><i class="fa-regular fa-star"></i>
@@ -278,7 +341,7 @@
                     <h3 class="product-name">Graphite Night Zebra Blackout</h3>
                     <p>Deep charcoal layers for bedrooms and media rooms that demand privacy and darkness.</p>
                     <div class="product-price">
-                        <span class="price">$88.20</span>
+                        <span class="price">From $88.20 / m²</span>
                         <div class="product-rating">
                             <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
                                 class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
@@ -307,7 +370,7 @@
                     <h3 class="product-name">Mocha Zebra Dual Shade</h3>
                     <p>Balanced warm neutrals with crisp band alignment for modern open-plan interiors.</p>
                     <div class="product-price">
-                        <span class="price">$72.40</span>
+                        <span class="price">From $72.40 / m²</span>
                         <div class="product-rating">
                             <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
                                 class="fas fa-star-half-alt"></i><i class="fa-regular fa-star"></i>
@@ -473,6 +536,24 @@
                     <span id="quick-view-category" class="quick-view-category"></span>
                     <h3 id="quick-view-title"></h3>
                     <p id="quick-view-description"></p>
+                    <div class="quick-view-measurements">
+                        <h4>Measurement estimate</h4>
+                        <div class="quick-view-measurement-grid">
+                            <label>
+                                Width (cm)
+                                <input id="quick-view-width" type="number" min="1" step="1" placeholder="Enter width">
+                            </label>
+                            <label>
+                                Height (cm)
+                                <input id="quick-view-height" type="number" min="1" step="1" placeholder="Enter height">
+                            </label>
+                        </div>
+                        <div class="quick-view-estimate">
+                            <span>Estimated total</span>
+                            <strong id="quick-view-estimate-total">$0.00</strong>
+                        </div>
+                        <small style="color: var(--gray); line-height: 1.5;">Card prices are base rates per square meter. Final total depends on your measured width and height.</small>
+                    </div>
                     <div class="quick-view-footer">
                         <span id="quick-view-price" class="quick-view-price"></span>
                         <button type="button" id="quick-view-add-cart" class="btn-primary">Add to Cart</button>
@@ -625,6 +706,9 @@
         const modalDescription = document.getElementById('quick-view-description');
         const modalPrice = document.getElementById('quick-view-price');
         const modalAddCart = document.getElementById('quick-view-add-cart');
+        const modalWidth = document.getElementById('quick-view-width');
+        const modalHeight = document.getElementById('quick-view-height');
+        const modalEstimate = document.getElementById('quick-view-estimate-total');
         const quickViewBackdrop = modal.querySelector('.quick-view-backdrop');
         const quickViewContent = modal.querySelector('.quick-view-content');
         const favoritesPanel = document.getElementById('favorites-panel');
@@ -647,6 +731,10 @@
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         })}`;
+        const formatUsdDirect = (value) => `$${Number(value || 0).toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        })}`;
         const formatUsdAmount = (usdValue) => `$${Number(usdValue || 0).toLocaleString('en-US', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
@@ -665,6 +753,15 @@
             priceText: card.querySelector('.price')?.textContent.trim() || '',
             priceValue: toUsd(Number(card.dataset.price || 0)),
         });
+
+        const getBaseRate = (card) => toUsd(Number(card?.dataset?.price || 0));
+        const calculateEstimate = (baseRate, widthCm, heightCm) => {
+            const widthM = Math.max(0, Number(widthCm || 0) / 100);
+            const heightM = Math.max(0, Number(heightCm || 0) / 100);
+            if (!baseRate || !widthM || !heightM) return 0;
+            return baseRate * widthM * heightM;
+        };
+        let quickViewEstimateHandler = null;
 
         const updateActionState = () => {
             const favorites = getSavedSet('wishlist');
@@ -980,6 +1077,18 @@
             modalTitle.textContent = activeProductKey;
             modalDescription.textContent = card.querySelector('.product-info p').textContent.trim();
             modalPrice.textContent = card.querySelector('.price').textContent.trim();
+            const baseRate = getBaseRate(card);
+            quickViewEstimateHandler = () => {
+                const widthValue = Number(modalWidth?.value || 0);
+                const heightValue = Number(modalHeight?.value || 0);
+                const estimate = calculateEstimate(baseRate, widthValue, heightValue);
+                if (modalEstimate) modalEstimate.textContent = estimate > 0 ? formatUsdDirect(estimate) : '$0.00';
+            };
+            modalWidth && (modalWidth.value = '');
+            modalHeight && (modalHeight.value = '');
+            modalWidth && (modalWidth.oninput = quickViewEstimateHandler);
+            modalHeight && (modalHeight.oninput = quickViewEstimateHandler);
+            quickViewEstimateHandler();
             if (quickViewContent) {
                 quickViewContent.scrollTop = 0;
             }
@@ -994,6 +1103,8 @@
             modal.style.display = 'none';
             modal.setAttribute('aria-hidden', 'true');
             document.body.classList.remove('modal-open');
+            if (modalWidth) modalWidth.oninput = null;
+            if (modalHeight) modalHeight.oninput = null;
         };
 
         const handlePanelAction = (event) => {
@@ -1106,6 +1217,12 @@
         });
 
         modalAddCart.addEventListener('click', () => {
+            const widthValue = Number(modalWidth?.value || 0);
+            const heightValue = Number(modalHeight?.value || 0);
+            if (!widthValue || !heightValue) {
+                showActionToast('Please fill in the measurement fields first.');
+                return;
+            }
             if (!activeProductKey) return;
             (async () => {
                 const added = await addToCart(activeProductKey);

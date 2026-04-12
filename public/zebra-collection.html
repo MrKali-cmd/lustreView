@@ -9,7 +9,7 @@
         href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=1775954931740">
+    <link rel="stylesheet" href="style.css?v=1776025312442">
     <style>
         :root {
             --collection-bg: #f4f2ee;
@@ -381,6 +381,44 @@
             margin-top: 3px;
         }
 
+        /* Tooltip (hover + keyboard focus) */
+        .has-tooltip {
+            position: relative;
+        }
+
+        .has-tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 50%;
+            top: calc(100% + 10px);
+            transform: translateX(-50%) translateY(-4px);
+            padding: 7px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+            color: #fff;
+            background: rgba(20, 20, 20, 0.78);
+            border: 1px solid rgba(199, 154, 79, 0.28);
+            box-shadow: 0 18px 46px rgba(0, 0, 0, 0.35);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.18s ease, transform 0.18s ease;
+            z-index: 60;
+        }
+
+        .has-tooltip:hover::after,
+        .has-tooltip:focus-visible::after {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* If dropdown open, don't cover it with tooltip */
+        .orbit-item.is-open.has-tooltip::after {
+            opacity: 0;
+        }
+
         .orbit-item {
             position: absolute;
             top: 30px;
@@ -480,6 +518,76 @@
             .products .filter-orbit-container {
                 margin-left: 14px;
             }
+        }
+
+        /* Responsive orbit sizing (tablet + phone) */
+        @media (max-width: 768px) {
+            .filter-orbit-container {
+                width: 86px;
+                height: 86px;
+            }
+
+            .filter-orbit-container::before { inset: -24px; opacity: 0.55; }
+            .filter-orbit-container::after { inset: -32px; opacity: 0.22; background-size: 16px 16px; }
+
+            .orbit-main-btn {
+                width: 82px;
+                height: 82px;
+            }
+
+            .orbit-main-btn i { font-size: 18px; }
+            .orbit-main-btn span { font-size: 11px; }
+
+            .orbit-item {
+                top: 24px;
+                left: 24px;
+                width: 48px;
+                height: 48px;
+            }
+
+            .orbit-main-btn.active + #orbitItems .orbit-item:nth-child(1) { --ox: 0px; --oy: -86px; }
+            .orbit-main-btn.active + #orbitItems .orbit-item:nth-child(2) { --ox: 86px; --oy: 0px; }
+            .orbit-main-btn.active + #orbitItems .orbit-item:nth-child(3) { --ox: 0px; --oy: 86px; }
+            .orbit-main-btn.active + #orbitItems .orbit-item:nth-child(4) { --ox: -86px; --oy: 0px; }
+
+            .orbit-dropdown {
+                top: 42px;
+                left: -6px;
+                min-width: 160px;
+                padding: 10px;
+            }
+
+            .has-tooltip::after {
+                font-size: 11px;
+                top: calc(100% + 8px);
+            }
+        }
+
+        @media (max-width: 420px) {
+            .filter-orbit-container {
+                width: 78px;
+                height: 78px;
+            }
+
+            .filter-orbit-container::before { inset: -22px; }
+            .filter-orbit-container::after { inset: -28px; background-size: 15px 15px; }
+
+            .orbit-main-btn {
+                width: 74px;
+                height: 74px;
+            }
+
+            .orbit-item {
+                top: 22px;
+                left: 22px;
+                width: 44px;
+                height: 44px;
+            }
+
+            .orbit-main-btn.active + #orbitItems .orbit-item:nth-child(1) { --ox: 0px; --oy: -78px; }
+            .orbit-main-btn.active + #orbitItems .orbit-item:nth-child(2) { --ox: 78px; --oy: 0px; }
+            .orbit-main-btn.active + #orbitItems .orbit-item:nth-child(3) { --ox: 0px; --oy: 78px; }
+            .orbit-main-btn.active + #orbitItems .orbit-item:nth-child(4) { --ox: -78px; --oy: 0px; }
         }
 
         .color-opts {
@@ -1592,8 +1700,8 @@
 <body data-site-page="collection">
 
     <div data-site-header></div>
-    <script src="site-state.js?v=1775954931740"></script>
-    <script src="site-header.js?v=1775954931740"></script>
+    <script src="site-state.js?v=1776025312442"></script>
+    <script src="site-header.js?v=1776025312442"></script>
 
     <section class="collection-hero">
         <div class="video-bg">
@@ -1617,19 +1725,19 @@
 
     <section class="products" style="padding-top: 0;">
         <div class="filter-orbit-container">
-            <button class="orbit-main-btn" id="orbitBtn" type="button" aria-expanded="false" aria-label="Open filters">
+            <button class="orbit-main-btn has-tooltip" data-tooltip="Filters" id="orbitBtn" type="button" aria-expanded="false" aria-label="Open filters">
                 <i class="fa-solid fa-filter"></i>
                 <span>Filter</span>
             </button>
             <div class="orbit-items" id="orbitItems">
-                <div class="orbit-item" data-type="price">
+                <div class="orbit-item has-tooltip" data-tooltip="Max Price" data-type="price" tabindex="0" role="button" aria-label="Max price">
                     <i class="fa-solid fa-tag"></i>
                     <div class="orbit-dropdown">
                         <p>Max Price: <span id="p-val">$300</span></p>
                         <input type="range" min="50" max="300" value="300" id="p-range">
                     </div>
                 </div>
-                <div class="orbit-item" data-type="color">
+                <div class="orbit-item has-tooltip" data-tooltip="Color" data-type="color" tabindex="0" role="button" aria-label="Color filter">
                     <i class="fa-solid fa-palette"></i>
                     <div class="orbit-dropdown">
                         <div class="color-opts">
@@ -1639,7 +1747,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="orbit-item" data-type="model">
+                <div class="orbit-item has-tooltip" data-tooltip="Model" data-type="model" tabindex="0" role="button" aria-label="Model filter">
                     <i class="fa-solid fa-layer-group"></i>
                     <div class="orbit-dropdown">
                         <div class="m-btn-wrap">
@@ -1648,7 +1756,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="orbit-item" data-type="reset" title="Reset filters" aria-label="Reset filters">
+                <div class="orbit-item has-tooltip" data-tooltip="Reset" data-type="reset" title="Reset filters" aria-label="Reset filters" tabindex="0" role="button">
                     <i class="fa-solid fa-rotate-left"></i>
                 </div>
             </div>

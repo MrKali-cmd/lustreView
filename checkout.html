@@ -411,6 +411,16 @@
                             </select>
                         </label>
 
+                        <label class="checkout-field">
+                            <span>Width (cm)</span>
+                            <input id="checkout-width" name="width" type="number" min="1" step="1" placeholder="100">
+                        </label>
+
+                        <label class="checkout-field">
+                            <span>Height (cm)</span>
+                            <input id="checkout-height" name="height" type="number" min="1" step="1" placeholder="100">
+                        </label>
+
                         <label class="checkout-field full">
                             <span>Order notes</span>
                             <textarea id="checkout-notes" name="notes" placeholder="Delivery notes, installation request, preferred call time, special instructions..."></textarea>
@@ -441,7 +451,7 @@
                     <strong id="checkout-count">0 items</strong>
                 </div>
                 <div class="checkout-summary-row">
-                    <span>Subtotal</span>
+                    <span>Base subtotal</span>
                     <strong id="checkout-total" class="checkout-summary-total">$0.00</strong>
                 </div>
 
@@ -629,6 +639,8 @@
                 const city = document.getElementById('checkout-city').value.trim();
                 const shippingAddress = document.getElementById('checkout-address').value.trim();
                 const paymentMethod = document.getElementById('checkout-payment').value.trim();
+                const width = Number(document.getElementById('checkout-width').value || 0);
+                const height = Number(document.getElementById('checkout-height').value || 0);
                 const notes = document.getElementById('checkout-notes').value.trim();
 
                 if (!name || !email || !phone || !city || !shippingAddress || !paymentMethod) {
@@ -651,6 +663,8 @@
                     city,
                     shippingAddress,
                     paymentMethod,
+                    width,
+                    height,
                     notes,
                     subtotal,
                     shippingFee,

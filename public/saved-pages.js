@@ -50,10 +50,10 @@
     const USD_RATE = 42000;
 
     const toUsd = (value) => Number(value || 0) / USD_RATE;
-    const formatPrice = (rawValue) => `$${toUsd(rawValue).toLocaleString('en-US', {
+    const formatBasePrice = (rawValue) => `From $${toUsd(rawValue).toLocaleString('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
-    })}`;
+    })} / m²`;
 
     const getCatalogItem = (key) => catalog.find((item) => item.key === key) || null;
 
@@ -142,7 +142,7 @@
                                 <span class="saved-card-category">${item.category}</span>
                                 <h3 class="saved-card-title">${item.name}</h3>
                             </div>
-                            <div class="saved-card-price">${formatPrice(item.price)}</div>
+                            <div class="saved-card-price">${formatBasePrice(item.price)}</div>
                         </div>
                         <p class="saved-card-desc">${item.description}</p>
                         <div class="saved-card-actions">

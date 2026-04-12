@@ -8,8 +8,8 @@
     <meta name="robots" content="noindex, nofollow">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=1775954931740">
-    <link rel="stylesheet" href="saved-pages.css?v=1775954931740">
+    <link rel="stylesheet" href="style.css?v=1776025312442">
+    <link rel="stylesheet" href="saved-pages.css?v=1776025312442">
     <style>
         :root {
             --checkout-bg: #f6f1e8;
@@ -354,8 +354,8 @@
 
 <body data-site-page="checkout">
     <div data-site-header></div>
-    <script src="site-state.js?v=1775954931740"></script>
-    <script src="site-header.js?v=1775954931740"></script>
+    <script src="site-state.js?v=1776025312442"></script>
+    <script src="site-header.js?v=1776025312442"></script>
 
     <main class="checkout-shell">
         <section class="checkout-hero">
@@ -411,6 +411,16 @@
                             </select>
                         </label>
 
+                        <label class="checkout-field">
+                            <span>Width (cm)</span>
+                            <input id="checkout-width" name="width" type="number" min="1" step="1" placeholder="100">
+                        </label>
+
+                        <label class="checkout-field">
+                            <span>Height (cm)</span>
+                            <input id="checkout-height" name="height" type="number" min="1" step="1" placeholder="100">
+                        </label>
+
                         <label class="checkout-field full">
                             <span>Order notes</span>
                             <textarea id="checkout-notes" name="notes" placeholder="Delivery notes, installation request, preferred call time, special instructions..."></textarea>
@@ -441,7 +451,7 @@
                     <strong id="checkout-count">0 items</strong>
                 </div>
                 <div class="checkout-summary-row">
-                    <span>Subtotal</span>
+                    <span>Base subtotal</span>
                     <strong id="checkout-total" class="checkout-summary-total">$0.00</strong>
                 </div>
 
@@ -509,7 +519,7 @@
         </div>
     </footer>
 
-    <script src="catalog-data.js?v=1775954931740"></script>
+    <script src="catalog-data.js?v=1776025312442"></script>
     <script>
         (function () {
             const catalog = Array.isArray(window.LUXE_CATALOG) ? window.LUXE_CATALOG : [];
@@ -629,6 +639,8 @@
                 const city = document.getElementById('checkout-city').value.trim();
                 const shippingAddress = document.getElementById('checkout-address').value.trim();
                 const paymentMethod = document.getElementById('checkout-payment').value.trim();
+                const width = Number(document.getElementById('checkout-width').value || 0);
+                const height = Number(document.getElementById('checkout-height').value || 0);
                 const notes = document.getElementById('checkout-notes').value.trim();
 
                 if (!name || !email || !phone || !city || !shippingAddress || !paymentMethod) {
@@ -651,6 +663,8 @@
                     city,
                     shippingAddress,
                     paymentMethod,
+                    width,
+                    height,
                     notes,
                     subtotal,
                     shippingFee,
