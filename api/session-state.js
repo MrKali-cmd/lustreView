@@ -20,6 +20,12 @@ const normalizeCartItem = (value, fallbackKey = '') => {
   };
 };
 const getItemKey = (value) => (typeof value === 'object' && value ? normalizeKey(value.key) : normalizeKey(value));
+const getRequestPayload = async (req) => {
+  if (req && req.body && typeof req.body === 'object') {
+    return req.body;
+  }
+  return readJson(req);
+};
 
 module.exports = async (req, res) => {
   if (handleOptions(req, res)) return;
@@ -32,7 +38,7 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'POST' || req.method === 'PATCH') {
-    const payload = await readJson(req);
+    const payload = await getRequestPayload(req);
     const action = String(payload.action || '').trim();
     const key = normalizeKey(payload.key || payload.itemKey);
     const item = normalizeCartItem(payload.item, key);
