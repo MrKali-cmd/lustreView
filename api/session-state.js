@@ -72,17 +72,22 @@ module.exports = async (req, res) => {
         if (entryKey) map.set(entryKey, typeof entry === 'object' && entry ? entry : { key: entryKey });
         return map;
       }, new Map());
-      const wishlist = new Set(Array.isArray(current.wishlist) ? current.wishlist : []);
+      const wishlistEntries = Array.isArray(current.wishlist) ? current.wishlist : [];
+      const wishlist = wishlistEntries.reduce((map, entry) => {
+        const entryKey = getItemKey(entry);
+        if (entryKey) map.set(entryKey, typeof entry === 'object' && entry ? entry : { key: entryKey });
+        return map;
+      }, new Map());
       let lastOrder = current.lastOrder && typeof current.lastOrder === 'object' ? current.lastOrder : null;
 
-      const addItem = (set) => {
-        if (item) set.set(item.key, item);
-        else if (key) set.set(key, { key });
+      const addItem = (map) => {
+        if (item) map.set(item.key, item);
+        else if (key) map.set(key, { key });
       };
 
-      const removeItem = (set) => {
-        if (key) set.delete(key);
-        if (item?.key) set.delete(item.key);
+      const removeItem = (map) => {
+        if (key) map.delete(key);
+        if (item?.key) map.delete(item.key);
       };
 
       switch (action) {
@@ -123,7 +128,7 @@ module.exports = async (req, res) => {
       return {
         ...current,
         cart: Array.from(cart.values()),
-        wishlist: Array.from(wishlist),
+        wishlist: Array.from(wishlist.values()),
         lastOrder
       };
     });

@@ -53,7 +53,21 @@
     const formatBasePrice = (rawValue) => `From $${toUsd(rawValue).toLocaleString('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
-    })} / mÂ²`;
+    })} / m²`;
+    const formatMeasurement = (item) => {
+        const width = Number(item?.width || 0);
+        const height = Number(item?.height || 0);
+        if (!width || !height) return '';
+        return `${width} cm x ${height} cm`;
+    };
+    const formatEstimatedPrice = (item) => {
+        const estimated = Number(item?.estimatedPrice || 0);
+        if (!estimated) return '';
+        return `$${estimated.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        })}`;
+    };
 
     const getCatalogItem = (key) => catalog.find((item) => item.key === key) || null;
 
@@ -148,6 +162,8 @@
             const primaryLabel = isWishlist ? 'Add to cart' : 'Save for later';
             const secondaryAction = 'remove';
             const secondaryLabel = 'Remove';
+            const measurement = formatMeasurement(item);
+            const estimatedPrice = formatEstimatedPrice(item);
 
             return `
                 <article class="saved-card" data-item-key="${item.key}">
@@ -160,6 +176,20 @@
                             </div>
                             <div class="saved-card-price">${formatBasePrice(item.price)}</div>
                         </div>
+                        ${measurement ? `
+                            <div class="saved-card-meta">
+                                <div class="saved-card-measurement">
+                                    <span>Size</span>
+                                    <strong>${measurement}</strong>
+                                </div>
+                                ${estimatedPrice ? `
+                                    <div class="saved-card-estimate">
+                                        <span>Estimated</span>
+                                        <strong>${estimatedPrice}</strong>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        ` : ''}
                         <p class="saved-card-desc">${item.description}</p>
                         <div class="saved-card-actions">
                             <button type="button" class="btn-primary" data-action="${primaryAction}" data-item-key="${item.key}">${primaryLabel}</button>
@@ -248,3 +278,4 @@
         listEl.innerHTML = '<div class="saved-empty">Could not load saved items.</div>';
     });
 })();
+

@@ -130,6 +130,39 @@
     white-space: nowrap;
 }
 
+.saved-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.saved-card-measurement,
+.saved-card-estimate {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 14px;
+    border-radius: 16px;
+    background: rgba(201, 169, 98, 0.08);
+    border: 1px solid rgba(201, 169, 98, 0.18);
+    min-width: 140px;
+}
+
+.saved-card-measurement span,
+.saved-card-estimate span {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gray);
+    font-weight: 700;
+}
+
+.saved-card-measurement strong,
+.saved-card-estimate strong {
+    font-size: 15px;
+    color: var(--dark);
+}
+
 .saved-card-desc {
     color: var(--gray);
     line-height: 1.75;
@@ -269,5 +302,11 @@
 
     .saved-card-title {
         font-size: 22px;
+    }
+
+    .saved-card-measurement,
+    .saved-card-estimate {
+        min-width: 0;
+        width: 100%;
     }
 }
