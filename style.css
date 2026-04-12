@@ -1166,8 +1166,8 @@ body::after {
 
         .action-toast {
             position: fixed;
-            right: 22px;
-            bottom: 22px;
+            right: 88px;
+            bottom: 88px;
             z-index: 12000;
             display: grid;
             gap: 4px;

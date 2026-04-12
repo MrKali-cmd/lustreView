@@ -731,8 +731,6 @@
                 const city = document.getElementById('checkout-city').value.trim();
                 const shippingAddress = document.getElementById('checkout-address').value.trim();
                 const paymentMethod = document.getElementById('checkout-payment').value.trim();
-                const width = Number(document.getElementById('checkout-width').value || 0);
-                const height = Number(document.getElementById('checkout-height').value || 0);
                 const notes = document.getElementById('checkout-notes').value.trim();
 
                 if (!name || !email || !phone || !city || !shippingAddress || !paymentMethod) {
@@ -745,7 +743,7 @@
                     return;
                 }
 
-                const subtotal = items.reduce((sum, item) => sum + getItemEstimate(item, width, height), 0);
+                const subtotal = items.reduce((sum, item) => sum + getItemEstimate(item, 0, 0), 0);
                 const shippingFee = 0;
                 const total = subtotal + shippingFee;
                 const orderPayload = {
@@ -755,8 +753,6 @@
                     city,
                     shippingAddress,
                     paymentMethod,
-                    width,
-                    height,
                     notes,
                     subtotal,
                     shippingFee,
@@ -768,9 +764,9 @@
                         category: item.category,
                         image: item.image,
                         basePrice: Number(item.price || 0),
-                        estimatedPrice: calculateItemTotal(item, width, height),
-                        width,
-                        height
+                        estimatedPrice: getItemEstimate(item, 0, 0),
+                        width: Number(item.width || 0),
+                        height: Number(item.height || 0)
                     }))
                 };
 

@@ -8,8 +8,8 @@
     <meta name="robots" content="noindex, nofollow">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=1776035382683">
-    <link rel="stylesheet" href="saved-pages.css?v=1776035382683">
+    <link rel="stylesheet" href="style.css?v=1776035824867">
+    <link rel="stylesheet" href="saved-pages.css?v=1776035824867">
     <style>
         :root {
             --checkout-bg: #f6f1e8;
@@ -385,8 +385,8 @@
 
 <body data-site-page="checkout">
     <div data-site-header></div>
-    <script src="site-state.js?v=1776035382683"></script>
-    <script src="site-header.js?v=1776035382683"></script>
+    <script src="site-state.js?v=1776035824867"></script>
+    <script src="site-header.js?v=1776035824867"></script>
 
     <main class="checkout-shell">
         <section class="checkout-hero">
@@ -540,7 +540,7 @@
         </div>
     </footer>
 
-    <script src="catalog-data.js?v=1776035382683"></script>
+    <script src="catalog-data.js?v=1776035824867"></script>
     <script>
         (function () {
             const catalog = Array.isArray(window.LUXE_CATALOG) ? window.LUXE_CATALOG : [];
@@ -731,8 +731,6 @@
                 const city = document.getElementById('checkout-city').value.trim();
                 const shippingAddress = document.getElementById('checkout-address').value.trim();
                 const paymentMethod = document.getElementById('checkout-payment').value.trim();
-                const width = Number(document.getElementById('checkout-width').value || 0);
-                const height = Number(document.getElementById('checkout-height').value || 0);
                 const notes = document.getElementById('checkout-notes').value.trim();
 
                 if (!name || !email || !phone || !city || !shippingAddress || !paymentMethod) {
@@ -745,7 +743,7 @@
                     return;
                 }
 
-                const subtotal = items.reduce((sum, item) => sum + getItemEstimate(item, width, height), 0);
+                const subtotal = items.reduce((sum, item) => sum + getItemEstimate(item, 0, 0), 0);
                 const shippingFee = 0;
                 const total = subtotal + shippingFee;
                 const orderPayload = {
@@ -755,8 +753,6 @@
                     city,
                     shippingAddress,
                     paymentMethod,
-                    width,
-                    height,
                     notes,
                     subtotal,
                     shippingFee,
@@ -768,9 +764,9 @@
                         category: item.category,
                         image: item.image,
                         basePrice: Number(item.price || 0),
-                        estimatedPrice: calculateItemTotal(item, width, height),
-                        width,
-                        height
+                        estimatedPrice: getItemEstimate(item, 0, 0),
+                        width: Number(item.width || 0),
+                        height: Number(item.height || 0)
                     }))
                 };
 
