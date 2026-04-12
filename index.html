@@ -891,7 +891,7 @@
             clearTimeout(toastTimer);
             toastTimer = setTimeout(() => {
                 actionToast.classList.remove('is-visible');
-            }, 2200);
+            }, 2800);
         };
 
         const showErrorToast = (message) => {
@@ -1196,7 +1196,7 @@
                                 updateActionState();
                                 syncPanels();
                                 showActionToast(added ? 'Saved to favorites' : 'Already in favorites');
-                                setTimeout(() => gotoWishlistPage(key), 140);
+                                setTimeout(() => gotoWishlistPage(key), 700);
                             })();
                             return;
                         }
