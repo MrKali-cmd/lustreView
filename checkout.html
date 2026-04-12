@@ -589,6 +589,19 @@
                 const height = Number(item?.height || 0);
                 return { width, height, hasMeasurements: Boolean(width && height) };
             };
+            const getItemEstimate = (item, widthFallback, heightFallback) => {
+                const measurement = getItemMeasurements(item);
+                if (measurement.hasMeasurements) {
+                    return calculateItemTotal(item, measurement.width, measurement.height);
+                }
+                if (Number(item?.estimatedPrice || 0) > 0) {
+                    return Number(item.estimatedPrice || 0);
+                }
+                if (widthFallback > 0 && heightFallback > 0) {
+                    return calculateItemTotal(item, widthFallback, heightFallback);
+                }
+                return Number(item?.price || 0) / USD_RATE;
+            };
 
             const setStatus = (message, kind = '') => {
                 checkoutStatus.textContent = message || '';
@@ -646,10 +659,7 @@
                 const { width, height } = getMeasurementInputs();
                 const hasMeasurements = width > 0 && height > 0;
                 const total = items.reduce((sum, item) => {
-                    const measurement = getItemMeasurements(item);
-                    if (measurement.hasMeasurements) return sum + calculateItemTotal(item, measurement.width, measurement.height);
-                    if (item.estimatedPrice) return sum + Number(item.estimatedPrice || 0);
-                    return sum + calculateItemTotal(item, width, height);
+                    return sum + getItemEstimate(item, width, height);
                 }, 0);
 
                 syncHeaderCounts(state);
@@ -678,8 +688,8 @@
                     const measurement = getItemMeasurements(item);
                     const resolvedWidth = measurement.width || width;
                     const resolvedHeight = measurement.height || height;
-                    const resolvedSize = (resolvedWidth && resolvedHeight) ? `${resolvedWidth} cm x ${resolvedHeight} cm` : 'Enter size above';
-                    const resolvedEstimated = measurement.hasMeasurements ? calculateItemTotal(item, measurement.width, measurement.height) : (item.estimatedPrice || (hasMeasurements ? calculateItemTotal(item, width, height) : 0));
+                    const resolvedSize = (resolvedWidth && resolvedHeight) ? `${resolvedWidth} cm x ${resolvedHeight} cm` : 'Size not saved';
+                    const resolvedEstimated = getItemEstimate(item, width, height);
                     return `
                     <article class="checkout-summary-item">
                         <img src="${item.image}" alt="${item.name}">
@@ -693,7 +703,7 @@
                                 </div>
                                 <div class="checkout-summary-pill">
                                     <span>Estimated</span>
-                                    <strong>${resolvedEstimated ? formatUsd(resolvedEstimated) : '$0.00'}</strong>
+                                    <strong>${formatUsd(resolvedEstimated)}</strong>
                                 </div>
                             </div>
                             <div style="margin-top:6px; font-size:0.85rem; color: rgba(255,255,255,0.72);">
@@ -741,12 +751,7 @@
                     return;
                 }
 
-                const subtotal = items.reduce((sum, item) => {
-                    const measurement = getItemMeasurements(item);
-                    if (measurement.hasMeasurements) return sum + calculateItemTotal(item, measurement.width, measurement.height);
-                    if (item.estimatedPrice) return sum + Number(item.estimatedPrice || 0);
-                    return sum + calculateItemTotal(item, width, height);
-                }, 0);
+                const subtotal = items.reduce((sum, item) => sum + getItemEstimate(item, width, height), 0);
                 const shippingFee = 0;
                 const total = subtotal + shippingFee;
                 const orderPayload = {
