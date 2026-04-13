@@ -107,7 +107,8 @@ module.exports = {
     filename: "bundle.js",
     path: path.resolve(__dirname, "build"),
     clean: true,
-    assetModuleFilename: "[path][name][ext]",
+    // Avoid leaking absolute Windows paths into emitted asset dirs (e.g. C:\Users\...).
+    assetModuleFilename: "assets/[name][ext]",
   },
   target: "web", // fix for "browserslist" error message
   stats: "errors-only", // suppress irrelevant log messages

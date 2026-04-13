@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog | Luxe Drapes</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .blog-shell { max-width: 1200px; margin: 0 auto; padding: 118px 5% 84px; }
+    .blog-hero { display: grid; gap: 14px; max-width: 860px; }
+    .blog-kicker { display:inline-flex; width:fit-content; padding:10px 14px; border-radius:999px; background: rgba(201,169,98,0.12); color: var(--primary-dark); font-size:12px; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+    .blog-title { margin:0; font-family:'Playfair Display', serif; font-size: clamp(2.4rem, 5vw, 4rem); line-height:1.05; }
+    .blog-desc { margin:0; color: var(--gray); line-height:1.85; font-size: 18px; }
+    .blog-grid { margin-top: 26px; display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .post-card { background: rgba(255,255,255,0.82); border: 1px solid rgba(17,17,17,0.08); border-radius: 26px; overflow:hidden; box-shadow: 0 18px 40px rgba(0,0,0,0.08); }
+    .post-thumb { height: 180px; background: linear-gradient(135deg, rgba(201,169,98,0.18), rgba(30,44,62,0.12)); }
+    .post-body { padding: 18px; display:grid; gap: 10px; }
+    .post-meta { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; font-weight: 800; color: var(--primary-dark); }
+    .post-title { margin:0; font-size: 18px; line-height: 1.35; }
+    .post-excerpt { margin:0; color: var(--gray); line-height: 1.75; }
+    .post-actions { margin-top: 2px; display:flex; gap: 10px; flex-wrap: wrap; }
+    @media (max-width: 980px) { .blog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 640px) { .blog-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body data-site-page="blog">
+  <div data-site-header></div>
+  <script src="site-state.js"></script>
+  <script src="site-header.js"></script>
+
+  <main class="blog-shell">
+    <section class="blog-hero">
+      <span class="blog-kicker">Journal</span>
+      <h1 class="blog-title">Design notes & measuring tips</h1>
+      <p class="blog-desc">Short articles about zebra blinds, light control, and how to measure your windows for a clean fit.</p>
+    </section>
+
+    <section class="blog-grid" aria-label="Blog posts">
+      <article class="post-card">
+        <div class="post-thumb"></div>
+        <div class="post-body">
+          <div class="post-meta">Guide</div>
+          <h2 class="post-title">How to measure zebra blinds in 3 minutes</h2>
+          <p class="post-excerpt">Width, height, and the two common mistakes that make orders look off.</p>
+          <div class="post-actions">
+            <a class="btn-secondary" href="contact.html">Ask a question</a>
+            <a class="btn-primary" href="zebra-collection.html">Shop collection</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="post-card">
+        <div class="post-thumb"></div>
+        <div class="post-body">
+          <div class="post-meta">Inspiration</div>
+          <h2 class="post-title">Light filtering vs blackout: what to pick</h2>
+          <p class="post-excerpt">A simple way to decide based on room type and privacy needs.</p>
+          <div class="post-actions">
+            <a class="btn-secondary" href="faq.html">Read FAQ</a>
+            <a class="btn-primary" href="zebra-collection.html">Browse products</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="post-card">
+        <div class="post-thumb"></div>
+        <div class="post-body">
+          <div class="post-meta">Care</div>
+          <h2 class="post-title">Keeping zebra shades clean</h2>
+          <p class="post-excerpt">Basic care, dusting schedule, and what to avoid for fabric longevity.</p>
+          <div class="post-actions">
+            <a class="btn-secondary" href="shipping-returns.html">Shipping & returns</a>
+            <a class="btn-primary" href="contact.html">Contact us</a>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>
+
