@@ -10,7 +10,7 @@
     "stripe": "^22.0.0"
   },
   "scripts": {
-    "build": "npm --prefix admin/tailadmin-free-tailwind-dashboard-template-main install && npm --prefix admin/tailadmin-free-tailwind-dashboard-template-main run build && node scripts/sync-admin-build.js && node scripts/prepare-public.js",
+    "build": "npm --prefix admin/tailadmin-free-tailwind-dashboard-template-main install && npm --prefix admin/tailadmin-free-tailwind-dashboard-template-main run build && node scripts/sync-admin-build.cjs && node scripts/prepare-public.cjs",
     "vercel-build": "npm run build",
     "start": "node scripts/start-all.js"
   }
