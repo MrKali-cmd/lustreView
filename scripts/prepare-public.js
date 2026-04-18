@@ -1,124 +1,35 @@
 const fs = require('fs');
 const path = require('path');
 
-const rootDir = path.resolve(__dirname, '..');
-const publicDir = path.join(rootDir, 'public');
-const buildVersion =
-  process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 8) ||
-  process.env.VERCEL_BUILD_ID ||
-  Date.now().toString();
-
-const filesToCopy = [
-  'index.html',
-  'zebra-collection.html',
-  'blog.html',
-  'faq.html',
-  'shipping-returns.html',
-  'privacy.html',
-  'terms.html',
-  'cookies.html',
-  'contact.html',
-  'cart.html',
-  'wishlist.html',
-  'checkout.html',
-  'order-success.html',
-  'showroom-3d.html',
-  'gemini.html',
-  'login.html',
-  'admin/index.html',
-  'admin/login.html',
-  'style.css',
-  'site-state.js',
-  'site-header.js',
-  'saved-pages.css',
-  'saved-pages.js',
-  'catalog-data.js'
+const files = [
+    'index.html', 'style.css', 'wishlist.html', 'cart.html', 'checkout.html',
+    'contact.html', 'faq.html', 'login.html', 'order-success.html',
+    'privacy.html', 'terms.html', 'shipping-returns.html', 'showroom-3d.html',
+    'zebra-collection.html', 'blog.html', 'cookies.html', 'site-header.js',
+    'site-state.js', 'catalog-data.js', 'saved-pages.css', 'saved-pages.js'
 ];
 
-const directoriesToCopy = [
-  ['portal-7f3a9c', 'portal-7f3a9c'],
-  ['admin/panel', 'admin/panel']
-];
+const dest = 'public';
 
-const ensureParentDir = (filePath) => {
-  fs.mkdirSync(path.dirname(filePath), { recursive: true });
-};
+try {
+    // Create public directory if it doesn't exist
+    if (!fs.existsSync(dest)) {
+        fs.mkdirSync(dest, { recursive: true });
+    }
 
-fs.rmSync(publicDir, { recursive: true, force: true });
-fs.mkdirSync(publicDir, { recursive: true });
+    files.forEach(f => {
+        const src = path.join(process.cwd(), f);
+        const target = path.join(process.cwd(), dest, f);
 
-for (const file of filesToCopy) {
-  const source = path.join(rootDir, file);
-  if (!fs.existsSync(source)) continue;
-  const target = path.join(publicDir, file);
-  ensureParentDir(target);
-  fs.copyFileSync(source, target);
+        if (fs.existsSync(src)) {
+            fs.copyFileSync(src, target);
+            console.log(`Successfully copied: ${f}`);
+        } else {
+            console.warn(`⚠️ Warning: File not found, skipping: ${f}`);
+        }
+    });
+    console.log(`✅ DONE: Public directory ready at ${new Date().toISOString()}`);
+} catch (error) {
+    console.error('❌ Build process failed:', error);
+    process.exit(1);
 }
-
-for (const [sourceRelative, targetRelative] of directoriesToCopy) {
-  const source = path.join(rootDir, sourceRelative);
-  if (!fs.existsSync(source)) continue;
-  const target = path.join(publicDir, targetRelative);
-  ensureParentDir(target);
-  fs.cpSync(source, target, { recursive: true });
-}
-
-const faviconSourceCandidates = [
-  path.join(publicDir, 'admin', 'panel', 'favicon.ico'),
-  path.join(rootDir, 'admin', 'panel', 'favicon.ico'),
-  path.join(rootDir, 'admin', 'tailadmin-free-tailwind-dashboard-template-main', 'src', 'images', 'favicon.ico')
-];
-
-const faviconTarget = path.join(publicDir, 'favicon.ico');
-const faviconSource = faviconSourceCandidates.find((candidate) => fs.existsSync(candidate));
-
-if (faviconSource) {
-  fs.copyFileSync(faviconSource, faviconTarget);
-}
-
-const htmlFilesToVersion = [
-  path.join(publicDir, 'index.html'),
-  path.join(publicDir, 'zebra-collection.html'),
-  path.join(publicDir, 'blog.html'),
-  path.join(publicDir, 'faq.html'),
-  path.join(publicDir, 'shipping-returns.html'),
-  path.join(publicDir, 'privacy.html'),
-  path.join(publicDir, 'terms.html'),
-  path.join(publicDir, 'cookies.html'),
-  path.join(publicDir, 'contact.html'),
-  path.join(publicDir, 'cart.html'),
-  path.join(publicDir, 'wishlist.html'),
-  path.join(publicDir, 'checkout.html'),
-  path.join(publicDir, 'order-success.html'),
-  path.join(publicDir, 'gemini.html'),
-  path.join(publicDir, 'login.html'),
-  path.join(publicDir, 'portal-7f3a9c', 'index.html'),
-  path.join(publicDir, 'admin', 'index.html'),
-  path.join(publicDir, 'admin', 'login.html'),
-  path.join(publicDir, 'admin', 'panel', 'index.html'),
-  path.join(publicDir, 'admin', 'panel', 'alerts.html'),
-  path.join(publicDir, 'admin', 'panel', 'basic-tables.html'),
-  path.join(publicDir, 'admin', 'panel', 'signin.html'),
-  path.join(publicDir, 'admin', 'panel', 'sidebar.html')
-];
-
-const versionedAssets = [
-  [/style\.css(?:\?v=[^"]*)?/g, `style.css?v=${buildVersion}`],
-  [/site-state\.js(?:\?v=[^"]*)?/g, `site-state.js?v=${buildVersion}`],
-  [/site-header\.js(?:\?v=[^"]*)?/g, `site-header.js?v=${buildVersion}`],
-  [/saved-pages\.css(?:\?v=[^"]*)?/g, `saved-pages.css?v=${buildVersion}`],
-  [/saved-pages\.js(?:\?v=[^"]*)?/g, `saved-pages.js?v=${buildVersion}`],
-  [/catalog-data\.js(?:\?v=[^"]*)?/g, `catalog-data.js?v=${buildVersion}`],
-  [/bundle\.js(?:\?v=[^"]*)?/g, `bundle.js?v=${buildVersion}`]
-];
-
-for (const filePath of htmlFilesToVersion) {
-  if (!fs.existsSync(filePath)) continue;
-  let html = fs.readFileSync(filePath, 'utf8');
-  for (const [pattern, target] of versionedAssets) {
-    html = html.replace(pattern, target);
-  }
-  fs.writeFileSync(filePath, html);
-}
-
-console.log(`Public site prepared at ${publicDir} with version ${buildVersion}`);
