@@ -33,7 +33,7 @@
     <section class="hero-premium" id="home">
         <div class="hero-inner">
             <div class="p-slide active">
-                <div class="p-slide-bg" style="background-image: url('https://res.cloudinary.com/dgyjxz9di/image/upload/v1776482361/WhatsApp_Image_2026-04-16_at_1.32.53_PM_3_mr6u0c.jpg');"></div>
+                <div class="p-slide-bg" style="background-image: url('img/curtain-1.jpg');"></div>
                 <div class="p-slide-content">
                     <span class="p-subtitle">Collection 2026</span>
                     <h1 class="p-title">Modern <span>Minimalism</span></h1>
@@ -46,7 +46,7 @@
             </div>
 
             <div class="p-slide">
-                <div class="p-slide-bg" style="background-image: url('https://res.cloudinary.com/dgyjxz9di/image/upload/v1776482361/WhatsApp_Image_2026-04-16_at_1.32.53_PM_5_myvvls.jpg');"></div>
+                <div class="p-slide-bg" style="background-image: url('img/curtain-2.jpg');"></div>
                 <div class="p-slide-content">
                     <span class="p-subtitle">Luxury Texture</span>
                     <h1 class="p-title">Royal <span>Velvet</span></h1>
@@ -386,6 +386,54 @@
             </ul>
 
             <a href="#contact" class="about-btn">Contact Our Team</a>
+        </div>
+    </section>
+
+    <section class="testimonials">
+        <div class="section-header">
+            <span class="section-tag">TESTIMONIALS</span>
+            <h2 class="section-title">What Our Clients Say</h2>
+        </div>
+
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <p class="testimonial-text">The quality and attention to detail is outstanding. Our living room has been
+                    completely transformed - worth every penny!</p>
+                <div class="testimonial-author">
+                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100" alt="Client"
+                        class="author-avatar">
+                    <div class="author-info">
+                        <h4>Sarah Johnson</h4>
+                        <span>Tehran, Interior Designer</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="testimonial-card">
+                <p class="testimonial-text">Professional team, perfect measurements, beautiful fabrics. Delivery was
+                    faster than expected. Highly recommend!</p>
+                <div class="testimonial-author">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100" alt="Client"
+                        class="author-avatar">
+                    <div class="author-info">
+                        <h4>Michael Rezaei</h4>
+                        <span>Villa Owner</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="testimonial-card">
+                <p class="testimonial-text">The blackout curtains made a huge difference in our bedroom. Excellent
+                    customer service from start to finish.</p>
+                <div class="testimonial-author">
+                    <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100" alt="Client"
+                        class="author-avatar">
+                    <div class="author-info">
+                        <h4>Leila Ahmadi</h4>
+                        <span>Family Home</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -1003,6 +1051,7 @@
             modalCategory.textContent = card.querySelector('.product-category').textContent.trim();
             modalTitle.textContent = activeProductKey;
             modalDescription.textContent = card.querySelector('.product-info p').textContent.trim();
+            modalPrice.textContent = ''; // Removed price display as per user request
             if (quickViewContent) {
                 quickViewContent.scrollTop = 0;
             }
@@ -1017,6 +1066,19 @@
             modal.style.display = 'none';
             modal.setAttribute('aria-hidden', 'true');
             document.body.classList.remove('modal-open');
+        };
+
+        const showActionToast = (message) => {
+            let toast = document.getElementById('action-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'action-toast';
+                toast.className = 'action-toast';
+                document.body.appendChild(toast);
+            }
+            toast.textContent = message;
+            toast.classList.add('is-visible');
+            setTimeout(() => { toast.classList.remove('is-visible'); }, 2500);
         };
 
         const handlePanelAction = (event) => {

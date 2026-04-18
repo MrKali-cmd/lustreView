@@ -1885,10 +1885,10 @@
         const API_BASE = (() => {
             const { protocol, hostname, port, origin } = window.location;
             if (protocol === 'file:') {
-                return 'http://localhost:3001/api/collections';
+                return 'http://localhost:3000/api/collections';
             }
-            if (hostname === 'localhost' && port && port !== '3001') {
-                return 'http://localhost:3001/api/collections';
+            if (hostname === 'localhost' && port && port !== '3000') {
+                return `http://localhost:${port}/api/collections`;
             }
             return `${origin}/api/collections`;
         })();
@@ -2405,10 +2405,8 @@
             document.getElementById('modal-image').src = card.querySelector('img').src;
             document.getElementById('modal-name').textContent = card.querySelector('h3').textContent;
             document.getElementById('modal-desc').textContent = card.querySelector('p').textContent;
-            // قیمت پرده حذف شد
             const priceElement = document.getElementById('modal-price');
-            priceElement.textContent = '';
-            priceElement.style.display = 'none';
+            if (priceElement) priceElement.style.display = 'none';
             const modalRating = document.getElementById('modal-rating');
             const ratingValue = card.dataset.rating;
             if (ratingValue) {
