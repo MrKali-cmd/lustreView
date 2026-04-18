@@ -20,7 +20,7 @@ try {
     }
 
     files.forEach(f => {
-        // جستجوی فایل بدون حساسیت به حروف بزرگ و کوچک در پوشه ریشه
+        // جستجوی فایل بدون حساسیت به حروف بزرگ و کوچک
         const actualFile = rootFiles.find(name => name.toLowerCase() === f.toLowerCase());
 
         if (actualFile) {
@@ -28,9 +28,8 @@ try {
             const target = path.join(process.cwd(), dest, f.toLowerCase());
 
             fs.copyFileSync(src, target);
-            // فقط در صورت مغایرت نام واقعی با نام درخواستی، لاگ جزئی نمایش داده می‌شود
             if (actualFile !== f.toLowerCase()) {
-                console.log(`ℹ️ Auto-fixed casing: ${actualFile} -> ${dest}/index.html`);
+                console.log(`ℹ️ Auto-fixed casing: ${actualFile} -> ${dest}/${f.toLowerCase()}`);
             }
         } else {
             console.error(`❌ Build Error: Missing essential file: ${f}`);
