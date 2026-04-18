@@ -1883,14 +1883,16 @@
 
         <script>
         const API_BASE = (() => {
+            const configuredBase = window.__LUXE_API_BASE__
+                || document.querySelector('meta[name="luxe-api-base"]')?.getAttribute('content')?.trim();
+            if (configuredBase) {
+                return configuredBase.replace(/\/$/, '');
+            }
             const { protocol, hostname, port, origin } = window.location;
             if (protocol === 'file:') {
-                return 'http://localhost:3001/api/collections';
+                return 'http://localhost:3001/api';
             }
-            if (hostname === 'localhost') {
-                return 'http://localhost:3001/api/collections';
-            }
-            return `${origin}/api/collections`;
+            return hostname === 'localhost' ? 'http://localhost:3001/api' : `${origin}/api`;
         })();
         const sortSelect = document.getElementById('sort-select');
         const typeFilter = document.getElementById('type-filter');
@@ -2198,7 +2200,7 @@
         };
 
         const loadCollections = async () => {
-            const res = await fetch(API_BASE);
+            const res = await fetch(`${API_BASE}/collections`);
             if (!res.ok) throw new Error('Failed to load collections');
             return res.json();
         };
