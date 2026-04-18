@@ -4,7 +4,7 @@ const cors = require('cors');
 const Database = require('better-sqlite3');
 require('dotenv').config();
 const nodemailer = require('nodemailer');
-const sessionStateHandler = require('../api/api/session-state.cjs');
+const sessionStateHandler = require('../api/session-state.cjs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;

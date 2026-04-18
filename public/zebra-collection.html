@@ -1866,7 +1866,7 @@
                 <ul>
                     <li><i class="fas fa-phone"></i> +16132007199</li>
                     <li><i class="fas fa-envelope"></i> hello@lustreviewblinds.ca</li>
-                    <li><i class="fas fa-map-marker-alt"></i> Tehran, Jordan St.</li>
+                    <li><i class="fas fa-map-marker-alt"></i> Ottawa, Ontario Canada</li>
                 </ul>
             </div>
         </div>
@@ -1887,7 +1887,7 @@
             if (protocol === 'file:') {
                 return 'http://localhost:3001/api/collections';
             }
-            if (hostname === 'localhost' && port && port !== '3001') {
+            if (hostname === 'localhost') {
                 return 'http://localhost:3001/api/collections';
             }
             return `${origin}/api/collections`;
@@ -1914,7 +1914,18 @@
         const headerConsultBtn = document.querySelector('header .header-btn');
         const headerCartLink = document.querySelector('.header-cart-link');
         const headerCartCount = document.querySelector('[data-cart-count]');
-        const headerWishlistCount = document.querySelector('[data-wishlist-count]');
+        const showToast = (message) => {
+            let toast = document.querySelector('.collection-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.className = 'collection-toast';
+                document.body.appendChild(toast);
+            }
+            toast.textContent = message;
+            toast.classList.add('is-visible');
+            setTimeout(() => toast.classList.remove('is-visible'), 2500);
+        };
+
         const orbitBtn = document.getElementById('orbitBtn');
         const orbitItems = document.getElementById('orbitItems');
         const pRange = document.getElementById('p-range');
@@ -2405,10 +2416,8 @@
             document.getElementById('modal-image').src = card.querySelector('img').src;
             document.getElementById('modal-name').textContent = card.querySelector('h3').textContent;
             document.getElementById('modal-desc').textContent = card.querySelector('p').textContent;
-            // قیمت پرده حذف شد
             const priceElement = document.getElementById('modal-price');
-            priceElement.textContent = '';
-            priceElement.style.display = 'none';
+            if (priceElement) priceElement.style.display = 'none';
             const modalRating = document.getElementById('modal-rating');
             const ratingValue = card.dataset.rating;
             if (ratingValue) {
@@ -2505,4 +2514,3 @@
 </body>
 
 </html>
-

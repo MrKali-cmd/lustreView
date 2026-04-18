@@ -644,7 +644,7 @@
             if (protocol === 'file:') {
                 return 'http://localhost:3001/api';
             }
-            if (hostname === 'localhost' && port && port !== '3001') {
+            if (hostname === 'localhost') {
                 return 'http://localhost:3001/api';
             }
             return `${origin}/api`;
@@ -681,7 +681,19 @@
         const cartPanelBody = document.getElementById('cart-panel-body');
         const cartPanelCount = document.getElementById('cart-panel-count');
         const cartPanelTotal = document.getElementById('cart-panel-total');
-        const actionToast = document.getElementById('action-toast');
+        const showActionToast = (message) => {
+            let toast = document.getElementById('action-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'action-toast';
+                toast.className = 'action-toast';
+                document.body.appendChild(toast);
+            }
+            toast.textContent = message;
+            toast.classList.add('is-visible');
+            setTimeout(() => { toast.classList.remove('is-visible'); }, 2500);
+        };
+
         let currentSlide = 0;
         let heroAutoplayTimer = null;
         let activeProductKey = '';
@@ -1218,6 +1230,7 @@
 
         if (premiumSlides.length) {
             showPremiumSlide(0);
+            queueHeroAutoplay();
         }
 
         bindProductButtons();

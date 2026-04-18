@@ -1885,10 +1885,10 @@
         const API_BASE = (() => {
             const { protocol, hostname, port, origin } = window.location;
             if (protocol === 'file:') {
-                return 'http://localhost:3000/api/collections';
+                return 'http://localhost:3001/api/collections';
             }
-            if (hostname === 'localhost' && port && port !== '3000') {
-                return `http://localhost:${port}/api/collections`;
+            if (hostname === 'localhost') {
+                return 'http://localhost:3001/api/collections';
             }
             return `${origin}/api/collections`;
         })();
@@ -1914,7 +1914,18 @@
         const headerConsultBtn = document.querySelector('header .header-btn');
         const headerCartLink = document.querySelector('.header-cart-link');
         const headerCartCount = document.querySelector('[data-cart-count]');
-        const headerWishlistCount = document.querySelector('[data-wishlist-count]');
+        const showToast = (message) => {
+            let toast = document.querySelector('.collection-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.className = 'collection-toast';
+                document.body.appendChild(toast);
+            }
+            toast.textContent = message;
+            toast.classList.add('is-visible');
+            setTimeout(() => toast.classList.remove('is-visible'), 2500);
+        };
+
         const orbitBtn = document.getElementById('orbitBtn');
         const orbitItems = document.getElementById('orbitItems');
         const pRange = document.getElementById('p-range');
