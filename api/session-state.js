@@ -5,7 +5,7 @@ const {
   readJson,
   sendJson,
   updateSessionState
-} = require('../_lib/store');
+} = require('./_lib/store');
 
 const normalizeKey = (value) => String(value || '').trim();
 const normalizeCartItem = (value, fallbackKey = '') => {
