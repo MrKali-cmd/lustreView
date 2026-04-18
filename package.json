@@ -2,6 +2,7 @@
   "name": "lustreview",
   "version": "1.0.0",
   "description": "A web project utilizing Neon Database and Stripe integration",
+  "type": "module",
   "private": true,
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
@@ -9,7 +10,7 @@
     "stripe": "^22.0.0"
   },
   "scripts": {
-    "build": "node scripts/prepare-public.js",
+    "build": "npm --prefix admin/tailadmin-free-tailwind-dashboard-template-main install && npm --prefix admin/tailadmin-free-tailwind-dashboard-template-main run build && node scripts/sync-admin-build.js && node scripts/prepare-public.js",
     "vercel-build": "npm run build",
     "start": "node scripts/start-all.js"
   }
