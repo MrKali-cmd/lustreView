@@ -3,11 +3,12 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/server/server.js"
+      "destination": "server/server.js"
     }
   ],
   "functions": {
     "server/server.js": {
+      "runtime": "nodejs20.x",
       "memory": 1024
     }
   }

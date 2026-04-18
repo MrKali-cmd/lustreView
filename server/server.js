@@ -13,8 +13,10 @@ const sql = neon(process.env.DATABASE_URL);
 app.use(cors());
 app.use(express.json());
 
-const rootDir = path.join(__dirname, '..');
-app.use(express.static(rootDir));
+if (process.env.NODE_ENV !== 'production') {
+  const rootDir = path.join(__dirname, '..');
+  app.use(express.static(rootDir));
+}
 
 app.all('/api/session-state', (req, res) => sessionStateHandler(req, res));
 
