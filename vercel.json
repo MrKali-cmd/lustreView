@@ -1,5 +1,4 @@
 {
-  "version": 2,
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -7,9 +6,6 @@
     }
   ],
   "functions": {
-    "server/server.js": {
-      "memory": 1024,
-      "maxDuration": 10
-    }
+    "server/server.js": { "memory": 1024 }
   }
 }

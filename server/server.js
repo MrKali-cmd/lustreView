@@ -335,7 +335,7 @@ app.post('/api/contact-messages/:id/reply', async (req, res) => {
   }
 });
 
-if (process.env.NODE_ENV !== 'production') {
+if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`LustreView Blinds API running on http://localhost:${PORT}`);
   });
