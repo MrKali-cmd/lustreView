@@ -6,30 +6,18 @@ const {
   isAdminSessionValid,
   isLoginConfigured,
   recordFailedLoginAttempt
-} = require('./_lib/admin-auth');
+} = require('../_lib/admin-auth');
 const {
   handleOptions,
   readJson,
   sendJson
-} = require('./_lib/store');
-
-const getActionFromPath = (req) => {
-  try {
-    const host = req.headers?.host || 'localhost';
-    const url = new URL(req.url || '', `http://${host}`);
-    const suffix = url.pathname.replace(/^\/api\/admin\/?/, '');
-    const action = (suffix.split('/').filter(Boolean)[0] || '').toLowerCase();
-    return action;
-  } catch {
-    return '';
-  }
-};
+} = require('../_lib/store');
 
 module.exports = async (req, res) => {
   try {
     if (handleOptions(req, res)) return;
 
-    const action = getActionFromPath(req);
+    const action = String(req.query?.action || '').trim().toLowerCase();
 
     if (action === 'login') {
       if (req.method !== 'POST') {
