@@ -2247,6 +2247,7 @@
                 allItems = await loadCollections();
                 refreshResults();
             } catch (error) {
+                console.error("Database connection error:", error);
                 grid.innerHTML = '<div style="padding: 24px;">Database is not reachable. Start the server first.</div>';
             }
         };
