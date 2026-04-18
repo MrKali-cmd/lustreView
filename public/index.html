@@ -1269,7 +1269,7 @@
                     document.getElementById('appt-submit').disabled = true;
                     document.getElementById('appt-submit').textContent = 'Scheduling...';
 
-                    const response = await fetch('/api/appointments', {
+                    const response = await fetch(`${API_BASE}/appointments`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'

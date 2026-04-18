@@ -1,7 +1,15 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "public",
+  "version": 2,
   "rewrites": [
-    { "source": "/api/admin/:path*", "destination": "/api/admin" }
-  ]
+    {
+      "source": "/api/(.*)",
+      "destination": "/server/server.js"
+    }
+  ],
+  "functions": {
+    "server/server.js": {
+      "runtime": "vercel-node@latest",
+      "memory": 1024
+    }
+  }
 }

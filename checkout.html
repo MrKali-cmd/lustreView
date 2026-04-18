@@ -539,6 +539,18 @@
     <script src="catalog-data.js"></script>
     <script>
         (function () {
+            const API_BASE = (() => {
+                const configuredBase = window.__LUXE_API_BASE__
+                    || document.querySelector('meta[name="luxe-api-base"]')?.getAttribute('content')?.trim();
+                if (configuredBase) {
+                    return configuredBase.replace(/\/$/, '');
+                }
+                const { protocol, hostname, port, origin } = window.location;
+                if (protocol === 'file:') {
+                    return 'http://localhost:3001/api';
+                }
+                return hostname === 'localhost' ? 'http://localhost:3001/api' : `${origin}/api`;
+            })();
             const catalog = Array.isArray(window.LUXE_CATALOG) ? window.LUXE_CATALOG : [];
             const USD_RATE = 42000;
             const checkoutItems = document.getElementById('checkout-items');
@@ -751,7 +763,7 @@
 
                 try {
                     const wantsStripeCheckout = paymentMethod === 'Card payment on confirmation';
-                    const endpoint = wantsStripeCheckout ? '/api/checkout/session' : '/api/orders';
+                    const endpoint = wantsStripeCheckout ? `${API_BASE}/checkout/session` : `${API_BASE}/orders`;
                     const response = await fetch(endpoint, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
