@@ -23,7 +23,7 @@
             summaryTitle: 'Cart summary',
             summaryText: 'Use the cart to keep a clean shortlist before checking out.',
             summaryValueLabel: 'Subtotal',
-            primaryLabel: 'Complete Order',
+            primaryLabel: 'Start checkout',
             primaryHref: 'checkout.html'
         }
     };
@@ -270,4 +270,3 @@
         listEl.innerHTML = '<div class="saved-empty">Could not load saved items.</div>';
     });
 })();
-
