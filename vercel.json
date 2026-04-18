@@ -8,7 +8,6 @@
   ],
   "functions": {
     "server/server.js": {
-      "runtime": "@vercel/node",
       "memory": 1024
     }
   }
