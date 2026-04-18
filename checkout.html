@@ -762,9 +762,7 @@
                 setStatus('Placing your order...', '');
 
                 try {
-                    const wantsStripeCheckout = paymentMethod === 'Card payment on confirmation';
-                    const endpoint = wantsStripeCheckout ? `${API_BASE}/checkout/session` : `${API_BASE}/orders`;
-                    const response = await fetch(endpoint, {
+                    const response = await fetch(`${API_BASE}/orders`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(orderPayload)
@@ -790,11 +788,6 @@
 
                     if (window.LuxeState?.clearCart) {
                         await window.LuxeState.clearCart();
-                    }
-
-                    if (wantsStripeCheckout) {
-                        window.location.href = payload.url;
-                        return;
                     }
 
                     checkoutForm.reset();
