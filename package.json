@@ -2,15 +2,19 @@
   "name": "lustreview",
   "version": "1.0.0",
   "description": "A web project utilizing Neon Database and Stripe integration",
-  "type": "module",
   "private": true,
+  "type": "commonjs",
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
     "nodemailer": "^6.9.15",
-    "stripe": "^22.0.0"
+    "stripe": "^22.0.0",
+    "express": "^4.21.2",
+    "cors": "^2.8.5",
+    "better-sqlite3": "^11.8.1",
+    "dotenv": "^16.4.7"
   },
   "scripts": {
-    "build": "npm --prefix admin/tailadmin-free-tailwind-dashboard-template-main install && npm --prefix admin/tailadmin-free-tailwind-dashboard-template-main run build && node scripts/sync-admin-build.cjs && node scripts/prepare-public.cjs",
+    "build": "node -e \"const fs=require('fs');const path=require('path');const files=['index.html','style.css','wishlist.html','cart.html','checkout.html','contact.html','faq.html','login.html','order-success.html','privacy.html','terms.html','shipping-returns.html','showroom-3d.html','zebra-collection.html','blog.html','cookies.html','site-header.js','site-state.js','catalog-data.js','saved-pages.css','saved-pages.js'];const dest='public';if(!fs.existsSync(dest))fs.mkdirSync(dest,{recursive:true});files.forEach(f=>{try{const src=path.join('.',f);if(fs.existsSync(src)){fs.copyFileSync(src,path.join(dest,f));console.log('Copied:',f)}}catch(e){console.error('Fail:',f,e)}});console.log('✅ DONE Public ready with version',Date.now())\"",
     "vercel-build": "npm run build",
     "start": "node scripts/start-all.js"
   }

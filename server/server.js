@@ -1,10 +1,10 @@
-﻿const path = require('path');
+﻿﻿const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const Database = require('better-sqlite3');
 require('dotenv').config();
 const nodemailer = require('nodemailer');
-const sessionStateHandler = require('../api/session-state');
+const sessionStateHandler = require('../api/api/session-state.cjs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -520,4 +520,3 @@ app.post('/api/contact-messages/:id/reply', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`LustreView Blinds API running on http://localhost:${PORT}`);
 });
-

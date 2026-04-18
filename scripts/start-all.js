@@ -1,9 +1,5 @@
-import { spawn } from 'child_process';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const { spawn } = require('child_process');
+const path = require('path');
 
 const rootDir = path.resolve(__dirname, '..');
 const adminDir = path.join(rootDir, 'admin', 'tailadmin-free-tailwind-dashboard-template-main');

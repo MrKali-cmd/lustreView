@@ -1600,7 +1600,7 @@ body::after {
             display: flex;
             align-items: center;
             gap: 16px;
-            margin-bottom: 120px;
+            margin-bottom: 16px;
             font-size: 17px;
         }
 
