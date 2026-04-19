@@ -76,7 +76,7 @@ const ensureTables = async () => {
   if (tablesReady) return;
   if (!sql) return;
 
-  await sql(`
+  await sql.query(`
     CREATE TABLE IF NOT EXISTS site_sessions (
       id TEXT PRIMARY KEY,
       state_json TEXT NOT NULL,
@@ -84,7 +84,7 @@ const ensureTables = async () => {
     )
   `);
 
-  await sql(`
+  await sql.query(`
     CREATE TABLE IF NOT EXISTS collections (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -102,7 +102,7 @@ const ensureTables = async () => {
     )
   `);
 
-  await sql(`
+  await sql.query(`
     CREATE TABLE IF NOT EXISTS contact_messages (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -119,7 +119,7 @@ const ensureTables = async () => {
     )
   `);
 
-  await sql(`
+  await sql.query(`
     CREATE TABLE IF NOT EXISTS orders (
       id TEXT PRIMARY KEY,
       customer_name TEXT NOT NULL,
@@ -140,7 +140,7 @@ const ensureTables = async () => {
     )
   `);
 
-  await sql(`
+  await sql.query(`
     CREATE TABLE IF NOT EXISTS appointments (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -218,7 +218,7 @@ app.get('/api/_debug/db', async (req, res) => {
 
   try {
     // Basic ping query.
-    const rows = await sql('SELECT 1 as ok');
+    const rows = await sql.query('SELECT 1 as ok');
     sendJson(res, 200, { ok: true, rows });
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -364,7 +364,7 @@ app.all('/api/session-state', async (req, res) => {
   const sessionId = ensureSiteSessionId(req, res);
 
   const loadState = async () => {
-    const rows = await sql('SELECT state_json FROM site_sessions WHERE id = $1', [sessionId]);
+    const rows = await sql.query('SELECT state_json FROM site_sessions WHERE id = $1', [sessionId]);
     const raw = rows?.[0]?.state_json;
     if (!raw) return { cart: [], wishlist: [], lastOrder: null };
     try {
@@ -381,7 +381,7 @@ app.all('/api/session-state', async (req, res) => {
 
   const saveState = async (state) => {
     const now = new Date().toISOString();
-    await sql(
+    await sql.query(
       `INSERT INTO site_sessions (id, state_json, updated_at)
        VALUES ($1, $2, $3)
        ON CONFLICT (id) DO UPDATE SET state_json = EXCLUDED.state_json, updated_at = EXCLUDED.updated_at`,
@@ -513,7 +513,7 @@ app.get('/api/collections', async (req, res) => {
   if (!(await requireDatabase(req, res))) return;
 
   try {
-    const rows = await sql('SELECT * FROM collections ORDER BY updated_at DESC');
+    const rows = await sql.query('SELECT * FROM collections ORDER BY updated_at DESC');
     sendJson(res, 200, rows.map(mapCollection));
   } catch (error) {
     sendJson(res, 500, { error: error.message || 'Failed to load collections' });
@@ -549,7 +549,7 @@ app.post('/api/collections', async (req, res) => {
   }
 
   try {
-    await sql(
+    await sql.query(
       `INSERT INTO collections (id, name, label, tags, type, status, price, popular, rating, badge, image, description, updated_at)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
        ON CONFLICT (id) DO UPDATE SET
@@ -618,7 +618,7 @@ app.put('/api/collections/:id', async (req, res) => {
   }
 
   try {
-    await sql(
+    await sql.query(
       `UPDATE collections SET name=$1, label=$2, tags=$3, type=$4, status=$5, price=$6, popular=$7, rating=$8, badge=$9, image=$10, description=$11, updated_at=$12 WHERE id=$13`,
       [
         row.name,
@@ -648,7 +648,7 @@ app.delete('/api/collections/:id', async (req, res) => {
   if (!(await requireDatabase(req, res))) return;
 
   try {
-    await sql('DELETE FROM collections WHERE id = $1', [req.params.id]);
+    await sql.query('DELETE FROM collections WHERE id = $1', [req.params.id]);
     sendJson(res, 204, null);
   } catch (error) {
     sendJson(res, 500, { error: error.message || 'Failed to delete collection' });
@@ -662,7 +662,7 @@ app.get('/api/contact-messages', async (req, res) => {
   if (!(await requireDatabase(req, res))) return;
 
   try {
-    const rows = await sql('SELECT * FROM contact_messages ORDER BY created_at DESC');
+    const rows = await sql.query('SELECT * FROM contact_messages ORDER BY created_at DESC');
     sendJson(res, 200, rows.map(mapMessage));
   } catch (error) {
     sendJson(res, 500, { error: error.message || 'Failed to load messages' });
@@ -697,7 +697,7 @@ app.post('/api/contact-messages', async (req, res) => {
   }
 
   try {
-    await sql(
+    await sql.query(
       `INSERT INTO contact_messages (id, name, phone, email, room_type, message, status, source, reply_message, replied_at, created_at, updated_at)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
       [
@@ -730,7 +730,7 @@ app.put('/api/contact-messages/:id', async (req, res) => {
   const id = String(req.params.id || '').trim();
 
   try {
-    const rows = await sql('SELECT * FROM contact_messages WHERE id = $1', [id]);
+    const rows = await sql.query('SELECT * FROM contact_messages WHERE id = $1', [id]);
     const existing = rows?.[0];
     if (!existing) {
       sendJson(res, 404, { error: 'Message not found' });
@@ -752,7 +752,7 @@ app.put('/api/contact-messages/:id', async (req, res) => {
       updated_at: new Date().toISOString()
     };
 
-    await sql(
+    await sql.query(
       `UPDATE contact_messages SET name=$1, phone=$2, email=$3, room_type=$4, message=$5, status=$6, source=$7, updated_at=$8 WHERE id=$9`,
       [
         updated.name,
@@ -778,7 +778,7 @@ app.delete('/api/contact-messages/:id', async (req, res) => {
   if (!(await requireDatabase(req, res))) return;
 
   try {
-    await sql('DELETE FROM contact_messages WHERE id = $1', [req.params.id]);
+    await sql.query('DELETE FROM contact_messages WHERE id = $1', [req.params.id]);
     sendJson(res, 204, null);
   } catch (error) {
     sendJson(res, 500, { error: error.message || 'Failed to delete message' });
@@ -799,7 +799,7 @@ app.post('/api/contact-messages/:id/reply', async (req, res) => {
     return;
   }
 
-  const rows = await sql('SELECT * FROM contact_messages WHERE id = $1', [id]);
+  const rows = await sql.query('SELECT * FROM contact_messages WHERE id = $1', [id]);
   const existing = rows?.[0];
   if (!existing) {
     sendJson(res, 404, { error: 'Message not found' });
@@ -832,7 +832,7 @@ app.post('/api/contact-messages/:id/reply', async (req, res) => {
   };
 
   try {
-    await sql(
+    await sql.query(
       `UPDATE contact_messages SET status=$1, reply_message=$2, replied_at=$3, updated_at=$4 WHERE id=$5`,
       [updated.status, updated.reply_message, updated.replied_at, updated.updated_at, id]
     );
