@@ -1,42 +1,202 @@
-﻿﻿const path = require('path');
+const crypto = require('crypto');
 const express = require('express');
 const cors = require('cors');
 const { neon } = require('@neondatabase/serverless');
 require('dotenv').config();
-const nodemailer = require('nodemailer');
-const sessionStateHandler = require('../api/session-state.js');
+
+const adminAuth = require('./_lib/admin-auth');
+const mail = require('./_lib/mail');
+const stripeLib = require('./_lib/stripe');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const sql = neon(process.env.DATABASE_URL);
+
+const sql = String(process.env.DATABASE_URL || '').trim()
+  ? neon(process.env.DATABASE_URL)
+  : null;
 
 app.use(cors());
 app.use(express.json());
 
-if (process.env.NODE_ENV !== 'production') {
-  const rootDir = path.join(__dirname, '..');
-  app.use(express.static(rootDir));
-}
+const sendJson = (res, status, payload) => {
+  res.statusCode = status;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store, max-age=0');
+  if (payload === null || payload === undefined) {
+    res.end();
+    return;
+  }
+  res.end(JSON.stringify(payload));
+};
 
-app.all('/api/session-state', (req, res) => sessionStateHandler(req, res));
+const handleOptions = (req, res) => {
+  if (req.method !== 'OPTIONS') return false;
+  res.statusCode = 204;
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.end();
+  return true;
+};
 
-const mapRow = (row) => ({
+const parseCookies = (headerValue) => {
+  const cookies = {};
+  String(headerValue || '')
+    .split(';')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .forEach((part) => {
+      const index = part.indexOf('=');
+      if (index < 0) return;
+      const name = part.slice(0, index).trim();
+      const value = part.slice(index + 1).trim();
+      cookies[name] = decodeURIComponent(value);
+    });
+  return cookies;
+};
+
+const SITE_SESSION_COOKIE = 'luxe_site_session';
+const getSiteSessionId = (req) => {
+  const cookies = parseCookies(req.headers?.cookie || req.headers?.Cookie || '');
+  return String(cookies[SITE_SESSION_COOKIE] || '').trim();
+};
+const ensureSiteSessionId = (req, res) => {
+  const existing = getSiteSessionId(req);
+  if (existing) return existing;
+  const id = `sess-${crypto.randomBytes(16).toString('hex')}`;
+  res.setHeader(
+    'Set-Cookie',
+    `${SITE_SESSION_COOKIE}=${encodeURIComponent(id)}; Path=/; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}`
+  );
+  return id;
+};
+
+let tablesReady = false;
+const ensureTables = async () => {
+  if (tablesReady) return;
+  if (!sql) return;
+
+  await sql(`
+    CREATE TABLE IF NOT EXISTS site_sessions (
+      id TEXT PRIMARY KEY,
+      state_json TEXT NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL
+    )
+  `);
+
+  await sql(`
+    CREATE TABLE IF NOT EXISTS collections (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      label TEXT NOT NULL,
+      tags TEXT DEFAULT '',
+      type TEXT DEFAULT '',
+      status TEXT DEFAULT 'Draft',
+      price NUMERIC DEFAULT 0,
+      popular NUMERIC DEFAULT 0,
+      rating NUMERIC DEFAULT 0,
+      badge TEXT DEFAULT '',
+      image TEXT DEFAULT '',
+      description TEXT DEFAULT '',
+      updated_at TEXT DEFAULT ''
+    )
+  `);
+
+  await sql(`
+    CREATE TABLE IF NOT EXISTS contact_messages (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      email TEXT NOT NULL,
+      room_type TEXT DEFAULT '',
+      message TEXT NOT NULL,
+      status TEXT NOT NULL,
+      source TEXT DEFAULT 'website',
+      reply_message TEXT DEFAULT '',
+      replied_at TEXT DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL
+    )
+  `);
+
+  await sql(`
+    CREATE TABLE IF NOT EXISTS orders (
+      id TEXT PRIMARY KEY,
+      customer_name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      payment_method TEXT NOT NULL,
+      shipping_address TEXT NOT NULL,
+      city TEXT NOT NULL,
+      notes TEXT DEFAULT '',
+      status TEXT NOT NULL,
+      currency TEXT NOT NULL,
+      subtotal NUMERIC NOT NULL,
+      shipping_fee NUMERIC NOT NULL,
+      total NUMERIC NOT NULL,
+      items_json TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL
+    )
+  `);
+
+  await sql(`
+    CREATE TABLE IF NOT EXISTS appointments (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      service_type TEXT NOT NULL,
+      preferred_date TEXT NOT NULL,
+      preferred_time TEXT NOT NULL,
+      notes TEXT DEFAULT '',
+      status TEXT NOT NULL,
+      source TEXT DEFAULT 'website',
+      created_at TIMESTAMPTZ NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL
+    )
+  `);
+
+  tablesReady = true;
+};
+
+const requireDatabase = async (req, res) => {
+  if (!sql) {
+    sendJson(res, 503, { error: 'Database is not reachable. Start the server first.' });
+    return false;
+  }
+  try {
+    await ensureTables();
+    return true;
+  } catch {
+    sendJson(res, 503, { error: 'Database is not reachable. Start the server first.' });
+    return false;
+  }
+};
+
+const requireAdmin = (req, res) => {
+  if (adminAuth.isAdminSessionValid(req)) return true;
+  sendJson(res, 401, { error: 'Unauthorized' });
+  return false;
+};
+
+const mapCollection = (row) => ({
   id: row.id,
   name: row.name,
   label: row.label,
   tags: row.tags,
   type: row.type,
   status: row.status,
-  price: row.price,
-  popular: row.popular,
-  rating: row.rating,
+  price: Number(row.price) || 0,
+  popular: Number(row.popular) || 0,
+  rating: Number(row.rating) || 0,
   badge: row.badge,
   image: row.image,
   description: row.description,
   updatedAt: row.updated_at
 });
 
-const mapMessageRow = (row) => ({
+const mapMessage = (row) => ({
   id: row.id,
   name: row.name,
   phone: row.phone,
@@ -51,272 +211,571 @@ const mapMessageRow = (row) => ({
   updatedAt: row.updated_at
 });
 
-const getMailConfigError = () => {
-  const missing = [];
-  if (!process.env.SMTP_HOST) missing.push('SMTP_HOST');
-  if (!process.env.SMTP_USER) missing.push('SMTP_USER');
-  if (!process.env.SMTP_PASS) missing.push('SMTP_PASS');
-  if (!process.env.MAIL_FROM) missing.push('MAIL_FROM');
-  return missing.length ? `SMTP is not configured. Missing: ${missing.join(', ')}.` : '';
-};
+const mapOrder = (row) => ({
+  id: row.id,
+  customerName: row.customer_name,
+  email: row.email,
+  phone: row.phone,
+  paymentMethod: row.payment_method,
+  shippingAddress: row.shipping_address,
+  city: row.city,
+  notes: row.notes || '',
+  status: row.status,
+  currency: row.currency,
+  subtotal: Number(row.subtotal) || 0,
+  shippingFee: Number(row.shipping_fee) || 0,
+  total: Number(row.total) || 0,
+  items: (() => {
+    try {
+      const parsed = JSON.parse(row.items_json || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  })(),
+  createdAt: row.created_at,
+  updatedAt: row.updated_at
+});
 
-const sendReplyEmail = async ({ to, subject, html, text }) => {
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT || 587),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
-  });
-  return await transporter.sendMail({ from: process.env.MAIL_FROM || process.env.SMTP_USER, to, subject, html, text });
-};
+const mapAppointment = (row) => ({
+  id: row.id,
+  name: row.name,
+  email: row.email,
+  phone: row.phone,
+  serviceType: row.service_type,
+  preferredDate: row.preferred_date,
+  preferredTime: row.preferred_time,
+  notes: row.notes || '',
+  status: row.status,
+  source: row.source,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at
+});
 
-const escapeHtml = (value) =>
-  String(value ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
+// ---- Admin auth endpoints
+app.post('/api/admin/login', async (req, res) => {
+  if (handleOptions(req, res)) return;
 
+  if (!adminAuth.isLoginConfigured()) {
+    sendJson(res, 500, {
+      error: 'Admin login is not configured. Set ADMIN_LOGIN_USER, ADMIN_PASSWORD, and ADMIN_SESSION_TOKEN.'
+    });
+    return;
+  }
+
+  const payload = req.body && typeof req.body === 'object' ? req.body : {};
+  const identifier = String(payload.identifier || payload.email || payload.username || '').trim();
+  const password = String(payload.password || '').trim();
+
+  if (!identifier || !password) {
+    sendJson(res, 400, { error: 'Missing credentials' });
+    return;
+  }
+
+  if (!adminAuth.credentialsMatch(identifier, password)) {
+    adminAuth.recordFailedLoginAttempt(req);
+    sendJson(res, 401, { error: 'Invalid username or password' });
+    return;
+  }
+
+  adminAuth.clearFailedLoginAttempts(req);
+  const cookie = adminAuth.buildSessionCookie(req);
+  if (!cookie) {
+    sendJson(res, 500, { error: 'Admin session token is missing' });
+    return;
+  }
+
+  res.setHeader('Set-Cookie', cookie);
+  sendJson(res, 200, { ok: true, redirectTo: '/admin/panel/index.html' });
+});
+
+app.get('/api/admin/me', async (req, res) => {
+  if (handleOptions(req, res)) return;
+  if (!adminAuth.isAdminSessionValid(req)) {
+    sendJson(res, 401, { authenticated: false });
+    return;
+  }
+  sendJson(res, 200, { authenticated: true });
+});
+
+app.all('/api/admin/logout', async (req, res) => {
+  if (handleOptions(req, res)) return;
+  res.setHeader('Set-Cookie', adminAuth.clearSessionCookie(req));
+  sendJson(res, 200, { ok: true });
+});
+
+// ---- Session state (cart / wishlist / last order)
+app.all('/api/session-state', async (req, res) => {
+  if (handleOptions(req, res)) return;
+  if (!(await requireDatabase(req, res))) return;
+
+  const sessionId = ensureSiteSessionId(req, res);
+
+  const loadState = async () => {
+    const rows = await sql('SELECT state_json FROM site_sessions WHERE id = $1', [sessionId]);
+    const raw = rows?.[0]?.state_json;
+    if (!raw) return { cart: [], wishlist: [], lastOrder: null };
+    try {
+      const parsed = JSON.parse(raw);
+      return {
+        cart: Array.isArray(parsed?.cart) ? parsed.cart : [],
+        wishlist: Array.isArray(parsed?.wishlist) ? parsed.wishlist : [],
+        lastOrder: parsed?.lastOrder && typeof parsed.lastOrder === 'object' ? parsed.lastOrder : null
+      };
+    } catch {
+      return { cart: [], wishlist: [], lastOrder: null };
+    }
+  };
+
+  const saveState = async (state) => {
+    const now = new Date().toISOString();
+    await sql(
+      `INSERT INTO site_sessions (id, state_json, updated_at)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (id) DO UPDATE SET state_json = EXCLUDED.state_json, updated_at = EXCLUDED.updated_at`,
+      [sessionId, JSON.stringify(state), now]
+    );
+    return state;
+  };
+
+  if (req.method === 'GET') {
+    sendJson(res, 200, await loadState());
+    return;
+  }
+
+  if (req.method === 'POST' || req.method === 'PATCH') {
+    const payload = req.body && typeof req.body === 'object' ? req.body : {};
+    const action = String(payload.action || '').trim();
+    const supportedActions = new Set([
+      'add-cart',
+      'remove-cart',
+      'clear-cart',
+      'add-wishlist',
+      'remove-wishlist',
+      'clear-wishlist',
+      'move-to-cart',
+      'move-to-wishlist',
+      'set-last-order',
+      'clear-last-order'
+    ]);
+
+    if (!action) {
+      sendJson(res, 400, { error: 'Missing action' });
+      return;
+    }
+    if (!supportedActions.has(action)) {
+      sendJson(res, 400, { error: 'Unsupported action' });
+      return;
+    }
+
+    const normalizeKey = (value) => String(value || '').trim();
+    const getItemKey = (value) =>
+      typeof value === 'object' && value ? normalizeKey(value.key) : normalizeKey(value);
+    const normalizeCartItem = (value, fallbackKey = '') => {
+      const key = normalizeKey(value?.key || value?.id || fallbackKey);
+      if (!key) return null;
+      return {
+        key,
+        width: Number(value?.width || 0),
+        height: Number(value?.height || 0),
+        estimatedPrice: Number(value?.estimatedPrice || 0),
+        basePrice: Number(value?.basePrice || 0)
+      };
+    };
+
+    const key = normalizeKey(payload.key || payload.itemKey);
+    const item = normalizeCartItem(payload.item, key);
+
+    const current = await loadState();
+    const cart = (Array.isArray(current.cart) ? current.cart : []).reduce((map, entry) => {
+      const entryKey = getItemKey(entry);
+      if (entryKey) map.set(entryKey, typeof entry === 'object' && entry ? entry : { key: entryKey });
+      return map;
+    }, new Map());
+    const wishlist = (Array.isArray(current.wishlist) ? current.wishlist : []).reduce((map, entry) => {
+      const entryKey = getItemKey(entry);
+      if (entryKey) map.set(entryKey, typeof entry === 'object' && entry ? entry : { key: entryKey });
+      return map;
+    }, new Map());
+    let lastOrder = current.lastOrder && typeof current.lastOrder === 'object' ? current.lastOrder : null;
+
+    const addItem = (map) => {
+      if (item) map.set(item.key, item);
+      else if (key) map.set(key, { key });
+    };
+    const removeItem = (map) => {
+      if (key) map.delete(key);
+      if (item?.key) map.delete(item.key);
+    };
+
+    switch (action) {
+      case 'add-cart':
+        addItem(cart);
+        break;
+      case 'remove-cart':
+        removeItem(cart);
+        break;
+      case 'clear-cart':
+        cart.clear();
+        break;
+      case 'add-wishlist':
+        addItem(wishlist);
+        break;
+      case 'remove-wishlist':
+        removeItem(wishlist);
+        break;
+      case 'clear-wishlist':
+        wishlist.clear();
+        break;
+      case 'move-to-cart':
+        removeItem(wishlist);
+        addItem(cart);
+        break;
+      case 'move-to-wishlist':
+        removeItem(cart);
+        addItem(wishlist);
+        break;
+      case 'set-last-order':
+        lastOrder = payload.order && typeof payload.order === 'object' ? payload.order : null;
+        break;
+      case 'clear-last-order':
+        lastOrder = null;
+        break;
+    }
+
+    const nextState = {
+      cart: Array.from(cart.values()),
+      wishlist: Array.from(wishlist.values()),
+      lastOrder
+    };
+    sendJson(res, 200, await saveState(nextState));
+    return;
+  }
+
+  sendJson(res, 405, { error: 'Method not allowed' });
+});
+
+// ---- Collections (admin only for mutations; GET is used by zebra page too)
 app.get('/api/collections', async (req, res) => {
+  if (handleOptions(req, res)) return;
+  if (!(await requireDatabase(req, res))) return;
+
   try {
     const rows = await sql('SELECT * FROM collections ORDER BY updated_at DESC');
-    res.json(rows.map(mapRow));
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    sendJson(res, 200, rows.map(mapCollection));
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || 'Failed to load collections' });
   }
 });
 
 app.post('/api/collections', async (req, res) => {
-  const payload = req.body || {};
+  if (handleOptions(req, res)) return;
+  if (!requireAdmin(req, res)) return;
+  if (!(await requireDatabase(req, res))) return;
+
+  const payload = req.body && typeof req.body === 'object' ? req.body : {};
   const now = new Date().toISOString().slice(0, 10);
+  const row = {
+    id: String(payload.id || `col-${Date.now()}`),
+    name: String(payload.name || '').trim(),
+    label: String(payload.label || '').trim(),
+    tags: String(payload.tags || '').trim(),
+    type: String(payload.type || '').trim(),
+    status: String(payload.status || 'Draft').trim(),
+    price: Number(payload.price) || 0,
+    popular: Number(payload.popular) || 0,
+    rating: Number(payload.rating) || 0,
+    badge: String(payload.badge || '').trim(),
+    image: String(payload.image || '').trim(),
+    description: String(payload.description || '').trim(),
+    updated_at: String(payload.updatedAt || now).trim()
+  };
+
+  if (!row.name || !row.label) {
+    sendJson(res, 400, { error: 'Missing required collection fields' });
+    return;
+  }
 
   try {
-    const row = {
-      id: payload.id || `col-${Date.now()}`,
-      name: payload.name,
-      label: payload.label,
-      tags: payload.tags,
-      type: payload.type,
-      status: payload.status || 'Draft',
-      price: Number(payload.price) || 0,
-      popular: Number(payload.popular) || 0,
-      rating: Number(payload.rating) || 0,
-      badge: payload.badge || '',
-      image: payload.image,
-      description: payload.description,
-      updated_at: payload.updatedAt || now
-    };
-
     await sql(
-      `INSERT INTO collections (id, name, label, tags, type, status, price, popular, rating, badge, image, description, updated_at) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
-      [row.id, row.name, row.label, row.tags, row.type, row.status, row.price, row.popular, row.rating, row.badge, row.image, row.description, row.updated_at]
+      `INSERT INTO collections (id, name, label, tags, type, status, price, popular, rating, badge, image, description, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+       ON CONFLICT (id) DO UPDATE SET
+         name=EXCLUDED.name,
+         label=EXCLUDED.label,
+         tags=EXCLUDED.tags,
+         type=EXCLUDED.type,
+         status=EXCLUDED.status,
+         price=EXCLUDED.price,
+         popular=EXCLUDED.popular,
+         rating=EXCLUDED.rating,
+         badge=EXCLUDED.badge,
+         image=EXCLUDED.image,
+         description=EXCLUDED.description,
+         updated_at=EXCLUDED.updated_at`,
+      [
+        row.id,
+        row.name,
+        row.label,
+        row.tags,
+        row.type,
+        row.status,
+        row.price,
+        row.popular,
+        row.rating,
+        row.badge,
+        row.image,
+        row.description,
+        row.updated_at
+      ]
     );
-
-    res.status(201).json(mapRow(row));
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    sendJson(res, 201, mapCollection(row));
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || 'Failed to save collection' });
   }
 });
 
 app.put('/api/collections/:id', async (req, res) => {
-  const payload = req.body || {};
+  if (handleOptions(req, res)) return;
+  if (!requireAdmin(req, res)) return;
+  if (!(await requireDatabase(req, res))) return;
+
+  const payload = req.body && typeof req.body === 'object' ? req.body : {};
   const now = new Date().toISOString().slice(0, 10);
-  const id = req.params.id;
+  const id = String(req.params.id || '').trim();
+
+  const row = {
+    id,
+    name: String(payload.name || '').trim(),
+    label: String(payload.label || '').trim(),
+    tags: String(payload.tags || '').trim(),
+    type: String(payload.type || '').trim(),
+    status: String(payload.status || 'Draft').trim(),
+    price: Number(payload.price) || 0,
+    popular: Number(payload.popular) || 0,
+    rating: Number(payload.rating) || 0,
+    badge: String(payload.badge || '').trim(),
+    image: String(payload.image || '').trim(),
+    description: String(payload.description || '').trim(),
+    updated_at: String(payload.updatedAt || now).trim()
+  };
+
+  if (!row.id || !row.name || !row.label) {
+    sendJson(res, 400, { error: 'Missing required collection fields' });
+    return;
+  }
 
   try {
-    const row = {
-      id,
-      name: payload.name,
-      label: payload.label,
-      tags: payload.tags,
-      type: payload.type,
-      status: payload.status || 'Draft',
-      price: Number(payload.price) || 0,
-      popular: Number(payload.popular) || 0,
-      rating: Number(payload.rating) || 0,
-      badge: payload.badge || '',
-      image: payload.image,
-      description: payload.description,
-      updated_at: payload.updatedAt || now
-    };
-
     await sql(
       `UPDATE collections SET name=$1, label=$2, tags=$3, type=$4, status=$5, price=$6, popular=$7, rating=$8, badge=$9, image=$10, description=$11, updated_at=$12 WHERE id=$13`,
-      [row.name, row.label, row.tags, row.type, row.status, row.price, row.popular, row.rating, row.badge, row.image, row.description, row.updated_at, id]
+      [
+        row.name,
+        row.label,
+        row.tags,
+        row.type,
+        row.status,
+        row.price,
+        row.popular,
+        row.rating,
+        row.badge,
+        row.image,
+        row.description,
+        row.updated_at,
+        row.id
+      ]
     );
-
-    res.json(mapRow(row));
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    sendJson(res, 200, mapCollection(row));
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || 'Failed to update collection' });
   }
 });
 
 app.delete('/api/collections/:id', async (req, res) => {
+  if (handleOptions(req, res)) return;
+  if (!requireAdmin(req, res)) return;
+  if (!(await requireDatabase(req, res))) return;
+
   try {
     await sql('DELETE FROM collections WHERE id = $1', [req.params.id]);
-    res.status(204).send();
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    sendJson(res, 204, null);
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || 'Failed to delete collection' });
   }
 });
 
+// ---- Contact messages
 app.get('/api/contact-messages', async (req, res) => {
+  if (handleOptions(req, res)) return;
+  if (!requireAdmin(req, res)) return;
+  if (!(await requireDatabase(req, res))) return;
+
   try {
     const rows = await sql('SELECT * FROM contact_messages ORDER BY created_at DESC');
-    res.json(rows.map(mapMessageRow));
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    sendJson(res, 200, rows.map(mapMessage));
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || 'Failed to load messages' });
   }
 });
 
 app.post('/api/contact-messages', async (req, res) => {
-  const payload = req.body || {};
+  if (handleOptions(req, res)) return;
+  if (!(await requireDatabase(req, res))) return;
+
+  const payload = req.body && typeof req.body === 'object' ? req.body : {};
   const now = new Date().toISOString();
-  const gmailPattern = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
 
   const row = {
-    id: `msg-${Date.now()}`,
+    id: String(payload.id || `msg-${Date.now()}`),
     name: String(payload.name || '').trim(),
     phone: String(payload.phone || payload.email || '').trim(),
     email: String(payload.email || payload.phone || '').trim(),
-    room_type: String(payload.roomType || '').trim(),
+    room_type: String(payload.roomType || payload.room_type || '').trim(),
     message: String(payload.message || '').trim(),
     status: 'New',
-    source: String(payload.source || 'website'),
+    source: String(payload.source || 'website').trim(),
+    reply_message: '',
+    replied_at: '',
     created_at: now,
     updated_at: now
   };
 
-  if (!row.name || !row.phone || !row.room_type || !row.message) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
-
-  if (!row.email || !gmailPattern.test(row.email)) {
-    return res.status(400).json({ error: 'Only Gmail addresses are allowed' });
+  if (!row.name || !row.phone || !row.message) {
+    sendJson(res, 400, { error: 'Missing required fields' });
+    return;
   }
 
   try {
     await sql(
-      `INSERT INTO contact_messages (id, name, phone, email, room_type, message, status, source, created_at, updated_at) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-      [row.id, row.name, row.phone, row.email, row.room_type, row.message, row.status, row.source, row.created_at, row.updated_at]
+      `INSERT INTO contact_messages (id, name, phone, email, room_type, message, status, source, reply_message, replied_at, created_at, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+      [
+        row.id,
+        row.name,
+        row.phone,
+        row.email,
+        row.room_type,
+        row.message,
+        row.status,
+        row.source,
+        row.reply_message,
+        row.replied_at,
+        row.created_at,
+        row.updated_at
+      ]
     );
-    res.status(201).json(mapMessageRow(row));
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    sendJson(res, 201, mapMessage(row));
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || 'Failed to save message' });
   }
 });
 
 app.put('/api/contact-messages/:id', async (req, res) => {
-  const payload = req.body || {};
-  const id = req.params.id;
-  const rows = await sql('SELECT * FROM contact_messages WHERE id = $1', [id]);
-  const existing = rows[0];
-  const messageData = payload.messageData && typeof payload.messageData === 'object' ? payload.messageData : null;
+  if (handleOptions(req, res)) return;
+  if (!requireAdmin(req, res)) return;
+  if (!(await requireDatabase(req, res))) return;
 
-  if (!existing && !messageData) {
-    return res.status(404).json({ error: 'Message not found' });
-  }
-
-  const row = {
-    id,
-    name: payload.name !== undefined ? String(payload.name).trim() : (existing?.name || String(messageData?.name || '').trim()),
-    phone: payload.phone !== undefined ? String(payload.phone).trim() : (existing?.phone || String(messageData?.phone || '').trim()),
-    email: payload.email !== undefined ? String(payload.email).trim() : (existing?.email || existing?.phone || String(messageData?.email || messageData?.phone || '').trim()),
-    room_type: payload.roomType !== undefined ? String(payload.roomType).trim() : (existing?.room_type || String(messageData?.roomType || messageData?.room_type || '').trim()),
-    message: payload.message !== undefined ? String(payload.message).trim() : (existing?.message || String(messageData?.message || '').trim()),
-    status: payload.status || existing?.status || 'New',
-    source: payload.source || existing?.source || String(messageData?.source || 'admin-panel').trim(),
-    created_at: existing?.created_at || new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  };
+  const payload = req.body && typeof req.body === 'object' ? req.body : {};
+  const id = String(req.params.id || '').trim();
 
   try {
+    const rows = await sql('SELECT * FROM contact_messages WHERE id = $1', [id]);
+    const existing = rows?.[0];
+    if (!existing) {
+      sendJson(res, 404, { error: 'Message not found' });
+      return;
+    }
+
+    const updated = {
+      id,
+      name: String(payload.name ?? existing.name ?? '').trim(),
+      phone: String(payload.phone ?? existing.phone ?? '').trim(),
+      email: String(payload.email ?? existing.email ?? '').trim(),
+      room_type: String(payload.roomType ?? payload.room_type ?? existing.room_type ?? '').trim(),
+      message: String(payload.message ?? existing.message ?? '').trim(),
+      status: String(payload.status ?? existing.status ?? 'New').trim(),
+      source: String(payload.source ?? existing.source ?? 'admin-panel').trim(),
+      reply_message: String(existing.reply_message || ''),
+      replied_at: String(existing.replied_at || ''),
+      created_at: existing.created_at,
+      updated_at: new Date().toISOString()
+    };
+
     await sql(
       `UPDATE contact_messages SET name=$1, phone=$2, email=$3, room_type=$4, message=$5, status=$6, source=$7, updated_at=$8 WHERE id=$9`,
-      [row.name, row.phone, row.email, row.room_type, row.message, row.status, row.source, row.updated_at, id]
+      [
+        updated.name,
+        updated.phone,
+        updated.email,
+        updated.room_type,
+        updated.message,
+        updated.status,
+        updated.source,
+        updated.updated_at,
+        id
+      ]
     );
-    res.json(mapMessageRow(row));
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    sendJson(res, 200, mapMessage(updated));
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || 'Failed to update message' });
   }
 });
 
 app.delete('/api/contact-messages/:id', async (req, res) => {
+  if (handleOptions(req, res)) return;
+  if (!requireAdmin(req, res)) return;
+  if (!(await requireDatabase(req, res))) return;
+
   try {
     await sql('DELETE FROM contact_messages WHERE id = $1', [req.params.id]);
-    res.status(204).send();
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    sendJson(res, 204, null);
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || 'Failed to delete message' });
   }
 });
 
 app.post('/api/contact-messages/:id/reply', async (req, res) => {
-  const payload = req.body || {};
-  const id = req.params.id;
-  const rows = await sql('SELECT * FROM contact_messages WHERE id = $1', [id]);
-  const existing = rows[0];
+  if (handleOptions(req, res)) return;
+  if (!requireAdmin(req, res)) return;
+  if (!(await requireDatabase(req, res))) return;
 
-  if (!existing) {
-    return res.status(404).json({ error: 'Message not found' });
-  }
+  const payload = req.body && typeof req.body === 'object' ? req.body : {};
+  const id = String(req.params.id || '').trim();
 
   const replyMessage = String(payload.reply || '').trim();
   if (!replyMessage) {
-    return res.status(400).json({ error: 'Reply text is required' });
+    sendJson(res, 400, { error: 'Reply text is required' });
+    return;
   }
 
-  const recipient = String(existing.email || '').trim();
-  if (!recipient || !recipient.includes('@')) {
-    return res.status(400).json({ error: 'Recipient email is missing or invalid' });
+  const rows = await sql('SELECT * FROM contact_messages WHERE id = $1', [id]);
+  const existing = rows?.[0];
+  if (!existing) {
+    sendJson(res, 404, { error: 'Message not found' });
+    return;
   }
 
-  const replySubject = payload.subject
-    ? String(payload.subject).trim()
-    : `Reply from LustreView Blinds for ${existing.room_type}`;
-
-  const replyHtml = `
-    <div style="font-family: Arial, sans-serif; line-height: 1.7; color: #222;">
-      <h2 style="margin: 0 0 16px;">LustreView Blinds</h2>
-      <p>Hello ${escapeHtml(existing.name)},</p>
-      <p>${escapeHtml(replyMessage).replace(/\n/g, '<br>')}</p>
-      <p style="margin-top: 24px;">Best regards,<br>LustreView Blinds team</p>
-    </div>
-  `;
-
-  const replyText = `Hello ${existing.name},\n\n${replyMessage}\n\nBest regards,\nLustreView Blinds team`;
   let emailDelivered = false;
-  let emailWarning = getMailConfigError();
+  let emailWarning = mail.getMailConfigError();
 
   if (!emailWarning) {
     try {
-      const delivery = await sendReplyEmail({
-        to: recipient,
-        subject: replySubject,
-        html: replyHtml,
-        text: replyText
+      await mail.sendMail({
+        to: String(existing.email || '').trim(),
+        subject: String(payload.subject || 'Reply from Luxe Drapes').trim(),
+        html: `<p style="white-space: pre-wrap;">${replyMessage}</p>`,
+        text: replyMessage
       });
-      emailDelivered = delivery.delivered;
-      emailWarning = delivery.reason || '';
+      emailDelivered = true;
     } catch (error) {
-      emailWarning = error.message || 'Failed to send email';
+      emailWarning = error?.message || 'Failed to send email';
     }
   }
 
   const updated = {
-    id,
-    name: existing.name,
-    phone: existing.phone,
-    email: existing.email,
-    room_type: existing.room_type,
-    message: existing.message,
+    ...existing,
     status: 'Replied',
-    source: existing.source,
     reply_message: replyMessage,
     replied_at: new Date().toISOString(),
-    created_at: existing.created_at,
     updated_at: new Date().toISOString()
   };
 
@@ -325,20 +784,247 @@ app.post('/api/contact-messages/:id/reply', async (req, res) => {
       `UPDATE contact_messages SET status=$1, reply_message=$2, replied_at=$3, updated_at=$4 WHERE id=$5`,
       [updated.status, updated.reply_message, updated.replied_at, updated.updated_at, id]
     );
-    return res.json({
-      ...mapMessageRow(updated),
-      emailDelivered,
-      emailWarning
+    sendJson(res, 200, { ...mapMessage(updated), emailDelivered, emailWarning });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || 'Failed to save reply' });
+  }
+});
+
+// ---- Orders
+app.get('/api/orders', async (req, res) => {
+  if (handleOptions(req, res)) return;
+  if (!requireAdmin(req, res)) return;
+  if (!(await requireDatabase(req, res))) return;
+
+  try {
+    const rows = await sql('SELECT * FROM orders ORDER BY created_at DESC');
+    sendJson(res, 200, rows.map(mapOrder));
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || 'Failed to load orders' });
+  }
+});
+
+app.post('/api/orders', async (req, res) => {
+  if (handleOptions(req, res)) return;
+  if (!(await requireDatabase(req, res))) return;
+
+  const payload = req.body && typeof req.body === 'object' ? req.body : {};
+  const now = new Date().toISOString();
+
+  const row = {
+    id: `ord-${Date.now()}`,
+    customerName: String(payload.customerName || '').trim(),
+    email: String(payload.email || '').trim(),
+    phone: String(payload.phone || '').trim(),
+    paymentMethod: String(payload.paymentMethod || '').trim(),
+    shippingAddress: String(payload.shippingAddress || '').trim(),
+    city: String(payload.city || '').trim(),
+    notes: String(payload.notes || '').trim(),
+    status: 'Pending',
+    currency: 'USD',
+    subtotal: Number(payload.subtotal) || 0,
+    shippingFee: Number(payload.shippingFee) || 0,
+    total: Number(payload.total) || 0,
+    items: Array.isArray(payload.items) ? payload.items : [],
+    createdAt: now,
+    updatedAt: now
+  };
+
+  if (
+    !row.customerName ||
+    !row.email ||
+    !row.phone ||
+    !row.paymentMethod ||
+    !row.shippingAddress ||
+    !row.city ||
+    !row.items.length
+  ) {
+    sendJson(res, 400, { error: 'Missing required order fields' });
+    return;
+  }
+
+  try {
+    await sql(
+      `INSERT INTO orders (id, customer_name, email, phone, payment_method, shipping_address, city, notes, status, currency, subtotal, shipping_fee, total, items_json, created_at, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
+      [
+        row.id,
+        row.customerName,
+        row.email,
+        row.phone,
+        row.paymentMethod,
+        row.shippingAddress,
+        row.city,
+        row.notes || '',
+        row.status,
+        row.currency,
+        row.subtotal,
+        row.shippingFee,
+        row.total,
+        JSON.stringify(row.items),
+        row.createdAt,
+        row.updatedAt
+      ]
+    );
+    sendJson(res, 201, row);
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || 'Failed to save order' });
+  }
+});
+
+app.get('/api/orders/:id', async (req, res) => {
+  if (handleOptions(req, res)) return;
+  if (!requireAdmin(req, res)) return;
+  if (!(await requireDatabase(req, res))) return;
+
+  const id = String(req.params.id || '').trim();
+  try {
+    const rows = await sql('SELECT * FROM orders WHERE id = $1', [id]);
+    const row = rows?.[0];
+    if (!row) {
+      sendJson(res, 404, { error: 'Order not found' });
+      return;
+    }
+    sendJson(res, 200, mapOrder(row));
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || 'Failed to load order' });
+  }
+});
+
+app.patch('/api/orders/:id', async (req, res) => {
+  if (handleOptions(req, res)) return;
+  if (!requireAdmin(req, res)) return;
+  if (!(await requireDatabase(req, res))) return;
+
+  const id = String(req.params.id || '').trim();
+  const payload = req.body && typeof req.body === 'object' ? req.body : {};
+  const nextStatus = String(payload.status || '').trim();
+
+  if (!nextStatus) {
+    sendJson(res, 400, { error: 'Missing status' });
+    return;
+  }
+
+  try {
+    await sql('UPDATE orders SET status=$1, updated_at=$2 WHERE id=$3', [nextStatus, new Date().toISOString(), id]);
+    sendJson(res, 200, { ok: true });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || 'Failed to update order' });
+  }
+});
+
+// ---- Appointments
+app.get('/api/appointments', async (req, res) => {
+  if (handleOptions(req, res)) return;
+  if (!requireAdmin(req, res)) return;
+  if (!(await requireDatabase(req, res))) return;
+
+  try {
+    const rows = await sql('SELECT * FROM appointments ORDER BY created_at DESC');
+    sendJson(res, 200, rows.map(mapAppointment));
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || 'Failed to load appointments' });
+  }
+});
+
+app.post('/api/appointments', async (req, res) => {
+  if (handleOptions(req, res)) return;
+  if (!(await requireDatabase(req, res))) return;
+
+  const payload = req.body && typeof req.body === 'object' ? req.body : {};
+  const now = new Date().toISOString();
+  const row = {
+    id: `appt-${Date.now()}`,
+    name: String(payload.name || '').trim(),
+    email: String(payload.email || '').trim(),
+    phone: String(payload.phone || '').trim(),
+    serviceType: String(payload.serviceType || 'Measurement').trim(),
+    preferredDate: String(payload.preferredDate || '').trim(),
+    preferredTime: String(payload.preferredTime || '').trim(),
+    notes: String(payload.notes || '').trim(),
+    status: 'Pending',
+    source: String(payload.source || 'website').trim(),
+    createdAt: now,
+    updatedAt: now
+  };
+
+  if (!row.name || !row.email || !row.phone || !row.preferredDate || !row.preferredTime) {
+    sendJson(res, 400, { error: 'Missing required fields' });
+    return;
+  }
+
+  try {
+    await sql(
+      `INSERT INTO appointments (id, name, email, phone, service_type, preferred_date, preferred_time, notes, status, source, created_at, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+      [
+        row.id,
+        row.name,
+        row.email,
+        row.phone,
+        row.serviceType,
+        row.preferredDate,
+        row.preferredTime,
+        row.notes || '',
+        row.status,
+        row.source,
+        row.createdAt,
+        row.updatedAt
+      ]
+    );
+    sendJson(res, 201, row);
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || 'Failed to save appointment' });
+  }
+});
+
+// ---- Stripe checkout (kept for later)
+app.post('/api/checkout/session', async (req, res) => {
+  if (handleOptions(req, res)) return;
+  const stripe = stripeLib.getStripe();
+  if (!stripe) {
+    sendJson(res, 400, { error: 'Stripe is not configured' });
+    return;
+  }
+
+  const payload = req.body && typeof req.body === 'object' ? req.body : {};
+  const items = Array.isArray(payload.items) ? payload.items : [];
+  if (!items.length) {
+    sendJson(res, 400, { error: 'Missing items' });
+    return;
+  }
+
+  try {
+    const baseUrl = stripeLib.getBaseUrl(req);
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: items.map((item) => ({
+        quantity: 1,
+        price_data: {
+          currency: 'usd',
+          unit_amount: Math.max(50, Math.round(Number(item.estimatedPrice || 0) * 100)),
+          product_data: {
+            name: String(item.name || item.key || 'Curtain')
+          }
+        }
+      })),
+      success_url: `${baseUrl}/order-success.html`,
+      cancel_url: `${baseUrl}/checkout.html`
     });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+
+    sendJson(res, 200, { url: session.url });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || 'Failed to create Stripe session' });
   }
 });
 
 if (require.main === module) {
   app.listen(PORT, () => {
-    console.log(`LustreView Blinds API running on http://localhost:${PORT}`);
+    // eslint-disable-next-line no-console
+    console.log(`API running on http://localhost:${PORT}`);
   });
 }
 
 module.exports = app;
+
