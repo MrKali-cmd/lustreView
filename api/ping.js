@@ -5,7 +5,8 @@ module.exports = async (req, res) => {
   res.end(
     JSON.stringify({
       ok: true,
-      now: new Date().toISOString()
+      now: new Date().toISOString(),
+      hasDatabaseEnv: Boolean(String(process.env.DATABASE_URL || '').trim())
     })
   );
 };

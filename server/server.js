@@ -161,15 +161,26 @@ const ensureTables = async () => {
 };
 
 const requireDatabase = async (req, res) => {
+  const hasDbEnv = Boolean(String(process.env.DATABASE_URL || '').trim());
   if (!sql) {
-    sendJson(res, 503, { error: 'Database is not reachable. Start the server first.' });
+    sendJson(res, 503, {
+      error: hasDbEnv
+        ? 'Database client was not initialized.'
+        : 'Database is not configured. Set DATABASE_URL in your environment variables.'
+    });
     return false;
   }
   try {
     await ensureTables();
     return true;
-  } catch {
-    sendJson(res, 503, { error: 'Database is not reachable. Start the server first.' });
+  } catch (error) {
+    // Log full error in Vercel logs for debugging.
+    // eslint-disable-next-line no-console
+    console.error('[db] connection/table init failed:', error);
+    sendJson(res, 503, {
+      error: 'Database is not reachable. Check DATABASE_URL and Neon availability.',
+      detail: String(error && (error.message || error.toString()) || 'unknown').slice(0, 180)
+    });
     return false;
   }
 };
@@ -183,7 +194,11 @@ const requireAdmin = (req, res) => {
 // Lightweight endpoint to verify the API is deployed and reachable (no DB required).
 app.get('/api/ping', (req, res) => {
   if (handleOptions(req, res)) return;
-  sendJson(res, 200, { ok: true, now: new Date().toISOString() });
+  sendJson(res, 200, {
+    ok: true,
+    now: new Date().toISOString(),
+    hasDatabaseEnv: Boolean(String(process.env.DATABASE_URL || '').trim())
+  });
 });
 
 const mapCollection = (row) => ({
