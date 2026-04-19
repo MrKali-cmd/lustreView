@@ -180,6 +180,12 @@ const requireAdmin = (req, res) => {
   return false;
 };
 
+// Lightweight endpoint to verify the API is deployed and reachable (no DB required).
+app.get('/api/ping', (req, res) => {
+  if (handleOptions(req, res)) return;
+  sendJson(res, 200, { ok: true, now: new Date().toISOString() });
+});
+
 const mapCollection = (row) => ({
   id: row.id,
   name: row.name,
@@ -1027,4 +1033,3 @@ if (require.main === module) {
 }
 
 module.exports = app;
-

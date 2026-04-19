@@ -6,6 +6,24 @@ const {
   recordFailedLoginAttempt
 } = require('../../server/_lib/admin-auth');
 
+const readJsonBody = async (req) => {
+  // Vercel Node Functions don't guarantee `req.body` is populated.
+  if (req.body && typeof req.body === 'object') return req.body;
+
+  const contentType = String(req.headers['content-type'] || req.headers['Content-Type'] || '').toLowerCase();
+  if (!contentType.includes('application/json')) return {};
+
+  const chunks = [];
+  for await (const chunk of req) chunks.push(chunk);
+  const raw = Buffer.concat(chunks).toString('utf8').trim();
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+};
+
 const sendJson = (res, status, payload) => {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -32,7 +50,7 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const payload = req.body && typeof req.body === 'object' ? req.body : {};
+  const payload = await readJsonBody(req);
   const identifier = String(payload.identifier || payload.email || payload.username || '').trim();
   const password = String(payload.password || '').trim();
 
@@ -57,4 +75,3 @@ module.exports = async (req, res) => {
   res.setHeader('Set-Cookie', cookie);
   sendJson(res, 200, { ok: true, redirectTo: '/admin/panel/index.html' });
 };
-

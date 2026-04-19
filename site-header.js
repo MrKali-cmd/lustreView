@@ -30,7 +30,25 @@
     const wishlistCurrent = page === 'wishlist';
     const cartCurrent = page === 'cart';
 
+    const promoDismissed = (() => {
+        try {
+            return window.localStorage.getItem('luxe_promo_50_dismissed') === '1';
+        } catch {
+            return false;
+        }
+    })();
+
     mountPoint.innerHTML = `
+        ${promoDismissed ? '' : `
+        <div class="promo-bar" data-promo-bar role="status" aria-label="Promotion">
+            <div class="promo-bar__inner">
+                <span class="promo-bar__pill">50% OFF</span>
+                <span class="promo-bar__text">Limited time discount on select zebra blinds.</span>
+                <a class="promo-bar__link" href="zebra-collection.html">Shop the sale</a>
+                <button class="promo-bar__close" type="button" aria-label="Dismiss promotion" data-promo-close>&times;</button>
+            </div>
+        </div>
+        `}
         <header id="main-header">
             <nav class="nav-container">
                 <a href="${isHomePage ? '#' : 'index.html'}" class="logo">
@@ -60,6 +78,22 @@
             </nav>
         </header>
     `;
+
+    const promoBar = mountPoint.querySelector('[data-promo-bar]');
+    if (promoBar) {
+        document.body.classList.add('has-promo-bar');
+        promoBar.querySelector('[data-promo-close]')?.addEventListener('click', () => {
+            try {
+                window.localStorage.setItem('luxe_promo_50_dismissed', '1');
+            } catch {
+                // ignore
+            }
+            promoBar.remove();
+            document.body.classList.remove('has-promo-bar');
+        });
+    } else {
+        document.body.classList.remove('has-promo-bar');
+    }
 
     const header = mountPoint.querySelector('#main-header');
     if (!header) return;
