@@ -849,7 +849,7 @@ app.get('/api/orders', async (req, res) => {
   if (!(await requireDatabase(req, res))) return;
 
   try {
-    const rows = await sql('SELECT * FROM orders ORDER BY created_at DESC');
+    const rows = await sql.query('SELECT * FROM orders ORDER BY created_at DESC');
     sendJson(res, 200, rows.map(mapOrder));
   } catch (error) {
     sendJson(res, 500, { error: error.message || 'Failed to load orders' });
@@ -896,7 +896,7 @@ app.post('/api/orders', async (req, res) => {
   }
 
   try {
-    await sql(
+    await sql.query(
       `INSERT INTO orders (id, customer_name, email, phone, payment_method, shipping_address, city, notes, status, currency, subtotal, shipping_fee, total, items_json, created_at, updated_at)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
       [
@@ -931,7 +931,7 @@ app.get('/api/orders/:id', async (req, res) => {
 
   const id = String(req.params.id || '').trim();
   try {
-    const rows = await sql('SELECT * FROM orders WHERE id = $1', [id]);
+    const rows = await sql.query('SELECT * FROM orders WHERE id = $1', [id]);
     const row = rows?.[0];
     if (!row) {
       sendJson(res, 404, { error: 'Order not found' });
@@ -958,7 +958,7 @@ app.patch('/api/orders/:id', async (req, res) => {
   }
 
   try {
-    await sql('UPDATE orders SET status=$1, updated_at=$2 WHERE id=$3', [nextStatus, new Date().toISOString(), id]);
+    await sql.query('UPDATE orders SET status=$1, updated_at=$2 WHERE id=$3', [nextStatus, new Date().toISOString(), id]);
     sendJson(res, 200, { ok: true });
   } catch (error) {
     sendJson(res, 500, { error: error.message || 'Failed to update order' });
@@ -972,7 +972,7 @@ app.get('/api/appointments', async (req, res) => {
   if (!(await requireDatabase(req, res))) return;
 
   try {
-    const rows = await sql('SELECT * FROM appointments ORDER BY created_at DESC');
+    const rows = await sql.query('SELECT * FROM appointments ORDER BY created_at DESC');
     sendJson(res, 200, rows.map(mapAppointment));
   } catch (error) {
     sendJson(res, 500, { error: error.message || 'Failed to load appointments' });
@@ -1006,7 +1006,7 @@ app.post('/api/appointments', async (req, res) => {
   }
 
   try {
-    await sql(
+    await sql.query(
       `INSERT INTO appointments (id, name, email, phone, service_type, preferred_date, preferred_time, notes, status, source, created_at, updated_at)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
       [
