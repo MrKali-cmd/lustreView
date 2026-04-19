@@ -201,6 +201,37 @@ app.get('/api/ping', (req, res) => {
   });
 });
 
+// Debug-only: check DB connectivity and return the underlying error details.
+// Protected behind admin auth to avoid leaking internal information publicly.
+app.get('/api/_debug/db', async (req, res) => {
+  if (handleOptions(req, res)) return;
+  if (!requireAdmin(req, res)) return;
+
+  const hasDbEnv = Boolean(String(process.env.DATABASE_URL || '').trim());
+  if (!hasDbEnv || !sql) {
+    sendJson(res, 503, {
+      ok: false,
+      error: hasDbEnv ? 'Database client was not initialized.' : 'DATABASE_URL is missing.'
+    });
+    return;
+  }
+
+  try {
+    // Basic ping query.
+    const rows = await sql('SELECT 1 as ok');
+    sendJson(res, 200, { ok: true, rows });
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('[db-check] failed:', error);
+    sendJson(res, 503, {
+      ok: false,
+      name: String(error?.name || ''),
+      code: String(error?.code || ''),
+      message: String(error?.message || error || '').slice(0, 400)
+    });
+  }
+});
+
 const mapCollection = (row) => ({
   id: row.id,
   name: row.name,
