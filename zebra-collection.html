@@ -1775,8 +1775,8 @@
                 <div class="orbit-item has-tooltip" data-tooltip="Max Price" data-type="price" tabindex="0" role="button" aria-label="Max price">
                     <i class="fa-solid fa-tag"></i>
                     <div class="orbit-dropdown">
-                        <p>Max Price: <span id="p-val">$300</span></p>
-                        <input type="range" min="50" max="300" value="300" id="p-range">
+                        <p>Max Price: <span id="p-val">$1000</span></p>
+                        <input type="range" min="0" max="1000" value="1000" id="p-range">
                     </div>
                 </div>
                 <div class="orbit-item has-tooltip" data-tooltip="Color" data-type="color" tabindex="0" role="button" aria-label="Color filter">
@@ -1942,8 +1942,10 @@
         const currentFilters = {
             type: 'all',
             color: 'all',
-            priceMin: 50,
-            priceMax: 300,
+            // Collections can be custom-priced (no fixed item price).
+            // Keep the default range wide so items with missing/zero price still show.
+            priceMin: 0,
+            priceMax: 1000,
             sort: sortSelect?.value || 'newest'
         };
         const formatPrice = (value) => `$${(Number(value || 0) / USD_RATE).toLocaleString('en-US', {
@@ -1986,12 +1988,12 @@
         }, { once: true });
         const updatePriceRangeVisual = () => {
             if (!priceMinInput || !priceMaxInput || !priceRangeFill) return;
-            const min = Number(priceMinInput.value || currentFilters.priceMin || 50);
-            const max = Number(priceMaxInput.value || currentFilters.priceMax || 300);
+            const min = Number(priceMinInput.value || currentFilters.priceMin || 0);
+            const max = Number(priceMaxInput.value || currentFilters.priceMax || 1000);
             const left = Math.min(min, max);
             const right = Math.max(min, max);
-            const minPercent = ((left - Number(priceMinInput.min || 0)) / (Number(priceMinInput.max || 300) - Number(priceMinInput.min || 0))) * 100;
-            const maxPercent = ((right - Number(priceMaxInput.min || 0)) / (Number(priceMaxInput.max || 300) - Number(priceMaxInput.min || 0))) * 100;
+            const minPercent = ((left - Number(priceMinInput.min || 0)) / (Number(priceMinInput.max || 1000) - Number(priceMinInput.min || 0))) * 100;
+            const maxPercent = ((right - Number(priceMaxInput.min || 0)) / (Number(priceMaxInput.max || 1000) - Number(priceMaxInput.min || 0))) * 100;
             priceRangeFill.style.left = `${Math.max(0, Math.min(100, minPercent))}%`;
             priceRangeFill.style.right = `${Math.max(0, Math.min(100, 100 - maxPercent))}%`;
             if (priceMinLabel) priceMinLabel.textContent = `$${left}`;
@@ -2258,12 +2260,12 @@
             currentFilters.color = colorFilter?.querySelector('.color-swatch.is-active')?.dataset.colorSwatch || 'all';
             currentFilters.sort = sortSelect?.value || 'newest';
             currentFilters.priceMin = Math.min(
-                Number(priceMinInput?.value || 50),
-                Number(priceMaxInput?.value || 300)
+                Number(priceMinInput?.value || 0),
+                Number(priceMaxInput?.value || 1000)
             );
             currentFilters.priceMax = Math.max(
-                Number(priceMinInput?.value || 50),
-                Number(priceMaxInput?.value || 300)
+                Number(priceMinInput?.value || 0),
+                Number(priceMaxInput?.value || 1000)
             );
         };
 
@@ -2289,10 +2291,10 @@
             if (item.dataset.type === 'reset') {
                 currentFilters.type = 'all';
                 currentFilters.color = 'all';
-                currentFilters.priceMin = 50;
-                currentFilters.priceMax = 300;
-                if (pRange) pRange.value = '300';
-                if (pVal) pVal.textContent = '$300';
+                currentFilters.priceMin = 0;
+                currentFilters.priceMax = 1000;
+                if (pRange) pRange.value = '1000';
+                if (pVal) pVal.textContent = '$1000';
                 colorDots.forEach((entry) => entry.classList.remove('is-active'));
                 modelButtons.forEach((entry) => entry.classList.remove('is-active'));
                 orbitItems.querySelectorAll('.orbit-item').forEach((entry) => entry.classList.remove('is-open'));
@@ -2311,10 +2313,10 @@
         });
 
         pRange?.addEventListener('input', (event) => {
-            const value = Number(event.target.value || 300);
+            const value = Number(event.target.value || 1000);
             if (pVal) pVal.textContent = `$${value}`;
             currentFilters.priceMax = value;
-            currentFilters.priceMin = 50;
+            currentFilters.priceMin = 0;
             refreshResults();
         });
 
@@ -2375,11 +2377,11 @@
         clearFiltersBtn?.addEventListener('click', () => {
             currentFilters.type = 'all';
             currentFilters.color = 'all';
-            currentFilters.priceMin = 50;
-            currentFilters.priceMax = 300;
+            currentFilters.priceMin = 0;
+            currentFilters.priceMax = 1000;
             if (sortSelect) sortSelect.value = 'newest';
-            if (priceMinInput) priceMinInput.value = '50';
-            if (priceMaxInput) priceMaxInput.value = '300';
+            if (priceMinInput) priceMinInput.value = '0';
+            if (priceMaxInput) priceMaxInput.value = '1000';
             setActiveTypePill('all');
             setActiveColorSwatch('all');
             updatePriceRangeVisual();

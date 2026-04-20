@@ -157,6 +157,20 @@ const ensureTables = async () => {
     )
   `);
 
+  await sql.query(`
+    CREATE TABLE IF NOT EXISTS reviews (
+      id TEXT PRIMARY KEY,
+      customer_name TEXT NOT NULL,
+      email TEXT DEFAULT '',
+      rating NUMERIC NOT NULL,
+      comment TEXT NOT NULL,
+      order_id TEXT DEFAULT '',
+      status TEXT DEFAULT 'Approved',
+      source TEXT DEFAULT 'website',
+      created_at TIMESTAMPTZ NOT NULL
+    )
+  `);
+
   tablesReady = true;
 };
 
@@ -249,6 +263,18 @@ const mapCollection = (row) => ({
   image: row.image,
   description: row.description,
   updatedAt: row.updated_at
+});
+
+const mapReview = (row) => ({
+  id: row.id,
+  customerName: row.customer_name,
+  email: row.email || '',
+  rating: Number(row.rating) || 0,
+  comment: row.comment,
+  orderId: row.order_id || '',
+  status: row.status || 'Approved',
+  source: row.source || 'website',
+  createdAt: row.created_at
 });
 
 const mapMessage = (row) => ({
@@ -599,28 +625,41 @@ app.put('/api/collections/:id', async (req, res) => {
   const now = new Date().toISOString().slice(0, 10);
   const id = String(req.params.id || '').trim();
 
-  const row = {
-    id,
-    name: String(payload.name || '').trim(),
-    label: String(payload.label || '').trim(),
-    tags: String(payload.tags || '').trim(),
-    type: String(payload.type || '').trim(),
-    status: String(payload.status || 'Draft').trim(),
-    price: Number(payload.price) || 0,
-    popular: Number(payload.popular) || 0,
-    rating: Number(payload.rating) || 0,
-    badge: String(payload.badge || '').trim(),
-    image: String(payload.image || '').trim(),
-    description: String(payload.description || '').trim(),
-    updated_at: String(payload.updatedAt || now).trim()
-  };
-
-  if (!row.id || !row.name || !row.label) {
-    sendJson(res, 400, { error: 'Missing required collection fields' });
-    return;
-  }
-
   try {
+    if (!id) {
+      sendJson(res, 400, { error: 'Missing required collection fields' });
+      return;
+    }
+
+    const existingRows = await sql.query('SELECT * FROM collections WHERE id = $1', [id]);
+    const existing = existingRows?.[0];
+    if (!existing) {
+      sendJson(res, 404, { error: 'Collection not found' });
+      return;
+    }
+
+    const row = {
+      id,
+      name: String(payload.name ?? existing.name ?? '').trim(),
+      label: String(payload.label ?? existing.label ?? '').trim(),
+      tags: String(payload.tags ?? existing.tags ?? '').trim(),
+      type: String(payload.type ?? existing.type ?? '').trim(),
+      status: String(payload.status ?? existing.status ?? 'Draft').trim(),
+      // Price is optional in admin UI now. Preserve existing value unless explicitly provided.
+      price: payload.price === undefined ? Number(existing.price) || 0 : Number(payload.price) || 0,
+      popular: payload.popular === undefined ? Number(existing.popular) || 0 : Number(payload.popular) || 0,
+      rating: payload.rating === undefined ? Number(existing.rating) || 0 : Number(payload.rating) || 0,
+      badge: String(payload.badge ?? existing.badge ?? '').trim(),
+      image: String(payload.image ?? existing.image ?? '').trim(),
+      description: String(payload.description ?? existing.description ?? '').trim(),
+      updated_at: String(payload.updatedAt || now).trim()
+    };
+
+    if (!row.name || !row.label) {
+      sendJson(res, 400, { error: 'Missing required collection fields' });
+      return;
+    }
+
     await sql.query(
       `UPDATE collections SET name=$1, label=$2, tags=$3, type=$4, status=$5, price=$6, popular=$7, rating=$8, badge=$9, image=$10, description=$11, updated_at=$12 WHERE id=$13`,
       [
@@ -1048,6 +1087,75 @@ app.post('/api/appointments', async (req, res) => {
     sendJson(res, 201, row);
   } catch (error) {
     sendJson(res, 500, { error: error.message || 'Failed to save appointment' });
+  }
+});
+
+// ---- Reviews (public)
+app.get('/api/reviews', async (req, res) => {
+  if (handleOptions(req, res)) return;
+  if (!(await requireDatabase(req, res))) return;
+
+  try {
+    const rows = await sql.query(
+      `SELECT * FROM reviews WHERE status != 'Hidden' ORDER BY created_at DESC LIMIT 50`
+    );
+    sendJson(res, 200, rows.map(mapReview));
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || 'Failed to load reviews' });
+  }
+});
+
+app.post('/api/reviews', async (req, res) => {
+  if (handleOptions(req, res)) return;
+  if (!(await requireDatabase(req, res))) return;
+
+  const payload = req.body && typeof req.body === 'object' ? req.body : {};
+  const name = String(payload.customerName || payload.name || '').trim();
+  const email = String(payload.email || '').trim();
+  const comment = String(payload.comment || payload.message || '').trim();
+  const orderId = String(payload.orderId || payload.order_id || '').trim();
+  const rating = Number(payload.rating);
+
+  if (!name || !comment || !Number.isFinite(rating)) {
+    sendJson(res, 400, { error: 'Missing required review fields' });
+    return;
+  }
+  if (rating < 1 || rating > 5) {
+    sendJson(res, 400, { error: 'Rating must be between 1 and 5' });
+    return;
+  }
+
+  const row = {
+    id: String(payload.id || `rev-${Date.now()}`),
+    customer_name: name,
+    email,
+    rating,
+    comment,
+    order_id: orderId,
+    status: 'Approved',
+    source: String(payload.source || 'website').trim(),
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    await sql.query(
+      `INSERT INTO reviews (id, customer_name, email, rating, comment, order_id, status, source, created_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+      [
+        row.id,
+        row.customer_name,
+        row.email,
+        row.rating,
+        row.comment,
+        row.order_id,
+        row.status,
+        row.source,
+        row.created_at
+      ]
+    );
+    sendJson(res, 201, mapReview(row));
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || 'Failed to save review' });
   }
 });
 
