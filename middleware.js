@@ -34,6 +34,14 @@ export function middleware(request) {
   const url = new URL(request.url);
   const { pathname } = url;
 
+  // Canonicalize host: force apex -> www to avoid cookie/session splitting.
+  // This fixes "reads work but mutations fail" when admin logs in on one host
+  // and admin panel/API calls happen on the other host.
+  if (url.hostname === 'lustreview.com') {
+    url.hostname = 'www.lustreview.com';
+    return Response.redirect(url, 308);
+  }
+
   if (!pathname.startsWith('/admin')) {
     return;
   }
@@ -72,5 +80,5 @@ export function middleware(request) {
 }
 
 export const config = {
-  matcher: ['/admin', '/admin/:path*']
+  matcher: ['/:path*']
 };
