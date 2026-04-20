@@ -70,7 +70,10 @@
         }
     })();
 
-    if (!promoDismissed) {
+    // Show promo only on public pages (home + collection). Avoid distracting cart/checkout/wishlist.
+    const promoAllowed = page === 'home' || page === 'collection';
+
+    if (promoAllowed && !promoDismissed) {
         const promo = document.createElement('div');
         promo.className = 'promo-float';
         promo.setAttribute('role', 'status');
@@ -89,7 +92,17 @@
         `;
         document.body.appendChild(promo);
 
-        // Animate in once per load (CSS handles motion; this just adds the class after paint).
+        const headerEl = document.getElementById('main-header');
+        const setPromoTop = () => {
+            const headerHeight = headerEl ? headerEl.getBoundingClientRect().height : 72;
+            // Keep it under the header, centered, with a bit of breathing room.
+            promo.style.top = `${Math.max(12, headerHeight + 14)}px`;
+        };
+
+        setPromoTop();
+        window.addEventListener('resize', setPromoTop);
+
+        // Animate in once per load.
         requestAnimationFrame(() => promo.classList.add('is-visible'));
 
         promo.querySelector('[data-promo-close]')?.addEventListener('click', () => {

@@ -174,18 +174,18 @@ body::after {
         /* Floating promo (more noticeable, doesn't fight the header layout). */
         .promo-float {
             position: fixed;
-            left: 18px;
-            bottom: 18px;
+            left: 50%;
+            top: 92px;
             z-index: 1200;
             pointer-events: none;
             opacity: 0;
-            transform: translateY(14px);
+            transform: translate(-50%, 14px);
             transition: opacity 0.25s ease, transform 0.25s ease;
         }
 
         .promo-float.is-visible {
             opacity: 1;
-            transform: translateY(0);
+            transform: translate(-50%, 0);
         }
 
         .promo-float__glow {
@@ -299,8 +299,7 @@ body::after {
 
         @media (max-width: 768px) {
             .promo-float {
-                left: 14px;
-                bottom: 14px;
+                left: 50%;
             }
 
             .promo-float__card {
