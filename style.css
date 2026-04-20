@@ -2127,6 +2127,148 @@ body::after {
             color: #b64646;
         }
 
+        .reviews {
+            padding: 28px 8% 120px;
+            background: linear-gradient(180deg, #ffffff 0%, #fbf7ef 100%);
+        }
+
+        .reviews-grid {
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            gap: 28px;
+            align-items: start;
+        }
+
+        .reviews-panel,
+        .review-form {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(201, 169, 98, 0.16);
+            border-radius: 24px;
+            box-shadow: 0 18px 50px rgba(24, 18, 10, 0.08);
+            backdrop-filter: blur(12px);
+        }
+
+        .reviews-panel {
+            padding: 28px;
+        }
+
+        .reviews-panel h3,
+        .review-form h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 30px;
+            margin-bottom: 18px;
+        }
+
+        .reviews-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .review-card {
+            padding: 16px 18px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(17,17,17,0.96), rgba(32,25,15,0.96));
+            color: #fff;
+            border: 1px solid rgba(201,169,98,0.18);
+        }
+
+        .review-card-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .review-card-name {
+            font-weight: 800;
+        }
+
+        .review-card-stars {
+            color: #c9a962;
+            letter-spacing: 2px;
+            font-size: 13px;
+        }
+
+        .review-card-comment {
+            color: rgba(255,255,255,0.84);
+            line-height: 1.65;
+            font-size: 14px;
+        }
+
+        .reviews-empty {
+            padding: 18px;
+            border-radius: 18px;
+            background: rgba(201,169,98,0.1);
+            color: var(--dark);
+            font-weight: 600;
+        }
+
+        .review-form {
+            padding: 28px;
+            display: grid;
+            gap: 16px;
+        }
+
+        .review-form label {
+            display: grid;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .review-form input,
+        .review-form textarea {
+            width: 100%;
+            border: 1px solid rgba(17, 17, 17, 0.12);
+            border-radius: 18px;
+            padding: 14px 16px;
+            background: rgba(255,255,255,0.92);
+            color: var(--dark);
+            font: inherit;
+            outline: none;
+        }
+
+        .review-form input:focus,
+        .review-form textarea:focus {
+            border-color: rgba(201,169,98,0.8);
+            box-shadow: 0 0 0 4px rgba(201,169,98,0.16);
+        }
+
+        .review-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .rating-picker {
+            display: inline-flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .rating-star {
+            width: 42px;
+            height: 42px;
+            border-radius: 999px;
+            border: 1px solid rgba(201,169,98,0.2);
+            background: rgba(255,255,255,0.9);
+            color: rgba(24,18,10,0.25);
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .rating-star.is-active {
+            color: #c9a962;
+            box-shadow: 0 10px 24px rgba(201,169,98,0.2);
+        }
+
+        .rating-star:hover {
+            transform: translateY(-1px);
+        }
+
         footer {
             background: var(--dark);
             padding: 100px 8% 40px;
@@ -2304,6 +2446,7 @@ body::after {
         @media (max-width: 992px) {
             .hero-title { font-size: 48px; }
             .section-title { font-size: 44px; }
+            .reviews-grid { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 768px) {
@@ -2405,6 +2548,25 @@ body::after {
                 line-height: 18px;
                 top: 4px;
                 right: 4px;
+            }
+
+            .reviews {
+                padding: 18px 5% 90px;
+            }
+
+            .reviews-panel,
+            .review-form {
+                padding: 20px;
+                border-radius: 20px;
+            }
+
+            .review-form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .rating-star {
+                width: 38px;
+                height: 38px;
             }
             .mobile-menu-btn { display: block; }
             .hero {

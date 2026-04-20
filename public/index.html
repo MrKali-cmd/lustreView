@@ -91,7 +91,7 @@
                     <h1 class="p-title">Light <span>Perfected</span></h1>
                     <p class="p-desc">From privacy to daylight balance, we tailor every layer to the room, the mood, and the exact dimensions of your home.</p>
                     <div class="p-actions">
-                        <a href="#contact" class="p-btn-gold">Book Consultation</a>
+                        <a href="#contact" class="p-btn-gold">Free Estimate</a>
                         <a href="#about" class="p-btn-outline">Our Story</a>
                     </div>
                 </div>
@@ -490,7 +490,62 @@
         <button type="submit" class="btn-primary" id="appt-submit">Schedule Appointment</button>
         <div id="appt-message" class="form-message" style="display: none; margin-top: 16px; padding: 12px; border-radius: 8px;"></div>
     </form>
-</section>
+    </section>
+
+    <section class="reviews" id="reviews">
+        <div class="section-header">
+            <span class="section-tag">CUSTOMER REVIEWS</span>
+            <h2 class="section-title">What Our Customers Say</h2>
+            <p class="section-desc">After installation, we share a review link so customers can rate the work and leave a note about the experience.</p>
+        </div>
+
+        <div class="reviews-grid">
+            <div class="reviews-panel">
+                <h3>Latest Reviews</h3>
+                <div id="reviews-list" class="reviews-list">
+                    <div class="reviews-empty">Loading reviews...</div>
+                </div>
+            </div>
+
+            <form id="review-form" class="review-form">
+                <h3>Leave a Review</h3>
+                <div class="review-form-grid">
+                    <label>
+                        <span>Your Name</span>
+                        <input type="text" id="review-name" placeholder="Your name" required>
+                    </label>
+                    <label>
+                        <span>Email</span>
+                        <input type="email" id="review-email" placeholder="your@email.com">
+                    </label>
+                </div>
+
+                    <label>
+                        <span>Rating</span>
+                        <div class="rating-picker" id="rating-picker" aria-label="Select rating">
+                        <button type="button" class="rating-star" data-rating="1" aria-label="1 star">★</button>
+                        <button type="button" class="rating-star" data-rating="2" aria-label="2 stars">★</button>
+                        <button type="button" class="rating-star" data-rating="3" aria-label="3 stars">★</button>
+                        <button type="button" class="rating-star" data-rating="4" aria-label="4 stars">★</button>
+                        <button type="button" class="rating-star" data-rating="5" aria-label="5 stars">★</button>
+                        </div>
+                    </label>
+
+                <label>
+                    <span>Comment</span>
+                    <textarea id="review-comment" rows="4" placeholder="Tell us about your installation experience..." required></textarea>
+                </label>
+
+                <label>
+                    <span>Order ID (optional)</span>
+                    <input type="text" id="review-order-id" placeholder="Order reference">
+                </label>
+
+                <button type="submit" class="btn-primary">Submit Review</button>
+                <p id="review-status" class="contact-status" style="display:none;"></p>
+            </form>
+        </div>
+    </section>
 
     <div id="quick-view-modal" class="quick-view-modal" aria-hidden="true">
         <div class="quick-view-backdrop" aria-hidden="true"></div>
@@ -659,6 +714,15 @@
         const cartPanelBody = document.getElementById('cart-panel-body');
         const cartPanelCount = document.getElementById('cart-panel-count');
         const cartPanelTotal = document.getElementById('cart-panel-total');
+        const reviewForm = document.getElementById('review-form');
+        const reviewName = document.getElementById('review-name');
+        const reviewEmail = document.getElementById('review-email');
+        const reviewComment = document.getElementById('review-comment');
+        const reviewOrderId = document.getElementById('review-order-id');
+        const reviewStatus = document.getElementById('review-status');
+        const reviewsList = document.getElementById('reviews-list');
+        const ratingPicker = document.getElementById('rating-picker');
+        let reviewRating = 5;
 
         const showActionToast = (message) => {
             let toast = document.getElementById('action-toast');
@@ -698,6 +762,53 @@
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         })}`;
+        const escapeHtml = (value) => String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+
+        const renderRatingPicker = (value) => {
+            reviewRating = Math.min(5, Math.max(1, Number(value || 5)));
+            ratingPicker?.querySelectorAll('.rating-star').forEach((button) => {
+                const rating = Number(button.dataset.rating || 0);
+                button.classList.toggle('is-active', rating <= reviewRating);
+            });
+        };
+
+        const renderReviews = (items = []) => {
+            if (!reviewsList) return;
+            if (!items.length) {
+                reviewsList.innerHTML = '<div class="reviews-empty">No reviews yet. Be the first to share your experience.</div>';
+                return;
+            }
+
+            reviewsList.innerHTML = items.map((review) => {
+                const stars = '★★★★★'.slice(0, Math.round(review.rating || 0)).padEnd(5, '☆');
+                return `
+                    <article class="review-card">
+                        <div class="review-card-head">
+                            <div class="review-card-name">${escapeHtml(review.customerName || 'Customer')}</div>
+                            <div class="review-card-stars">${stars}</div>
+                        </div>
+                        <div class="review-card-comment">${escapeHtml(review.comment || '')}</div>
+                    </article>
+                `;
+            }).join('');
+        };
+
+        const loadReviews = async () => {
+            if (!reviewsList) return;
+            try {
+                const response = await fetch(`${API_BASE}/reviews`, { cache: 'no-store' });
+                if (!response.ok) throw new Error('Failed to load reviews');
+                const data = await response.json();
+                renderReviews(Array.isArray(data) ? data.slice(0, 6) : []);
+            } catch {
+                reviewsList.innerHTML = '<div class="reviews-empty">Reviews are temporarily unavailable.</div>';
+            }
+        };
 
         const getSavedState = () => (window.LuxeState?.getSnapshot ? window.LuxeState.getSnapshot() : { cart: [], wishlist: [], lastOrder: null });
         const getSavedSet = (key) => new Set(Array.isArray(getSavedState()[key]) ? getSavedState()[key].map((entry) => (entry && typeof entry === 'object' ? entry.key : entry)).filter(Boolean) : []);
@@ -1242,6 +1353,67 @@
         });
 
         // Appointment form handler
+        ratingPicker?.addEventListener('click', (event) => {
+            const button = event.target.closest('.rating-star');
+            if (!button) return;
+            renderRatingPicker(button.dataset.rating);
+        });
+        renderRatingPicker(reviewRating);
+
+        if (reviewForm) {
+            reviewForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const payload = {
+                    customerName: reviewName?.value.trim(),
+                    email: reviewEmail?.value.trim(),
+                    rating: reviewRating,
+                    comment: reviewComment?.value.trim(),
+                    orderId: reviewOrderId?.value.trim(),
+                    source: 'website'
+                };
+
+                if (!payload.customerName || !payload.comment) {
+                    if (reviewStatus) {
+                        reviewStatus.textContent = 'Please add your name and comment.';
+                        reviewStatus.className = 'contact-status is-error';
+                        reviewStatus.style.display = 'block';
+                    }
+                    return;
+                }
+
+                try {
+                    if (reviewStatus) {
+                        reviewStatus.style.display = 'none';
+                    }
+
+                    const response = await fetch(`${API_BASE}/reviews`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error || 'Failed to submit review');
+
+                    if (reviewStatus) {
+                        reviewStatus.textContent = 'Thanks. Your review was submitted successfully.';
+                        reviewStatus.className = 'contact-status is-success';
+                        reviewStatus.style.display = 'block';
+                    }
+                    reviewForm.reset();
+                    renderRatingPicker(5);
+                    await loadReviews();
+                } catch (error) {
+                    if (reviewStatus) {
+                        reviewStatus.textContent = `Error: ${error.message}`;
+                        reviewStatus.className = 'contact-status is-error';
+                        reviewStatus.style.display = 'block';
+                    }
+                }
+            });
+        }
+
         const appointmentForm = document.getElementById('appointment-form');
         const appointmentMessage = document.getElementById('appt-message');
         
@@ -1310,13 +1482,16 @@
             window.LuxeState.ready().then(() => {
                 syncPanels();
                 updateActionState();
+                loadReviews();
             }).catch(() => {
                 syncPanels();
                 updateActionState();
+                loadReviews();
             });
         } else {
             syncPanels();
             updateActionState();
+            loadReviews();
         }
     </script>
 </body>

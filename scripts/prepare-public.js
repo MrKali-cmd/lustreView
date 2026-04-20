@@ -70,6 +70,9 @@ try {
   // Admin login entry point lives under /portal-7f3a9c on the static site.
   copyDirRecursive(path.join(cwd, 'portal-7f3a9c'), path.join(cwd, DEST_DIR, 'portal-7f3a9c'));
 
+  // Admin panel is also served statically from /admin on Vercel.
+  copyDirRecursive(path.join(cwd, 'admin'), path.join(cwd, DEST_DIR, 'admin'));
+
   console.log(`[build] Public site prepared at ${path.join(cwd, DEST_DIR)}`);
 } catch (error) {
   console.error('[build] prepare-public failed:', error);

@@ -43,6 +43,8 @@
                 </ul>
 
                 <div class="header-actions">
+                    <a href="index.html#contact" class="header-btn">Free Estimate</a>
+
                     <a href="wishlist.html" class="action-item header-wishlist-link${wishlistCurrent ? ' is-current' : ''}" id="wishlist-trigger" aria-label="Open wishlist"${wishlistCurrent ? ' aria-current="page"' : ''}>
                         <i class="fa-regular fa-heart"></i>
                         <span class="action-badge header-wishlist-count" id="wishlist-count" data-wishlist-count>0</span>

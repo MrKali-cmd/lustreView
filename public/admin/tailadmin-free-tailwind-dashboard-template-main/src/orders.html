@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+    />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Orders | LustreView Blinds Admin</title>
+    <style>
+      .order-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 999px;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .order-pill.pending {
+        background: rgba(245, 158, 11, 0.15);
+        color: #f59e0b;
+      }
+
+      .order-pill.processing {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+      }
+
+      .order-pill.completed {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+      }
+
+      .order-pill.cancelled {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+      }
+
+      .order-card {
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        padding: 18px;
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .order-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding-top: 10px;
+        margin-top: 10px;
+        border-top: 1px solid rgba(148, 163, 184, 0.14);
+        font-size: 14px;
+      }
+
+      .order-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .order-actions button {
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        background: transparent;
+        color: inherit;
+        border-radius: 10px;
+        padding: 8px 12px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .order-actions button:hover {
+        border-color: rgba(201, 169, 98, 0.42);
+        color: #d4af37;
+      }
+
+      .order-help {
+        display: inline-flex;
+        margin-top: 6px;
+        font-size: 12px;
+        color: #94a3b8;
+      }
+    </style>
+  </head>
+  <body
+    x-data="{ page: 'orders', 'loaded': true, 'darkMode': false, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
+    x-init="
+         darkMode = JSON.parse(localStorage.getItem('darkMode'));
+         $watch('darkMode', value => localStorage.setItem('darkMode', JSON.stringify(value)))"
+    :class="{'dark bg-gray-900': darkMode === true}"
+  >
+    <include src="./partials/preloader.html"></include>
+
+    <div class="flex h-screen overflow-hidden">
+      <include src="./partials/sidebar.html"></include>
+
+      <div class="relative flex flex-col flex-1 overflow-x-hidden overflow-y-auto">
+        <include src="./partials/overlay.html" />
+        <include src="./partials/header.html" />
+
+        <main>
+          <div class="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">
+            <div class="mb-6">
+              <div x-data="{ pageName: `Orders`}">
+                <include src="./partials/breadcrumb.html" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 mb-6 md:grid-cols-4">
+              <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                <span class="text-sm text-gray-500 dark:text-gray-400">All orders</span>
+                <h2 id="orders-total" class="mt-2 text-3xl font-semibold text-gray-800 dark:text-white/90">0</h2>
+              </div>
+              <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                <span class="text-sm text-gray-500 dark:text-gray-400">Pending</span>
+                <h2 id="orders-pending" class="mt-2 text-3xl font-semibold text-gray-800 dark:text-white/90">0</h2>
+              </div>
+              <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                <span class="text-sm text-gray-500 dark:text-gray-400">Processing</span>
+                <h2 id="orders-processing" class="mt-2 text-3xl font-semibold text-gray-800 dark:text-white/90">0</h2>
+              </div>
+              <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                <span class="text-sm text-gray-500 dark:text-gray-400">Completed</span>
+                <h2 id="orders-completed" class="mt-2 text-3xl font-semibold text-gray-800 dark:text-white/90">0</h2>
+              </div>
+            </div>
+
+            <div id="orders-feedback" class="mb-4 text-sm font-medium text-gray-500 dark:text-gray-400"></div>
+
+            <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+              <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">Store Orders</h2>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Review placed orders, change their status, and remove completed or cancelled ones.</p>
+              </div>
+
+              <div class="hidden overflow-x-auto md:block">
+                <table class="min-w-full">
+                  <thead>
+                    <tr class="border-b border-gray-200 dark:border-gray-800">
+                      <th class="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Customer</th>
+                      <th class="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Delivery</th>
+                      <th class="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Payment</th>
+                      <th class="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Total</th>
+                      <th class="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Status</th>
+                      <th class="px-5 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="orders-table-body"></tbody>
+                </table>
+              </div>
+
+              <div id="orders-mobile-list" class="grid gap-4 p-4 md:hidden"></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      (() => {
+        const API_BASE = (() => {
+          const configuredBase =
+            window.__LUXE_API_BASE__ ||
+            document.querySelector('meta[name="luxe-api-base"]')?.content ||
+            "";
+          const { protocol, hostname, port, origin } = window.location;
+          if (configuredBase) return configuredBase.replace(/\/$/, "");
+          if (protocol === "file:") return "http://localhost:3001/api";
+          if (hostname === "localhost" && port && port !== "3001") {
+            return "http://localhost:3001/api";
+          }
+          return `${origin}/api`;
+        })();
+
+        const USD_RATE = 42000;
+        const tableBody = document.getElementById("orders-table-body");
+        const mobileList = document.getElementById("orders-mobile-list");
+        const feedback = document.getElementById("orders-feedback");
+        const metrics = {
+          total: document.getElementById("orders-total"),
+          pending: document.getElementById("orders-pending"),
+          processing: document.getElementById("orders-processing"),
+          completed: document.getElementById("orders-completed"),
+        };
+
+        const formatUsd = (value) =>
+          `$${(Number(value || 0) / USD_RATE).toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`;
+
+        const escapeHtml = (value) =>
+          String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
+
+        const statusClass = (status) => {
+          if (status === "Processing") return "processing";
+          if (status === "Completed") return "completed";
+          if (status === "Cancelled") return "cancelled";
+          return "pending";
+        };
+
+        const setFeedback = (message = "", kind = "") => {
+          feedback.textContent = message;
+          feedback.className = "mb-4 text-sm font-medium";
+          if (kind === "error") {
+            feedback.classList.add("text-red-400");
+          } else if (kind === "success") {
+            feedback.classList.add("text-green-400");
+          } else {
+            feedback.classList.add("text-gray-500", "dark:text-gray-400");
+          }
+        };
+
+        const orderItemsPreview = (items) => {
+          const list = Array.isArray(items) ? items : [];
+          if (!list.length) return "No items";
+          const first = list[0]?.name || "Unnamed item";
+          if (list.length === 1) return first;
+          return `${first} + ${list.length - 1} more`;
+        };
+
+        const paymentHint = (order) => {
+          if (order.paymentMethod === "Cash on delivery") {
+            return "Collect payment at delivery.";
+          }
+          if (order.paymentMethod === "Bank transfer") {
+            return "Share bank details or verify incoming transfer.";
+          }
+          if (order.paymentMethod === "Stripe card payment" || order.paymentMethod === "Pay online by card (Stripe)") {
+            return "Payment already completed online.";
+          }
+          return "Review payment flow for this order.";
+        };
+
+        const renderMetrics = (orders) => {
+          metrics.total.textContent = String(orders.length);
+          metrics.pending.textContent = String(orders.filter((item) => item.status === "Pending").length);
+          metrics.processing.textContent = String(orders.filter((item) => item.status === "Processing").length);
+          metrics.completed.textContent = String(orders.filter((item) => item.status === "Completed").length);
+        };
+
+        const renderDesktop = (orders) => {
+          if (!orders.length) {
+            tableBody.innerHTML = `
+              <tr>
+                <td colspan="6" class="px-5 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                  No orders have been placed yet.
+                </td>
+              </tr>
+            `;
+            return;
+          }
+
+          tableBody.innerHTML = orders.map((order) => `
+            <tr class="border-b border-gray-200 dark:border-gray-800">
+              <td class="px-5 py-4 align-top">
+                <div class="font-medium text-gray-800 dark:text-white/90">${escapeHtml(order.customerName)}</div>
+                <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">${escapeHtml(order.email)}</div>
+                <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">${escapeHtml(order.phone)}</div>
+                <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">${escapeHtml(orderItemsPreview(order.items))}</div>
+              </td>
+              <td class="px-5 py-4 align-top text-sm text-gray-500 dark:text-gray-400">
+                <div>${escapeHtml(order.city)}</div>
+                <div class="mt-1">${escapeHtml(order.shippingAddress)}</div>
+              </td>
+              <td class="px-5 py-4 align-top text-sm text-gray-500 dark:text-gray-400">
+                <div>${escapeHtml(order.paymentMethod)}</div>
+                <span class="order-help">${escapeHtml(paymentHint(order))}</span>
+              </td>
+              <td class="px-5 py-4 align-top text-sm font-semibold text-gray-800 dark:text-white/90">${formatUsd(order.total)}</td>
+              <td class="px-5 py-4 align-top">
+                <span class="order-pill ${statusClass(order.status)}">${escapeHtml(order.status || "Pending")}</span>
+              </td>
+              <td class="px-5 py-4 align-top">
+                <div class="flex flex-wrap gap-2">
+                  <button data-order-action="status" data-id="${escapeHtml(order.id)}" data-status="Pending" class="rounded-lg border border-gray-200 px-3 py-2 text-xs font-semibold dark:border-gray-700">Pending</button>
+                  <button data-order-action="status" data-id="${escapeHtml(order.id)}" data-status="Processing" class="rounded-lg border border-gray-200 px-3 py-2 text-xs font-semibold dark:border-gray-700">Processing</button>
+                  <button data-order-action="status" data-id="${escapeHtml(order.id)}" data-status="Completed" class="rounded-lg border border-gray-200 px-3 py-2 text-xs font-semibold dark:border-gray-700">Completed</button>
+                  <button data-order-action="delete" data-id="${escapeHtml(order.id)}" class="rounded-lg border border-red-400/35 px-3 py-2 text-xs font-semibold text-red-400">Delete</button>
+                </div>
+              </td>
+            </tr>
+          `).join("");
+        };
+
+        const renderMobile = (orders) => {
+          if (!orders.length) {
+            mobileList.innerHTML = `
+              <div class="order-card text-sm text-gray-500 dark:text-gray-400">
+                No orders have been placed yet.
+              </div>
+            `;
+            return;
+          }
+
+          mobileList.innerHTML = orders.map((order) => `
+            <article class="order-card">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <h3 class="text-base font-semibold text-gray-800 dark:text-white/90">${escapeHtml(order.customerName)}</h3>
+                  <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">${escapeHtml(order.email)}</p>
+                </div>
+                <span class="order-pill ${statusClass(order.status)}">${escapeHtml(order.status || "Pending")}</span>
+              </div>
+
+              <div class="order-line"><span class="text-gray-500 dark:text-gray-400">Items</span><strong class="text-right text-gray-800 dark:text-white/90">${escapeHtml(orderItemsPreview(order.items))}</strong></div>
+              <div class="order-line"><span class="text-gray-500 dark:text-gray-400">Delivery</span><strong class="text-right text-gray-800 dark:text-white/90">${escapeHtml(order.city)}</strong></div>
+              <div class="order-line"><span class="text-gray-500 dark:text-gray-400">Payment</span><strong class="text-right text-gray-800 dark:text-white/90">${escapeHtml(order.paymentMethod)}</strong></div>
+              <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">${escapeHtml(paymentHint(order))}</div>
+              <div class="order-line"><span class="text-gray-500 dark:text-gray-400">Total</span><strong class="text-right text-gray-800 dark:text-white/90">${formatUsd(order.total)}</strong></div>
+
+              <div class="order-actions">
+                <button data-order-action="status" data-id="${escapeHtml(order.id)}" data-status="Pending">Pending</button>
+                <button data-order-action="status" data-id="${escapeHtml(order.id)}" data-status="Processing">Processing</button>
+                <button data-order-action="status" data-id="${escapeHtml(order.id)}" data-status="Completed">Completed</button>
+                <button data-order-action="delete" data-id="${escapeHtml(order.id)}">Delete</button>
+              </div>
+            </article>
+          `).join("");
+        };
+
+        const renderOrders = (orders) => {
+          renderMetrics(orders);
+          renderDesktop(orders);
+          renderMobile(orders);
+        };
+
+        const fetchOrders = async () => {
+          const response = await fetch(`${API_BASE}/orders`, { cache: "no-store" });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(payload.error || "Could not load orders.");
+          }
+          return Array.isArray(payload) ? payload : [];
+        };
+
+        const loadOrders = async () => {
+          try {
+            const orders = await fetchOrders();
+            renderOrders(orders);
+            setFeedback("");
+          } catch (error) {
+            renderOrders([]);
+            setFeedback(error.message || "Could not load orders.", "error");
+          }
+        };
+
+        const updateOrderStatus = async (id, status) => {
+          const response = await fetch(`${API_BASE}/orders/${encodeURIComponent(id)}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status }),
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(payload.error || "Could not update the order.");
+          }
+          return payload;
+        };
+
+        const deleteOrder = async (id) => {
+          const response = await fetch(`${API_BASE}/orders/${encodeURIComponent(id)}`, {
+            method: "DELETE",
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(payload.error || "Could not delete the order.");
+          }
+          return payload;
+        };
+
+        document.addEventListener("click", async (event) => {
+          const button = event.target.closest("[data-order-action]");
+          if (!button) return;
+
+          const id = button.dataset.id;
+          const action = button.dataset.orderAction;
+          if (!id) return;
+
+          button.disabled = true;
+          try {
+            if (action === "status") {
+              await updateOrderStatus(id, button.dataset.status || "Pending");
+              setFeedback("Order status updated.", "success");
+            } else if (action === "delete") {
+              await deleteOrder(id);
+              setFeedback("Order removed.", "success");
+            }
+            await loadOrders();
+          } catch (error) {
+            setFeedback(error.message || "Action failed.", "error");
+          } finally {
+            button.disabled = false;
+          }
+        });
+
+        loadOrders();
+      })();
+    </script>
+  </body>
+</html>

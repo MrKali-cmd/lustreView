@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+    />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Contact Messages | LustreView Blinds Admin</title>
+    <style>
+      #reply-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 2000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(10, 10, 10, 0.58);
+        backdrop-filter: blur(6px);
+      }
+
+      #reply-modal .modal-content {
+        position: relative;
+        width: min(460px, 92vw);
+        max-width: 460px;
+        border-radius: 18px;
+        padding: 20px;
+        background: #111827 !important;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #e5e7eb;
+        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+      }
+
+      #reply-modal .modal-body {
+        display: block;
+      }
+
+      #reply-modal .modal-info {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      #reply-modal .modal-info h2 {
+        color: #f9fafb;
+      }
+
+      #reply-modal .modal-info p {
+        color: #cbd5e1;
+      }
+
+      #reply-modal input,
+      #reply-modal textarea {
+        background: #0f172a !important;
+        color: #e5e7eb !important;
+        border-color: #334155 !important;
+      }
+
+      #reply-modal input::placeholder,
+      #reply-modal textarea::placeholder {
+        color: #94a3b8;
+      }
+
+      #reply-modal .close-modal {
+        position: absolute;
+        top: 8px;
+        right: 14px;
+        font-size: 32px;
+        line-height: 1;
+        cursor: pointer;
+        color: #8e8578;
+        transition: color 0.2s ease;
+      }
+
+      #reply-modal .close-modal:hover {
+        color: #222;
+      }
+
+      body.modal-open {
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body
+    x-data="{ page: 'contact', 'loaded': true, 'darkMode': false, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
+    x-init="
+         darkMode = JSON.parse(localStorage.getItem('darkMode'));
+         $watch('darkMode', value => localStorage.setItem('darkMode', JSON.stringify(value)))"
+    :class="{'dark bg-gray-900': darkMode === true}"
+  >
+    <include src="./partials/preloader.html"></include>
+
+    <div class="flex h-screen overflow-hidden">
+      <include src="./partials/sidebar.html"></include>
+
+      <div class="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
+        <include src="./partials/overlay.html" />
+        <include src="./partials/header.html" />
+
+        <main>
+          <div class="mx-auto max-w-(--breakpoint-2xl) p-4 md:p-6">
+            <div x-data="{ pageName: `Contact Messages`}">
+              <include src="./partials/breadcrumb.html" />
+            </div>
+
+          <div class="flex flex-col gap-6">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                  <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">Contact Messages</h2>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                    New form submissions from the website appear here first.
+                  </p>
+                </div>
+                <button id="refresh-messages" class="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">
+                  Refresh
+                </button>
+              </div>
+
+              <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+                <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] sm:p-6">
+                  <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">New</h3>
+                  <p id="count-new" class="mt-3 text-2xl font-semibold text-gray-800 dark:text-white/90">0</p>
+                </div>
+                <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] sm:p-6">
+                  <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">In Progress</h3>
+                  <p id="count-progress" class="mt-3 text-2xl font-semibold text-gray-800 dark:text-white/90">0</p>
+                </div>
+                <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] sm:p-6">
+                  <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Resolved</h3>
+                  <p id="count-resolved" class="mt-3 text-2xl font-semibold text-gray-800 dark:text-white/90">0</p>
+                </div>
+                <div class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] sm:p-6">
+                  <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Replied</h3>
+                  <p id="count-replied" class="mt-3 text-2xl font-semibold text-gray-800 dark:text-white/90">0</p>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+                <div class="border-b border-gray-100 px-5 py-4 dark:border-gray-800 sm:px-6 sm:py-5">
+                  <h3 class="text-base font-medium text-gray-800 dark:text-white/90">Inbox</h3>
+                </div>
+                <div id="messages-list" class="space-y-4 p-5 dark:border-gray-800 sm:p-6">
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Loading messages...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div id="reply-modal" class="modal" aria-hidden="true" style="display: none;">
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="reply-title" style="max-width: 460px; width: min(460px, 92vw); padding: 20px; border-radius: 18px;">
+        <span class="close-modal" id="reply-close" aria-label="Close reply dialog">&times;</span>
+        <div class="modal-body" style="display:block;">
+          <div class="modal-info">
+            <h2 id="reply-title" style="font-size:20px; font-weight:700; margin-bottom:6px;"></h2>
+            <p id="reply-recipient" class="text-sm text-gray-500 dark:text-gray-400"></p>
+            <input id="reply-subject" class="rounded-lg border border-gray-200 px-3 py-2.5 text-sm dark:border-gray-800 dark:bg-transparent dark:text-white" placeholder="Subject" style="margin-top:12px;" />
+            <textarea id="reply-body" rows="4" class="rounded-lg border border-gray-200 px-3 py-2.5 text-sm dark:border-gray-800 dark:bg-transparent dark:text-white" placeholder="Write your reply..." style="margin-top:12px;"></textarea>
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-1" style="margin-top:12px;">
+              <span id="reply-status" class="text-sm text-gray-500 dark:text-gray-400"></span>
+              <button type="button" id="reply-send" class="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600">Send Reply</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE = (() => {
+        const configuredBase =
+          window.__LUXE_API_BASE__ ||
+          document.querySelector('meta[name="luxe-api-base"]')?.content ||
+          '';
+        const { protocol, hostname, port, origin } = window.location;
+        if (configuredBase) {
+          return configuredBase.replace(/\/$/, '');
+        }
+        if (protocol === 'file:') {
+          return 'http://localhost:3001/api';
+        }
+        if (hostname === 'localhost' && port && port !== '3001') {
+          return 'http://localhost:3001/api';
+        }
+        return `${origin}/api`;
+      })();
+
+      const listEl = document.getElementById('messages-list');
+      const countNew = document.getElementById('count-new');
+      const countProgress = document.getElementById('count-progress');
+      const countResolved = document.getElementById('count-resolved');
+      const countReplied = document.getElementById('count-replied');
+      const refreshBtn = document.getElementById('refresh-messages');
+      const replyModal = document.getElementById('reply-modal');
+      const replyClose = document.getElementById('reply-close');
+      const replySend = document.getElementById('reply-send');
+      const replySubject = document.getElementById('reply-subject');
+      const replyBody = document.getElementById('reply-body');
+      const replyRecipient = document.getElementById('reply-recipient');
+      const replyStatus = document.getElementById('reply-status');
+      let activeReplyId = '';
+      let activeReplySnapshot = null;
+      let currentMessages = [];
+
+      const formatDate = (value) => {
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return 'Unknown';
+        return date.toLocaleString('en-US', {
+          month: 'short',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      };
+
+      const badgeClass = (status) => {
+        if (status === 'Resolved') return 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10';
+        if (status === 'Replied') return 'bg-sky-50 text-sky-600 dark:bg-sky-500/10';
+        if (status === 'In Progress') return 'bg-brand-50 text-brand-500 dark:bg-brand-500/10';
+        return 'bg-amber-50 text-amber-700 dark:bg-amber-500/10';
+      };
+
+      const escapeHtml = (value) =>
+        String(value ?? '')
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#39;');
+
+      const renderStats = (messages) => {
+        countNew.textContent = messages.filter((item) => item.status === 'New').length;
+        countProgress.textContent = messages.filter((item) => item.status === 'In Progress').length;
+        countResolved.textContent = messages.filter((item) => item.status === 'Resolved').length;
+        countReplied.textContent = messages.filter((item) => item.status === 'Replied').length;
+      };
+
+      const renderMessages = (messages) => {
+        if (!messages.length) {
+          listEl.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400">No messages yet.</p>';
+          return;
+        }
+
+        listEl.innerHTML = messages
+          .map(
+            (message) => `
+              <div class="rounded-2xl border border-gray-200 p-5 dark:border-gray-800">
+                <div class="flex flex-wrap items-start justify-between gap-4">
+                  <div class="space-y-2">
+                    <div class="flex flex-wrap items-center gap-3">
+                      <h4 class="text-base font-semibold text-gray-800 dark:text-white/90">${escapeHtml(message.name)}</h4>
+                      <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${badgeClass(message.status)}">${escapeHtml(message.status)}</span>
+                    </div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">${escapeHtml(message.email || message.phone)} | ${escapeHtml(message.roomType)}</p>
+                    <p class="max-w-3xl whitespace-pre-line text-sm leading-7 text-gray-700 dark:text-gray-300">${escapeHtml(message.message)}</p>
+                    ${message.replyMessage ? `<div class="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200"><span class="font-semibold">Reply sent:</span> ${escapeHtml(message.replyMessage)}</div>` : ''}
+                    <p class="text-xs text-gray-400 dark:text-gray-500">Received ${formatDate(message.createdAt)} from ${escapeHtml(message.source)}</p>
+                  </div>
+                  <div class="flex flex-wrap gap-2">
+                    <button data-action="reply" data-id="${message.id}" class="rounded-md bg-amber-500 px-3 py-1 text-xs font-medium text-white hover:bg-amber-600">Reply</button>
+                    <button data-action="progress" data-id="${message.id}" class="rounded-md bg-brand-500 px-3 py-1 text-xs font-medium text-white hover:bg-brand-600">In Progress</button>
+                    <button data-action="resolve" data-id="${message.id}" class="rounded-md bg-emerald-500 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-600">Resolve</button>
+                    <button data-action="delete" data-id="${message.id}" class="rounded-md border border-gray-200 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:text-gray-200 dark:hover:bg-white/5">Delete</button>
+                  </div>
+                </div>
+              </div>
+            `
+          )
+          .join('');
+      };
+
+      const loadMessages = async () => {
+        listEl.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400">Loading messages...</p>';
+        const response = await fetch(`${API_BASE}/contact-messages`, {
+          cache: 'no-store'
+        });
+        if (!response.ok) {
+          throw new Error('Failed to load messages');
+        }
+        const messages = await response.json();
+        currentMessages = messages;
+        renderStats(messages);
+        renderMessages(messages);
+      };
+
+      const updateMessage = async (id, status, messageData = null) => {
+        const response = await fetch(`${API_BASE}/contact-messages/${id}`, {
+          method: 'PUT',
+          cache: 'no-store',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status,
+            messageData
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update message');
+        }
+      };
+
+      const openReplyModal = (message) => {
+        activeReplyId = message.id;
+        activeReplySnapshot = {
+          id: message.id,
+          name: message.name,
+          email: message.email || message.phone || '',
+          roomType: message.roomType || '',
+          message: message.message || '',
+          source: message.source || 'admin-panel'
+        };
+        document.getElementById('reply-title').textContent = `Reply to ${message.name}`;
+        replyRecipient.textContent = `To: ${message.name} <${message.email || message.phone}>`;
+        replySubject.value = `Reply from LustreView Blinds for ${message.roomType || message.room_type || 'your request'}`;
+        replyBody.value = '';
+        replyStatus.textContent = '';
+        replyModal.style.display = 'flex';
+        replyModal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+        replyBody.focus();
+      };
+
+      const closeReplyModal = () => {
+        activeReplyId = '';
+        activeReplySnapshot = null;
+        replyModal.style.display = 'none';
+        replyModal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('modal-open');
+      };
+
+      const sendReply = async () => {
+        if (!activeReplyId) return;
+        const response = await fetch(`${API_BASE}/contact-messages/${activeReplyId}/reply`, {
+          method: 'POST',
+          cache: 'no-store',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subject: replySubject.value.trim(),
+            reply: replyBody.value.trim(),
+            messageData: activeReplySnapshot
+          })
+        });
+
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}));
+          throw new Error(payload.detail || payload.error || 'Failed to send reply');
+        }
+
+        return response.json();
+      };
+
+      const deleteMessage = async (id) => {
+        const response = await fetch(`${API_BASE}/contact-messages/${id}`, {
+          method: 'DELETE',
+          cache: 'no-store'
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete message');
+        }
+      };
+
+      listEl.addEventListener('click', async (event) => {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+
+        const { action, id } = button.dataset;
+        const message = currentMessages.find((item) => item.id === id);
+
+        try {
+          if (action === 'reply') {
+            if (!message) return;
+            openReplyModal(message);
+            return;
+          }
+          if (action === 'progress') {
+            await updateMessage(id, 'In Progress', message);
+          } else if (action === 'resolve') {
+            await updateMessage(id, 'Resolved', message);
+          } else if (action === 'delete') {
+            await deleteMessage(id);
+          }
+          await loadMessages();
+        } catch (error) {
+          listEl.insertAdjacentHTML(
+            'afterbegin',
+            '<p class="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600 dark:bg-red-500/10 dark:text-red-300">Could not update the message.</p>'
+          );
+        }
+      });
+
+      refreshBtn.addEventListener('click', () => {
+        loadMessages().catch(() => {
+          listEl.innerHTML = '<p class="text-sm text-red-600">Database is not reachable. Start the server first.</p>';
+        });
+      });
+
+      replyClose.addEventListener('click', closeReplyModal);
+      replyModal.addEventListener('click', (event) => {
+        if (event.target === replyModal) closeReplyModal();
+      });
+      replySend.addEventListener('click', async () => {
+        try {
+          replySend.disabled = true;
+          replyStatus.textContent = 'Sending reply...';
+          const result = await sendReply();
+          const hasWarning = Boolean(result?.emailWarning);
+          replyStatus.textContent = hasWarning
+            ? `Reply saved. ${result.emailWarning}`
+            : 'Reply sent successfully.';
+          await loadMessages();
+          if (!hasWarning) {
+            closeReplyModal();
+          }
+        } catch (error) {
+          replyStatus.textContent = error.message || 'Could not send reply.';
+        } finally {
+          replySend.disabled = false;
+        }
+      });
+      window.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && replyModal.style.display === 'flex') {
+          closeReplyModal();
+        }
+      });
+
+      loadMessages().catch(() => {
+        listEl.innerHTML = '<p class="text-sm text-red-600">Database is not reachable. Start the server first.</p>';
+      });
+    </script>
+  </body>
+</html>
