@@ -30,25 +30,7 @@
     const wishlistCurrent = page === 'wishlist';
     const cartCurrent = page === 'cart';
 
-    const promoDismissed = (() => {
-        try {
-            return window.localStorage.getItem('luxe_promo_50_dismissed') === '1';
-        } catch {
-            return false;
-        }
-    })();
-
     mountPoint.innerHTML = `
-        ${promoDismissed ? '' : `
-        <div class="promo-bar" data-promo-bar role="status" aria-label="Promotion">
-            <div class="promo-bar__inner">
-                <span class="promo-bar__pill">50% OFF</span>
-                <span class="promo-bar__text">Limited time discount on select zebra blinds.</span>
-                <a class="promo-bar__link" href="zebra-collection.html">Shop the sale</a>
-                <button class="promo-bar__close" type="button" aria-label="Dismiss promotion" data-promo-close>&times;</button>
-            </div>
-        </div>
-        `}
         <header id="main-header">
             <nav class="nav-container">
                 <a href="${isHomePage ? '#' : 'index.html'}" class="logo">
@@ -79,20 +61,46 @@
         </header>
     `;
 
-    const promoBar = mountPoint.querySelector('[data-promo-bar]');
-    if (promoBar) {
-        document.body.classList.add('has-promo-bar');
-        promoBar.querySelector('[data-promo-close]')?.addEventListener('click', () => {
+    // Floating promo (more noticeable than a thin header bar).
+    const promoDismissed = (() => {
+        try {
+            return window.localStorage.getItem('luxe_promo_50_dismissed') === '1';
+        } catch {
+            return false;
+        }
+    })();
+
+    if (!promoDismissed) {
+        const promo = document.createElement('div');
+        promo.className = 'promo-float';
+        promo.setAttribute('role', 'status');
+        promo.setAttribute('aria-label', 'Promotion');
+        promo.innerHTML = `
+            <div class="promo-float__glow" aria-hidden="true"></div>
+            <div class="promo-float__card">
+                <div class="promo-float__badge">50% OFF</div>
+                <div class="promo-float__meta">
+                    <div class="promo-float__title">Limited-Time Sale</div>
+                    <div class="promo-float__text">Save big on select zebra blinds.</div>
+                </div>
+                <a class="promo-float__cta" href="zebra-collection.html">Shop Sale</a>
+                <button class="promo-float__close" type="button" aria-label="Dismiss promotion" data-promo-close>&times;</button>
+            </div>
+        `;
+        document.body.appendChild(promo);
+
+        // Animate in once per load (CSS handles motion; this just adds the class after paint).
+        requestAnimationFrame(() => promo.classList.add('is-visible'));
+
+        promo.querySelector('[data-promo-close]')?.addEventListener('click', () => {
             try {
                 window.localStorage.setItem('luxe_promo_50_dismissed', '1');
             } catch {
                 // ignore
             }
-            promoBar.remove();
-            document.body.classList.remove('has-promo-bar');
+            promo.classList.remove('is-visible');
+            setTimeout(() => promo.remove(), 250);
         });
-    } else {
-        document.body.classList.remove('has-promo-bar');
     }
 
     const header = mountPoint.querySelector('#main-header');
