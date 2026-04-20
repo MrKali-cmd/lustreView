@@ -197,7 +197,10 @@ app.get('/api/ping', (req, res) => {
   sendJson(res, 200, {
     ok: true,
     now: new Date().toISOString(),
-    hasDatabaseEnv: Boolean(String(process.env.DATABASE_URL || '').trim())
+    hasDatabaseEnv: Boolean(String(process.env.DATABASE_URL || '').trim()),
+    commit: String(process.env.VERCEL_GIT_COMMIT_SHA || ''),
+    ref: String(process.env.VERCEL_GIT_COMMIT_REF || ''),
+    deployment: String(process.env.VERCEL_DEPLOYMENT_ID || '')
   });
 });
 
@@ -943,7 +946,7 @@ app.get('/api/orders/:id', async (req, res) => {
   }
 });
 
-app.patch('/api/orders/:id', async (req, res) => {
+const updateOrderStatus = async (req, res) => {
   if (handleOptions(req, res)) return;
   if (!requireAdmin(req, res)) return;
   if (!(await requireDatabase(req, res))) return;
@@ -962,6 +965,24 @@ app.patch('/api/orders/:id', async (req, res) => {
     sendJson(res, 200, { ok: true });
   } catch (error) {
     sendJson(res, 500, { error: error.message || 'Failed to update order' });
+  }
+};
+
+// Admin panel uses PUT for status update.
+app.put('/api/orders/:id', updateOrderStatus);
+app.patch('/api/orders/:id', updateOrderStatus);
+
+app.delete('/api/orders/:id', async (req, res) => {
+  if (handleOptions(req, res)) return;
+  if (!requireAdmin(req, res)) return;
+  if (!(await requireDatabase(req, res))) return;
+
+  const id = String(req.params.id || '').trim();
+  try {
+    await sql.query('DELETE FROM orders WHERE id = $1', [id]);
+    sendJson(res, 200, { ok: true });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || 'Failed to delete order' });
   }
 });
 
