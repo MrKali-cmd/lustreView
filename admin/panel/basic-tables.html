@@ -1470,19 +1470,22 @@
           return res.json();
         },
         update: async (id, payload) => {
-          const res = await fetch(`${ADMIN_REVIEW_API_BASE}/${encodeURIComponent(id)}`, {
-            method: 'PUT',
+          const res = await fetch(ADMIN_REVIEW_API_BASE, {
+            method: 'POST',
             cache: 'no-store',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ ...payload, action: 'update', id })
           });
           if (!res.ok) throw new Error(`Failed to update review (${res.status})`);
           return res.json();
         },
         remove: async (id) => {
-          const res = await fetch(`${ADMIN_REVIEW_API_BASE}/${encodeURIComponent(id)}`, {
-            method: 'DELETE',
+          const res = await fetch(ADMIN_REVIEW_API_BASE, {
+            method: 'POST',
             cache: 'no-store'
+            ,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'delete', id })
           });
           if (!res.ok) throw new Error(`Failed to delete review (${res.status})`);
         }
