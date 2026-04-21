@@ -2319,6 +2319,82 @@ body::after {
         .reviews-premium {
             padding: 96px 8% 120px;
             background: linear-gradient(180deg, #fffdf8 0%, #fbf4e8 100%);
+            overflow: hidden;
+        }
+
+        .news-ticker-reviews {
+            margin: 0 0 42px;
+            padding: 28px 0 10px;
+            background: linear-gradient(180deg, rgba(17,17,17,0.95), rgba(17,17,17,0.88));
+            border: 1px solid rgba(201,169,98,0.12);
+            border-radius: 28px;
+            box-shadow: 0 24px 56px rgba(0,0,0,0.12);
+            overflow: hidden;
+        }
+
+        .ticker-title {
+            text-align: center;
+            margin-bottom: 18px;
+        }
+
+        .ticker-title span {
+            color: var(--primary);
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.35rem, 2.5vw, 2rem);
+            letter-spacing: 0.12em;
+        }
+
+        .ticker-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            padding: 0 0 18px;
+        }
+
+        .ticker-track {
+            display: flex;
+            width: max-content;
+            gap: 16px;
+            will-change: transform;
+        }
+
+        .track-left {
+            animation: scrollLeft 30s linear infinite;
+        }
+
+        .track-right {
+            animation: scrollRight 35s linear infinite;
+        }
+
+        .rev-bubble {
+            background: rgba(201, 169, 98, 0.08);
+            border: 1px solid rgba(201, 169, 98, 0.22);
+            color: #fff;
+            padding: 18px 32px;
+            border-radius: 999px;
+            font-size: 0.96rem;
+            white-space: nowrap;
+            transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .rev-bubble:hover {
+            background: var(--primary);
+            color: #111;
+            transform: scale(1.04);
+        }
+
+        .ticker-wrapper:hover .ticker-track {
+            animation-play-state: paused;
+        }
+
+        @keyframes scrollLeft {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        @keyframes scrollRight {
+            0% { transform: translateX(-50%); }
+            100% { transform: translateX(0); }
         }
 
         .rev-header {
@@ -2798,6 +2874,25 @@ body::after {
 
             .reviews-premium {
                 padding: 22px 5% 90px;
+            }
+
+            .news-ticker-reviews {
+                margin-bottom: 28px;
+                border-radius: 22px;
+                padding-top: 22px;
+            }
+
+            .ticker-wrapper {
+                gap: 10px;
+            }
+
+            .ticker-track {
+                gap: 10px;
+            }
+
+            .rev-bubble {
+                padding: 14px 20px;
+                font-size: 0.82rem;
             }
 
             .reviews-premium-layout {
