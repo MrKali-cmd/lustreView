@@ -1125,6 +1125,119 @@ app.post('/api/reviews', async (req, res) => {
   if (!(await requireDatabase(req, res))) return;
 
   const payload = req.body && typeof req.body === 'object' ? req.body : {};
+  const action = String(payload.action || '').trim().toLowerCase();
+  const reviewId = String(payload.id || payload.reviewId || '').trim();
+
+  if (action === 'update') {
+    const token = getReviewManageToken(req, payload);
+    const name = String(payload.customerName || payload.name || '').trim();
+    const email = String(payload.email || '').trim();
+    const comment = String(payload.comment || payload.message || '').trim();
+    const orderId = String(payload.orderId || payload.order_id || '').trim();
+    const rating = Number(payload.rating);
+
+    if (!token) {
+      sendJson(res, 403, { error: 'Missing review token' });
+      return;
+    }
+    if (!reviewId) {
+      sendJson(res, 400, { error: 'Missing review id' });
+      return;
+    }
+    if (!name || !comment || !Number.isFinite(rating)) {
+      sendJson(res, 400, { error: 'Missing required review fields' });
+      return;
+    }
+    if (rating < 1 || rating > 5) {
+      sendJson(res, 400, { error: 'Rating must be between 1 and 5' });
+      return;
+    }
+
+    try {
+      const rows = await sql.query(`SELECT * FROM reviews WHERE id = $1 AND edit_token = $2`, [reviewId, token]);
+      let current = rows?.[0];
+      if (!current) {
+        const fallbackRows = await sql.query(`SELECT * FROM reviews WHERE id = $1`, [reviewId]);
+        const fallback = fallbackRows?.[0];
+        if (fallback) {
+          await sql.query(`UPDATE reviews SET edit_token = $1, updated_at = $2 WHERE id = $3`, [token, new Date().toISOString(), reviewId]);
+          current = { ...fallback, edit_token: token };
+        }
+      }
+      if (!current) {
+        sendJson(res, 404, { error: 'Review not found' });
+        return;
+      }
+
+      const updatedAt = new Date().toISOString();
+      const nextRow = {
+        ...current,
+        customer_name: name,
+        email,
+        rating,
+        comment,
+        order_id: orderId,
+        updated_at: updatedAt
+      };
+
+      await sql.query(
+        `UPDATE reviews
+         SET customer_name=$1, email=$2, rating=$3, comment=$4, order_id=$5, updated_at=$6
+         WHERE id=$7 AND edit_token=$8`,
+        [
+          nextRow.customer_name,
+          nextRow.email,
+          nextRow.rating,
+          nextRow.comment,
+          nextRow.order_id,
+          nextRow.updated_at,
+          reviewId,
+          token
+        ]
+      );
+
+      sendJson(res, 200, { ...mapReview(nextRow), manageToken: token });
+    } catch (error) {
+      sendJson(res, 500, { error: error.message || 'Failed to update review' });
+    }
+    return;
+  }
+
+  if (action === 'delete') {
+    const token = getReviewManageToken(req, payload);
+    if (!token) {
+      sendJson(res, 403, { error: 'Missing review token' });
+      return;
+    }
+    if (!reviewId) {
+      sendJson(res, 400, { error: 'Missing review id' });
+      return;
+    }
+
+    try {
+      const rows = await sql.query(`SELECT id, edit_token FROM reviews WHERE id = $1 AND edit_token = $2`, [reviewId, token]);
+      let current = rows?.[0];
+      if (!current) {
+        const fallbackRows = await sql.query(`SELECT id, edit_token FROM reviews WHERE id = $1`, [reviewId]);
+        const fallback = fallbackRows?.[0];
+        if (fallback) {
+          await sql.query(`UPDATE reviews SET edit_token = $1, updated_at = $2 WHERE id = $3`, [token, new Date().toISOString(), reviewId]);
+          current = { id: reviewId, edit_token: token };
+        }
+      }
+      if (!current) {
+        sendJson(res, 404, { error: 'Review not found' });
+        return;
+      }
+
+      await sql.query(`DELETE FROM reviews WHERE id = $1 AND edit_token = $2`, [reviewId, token]);
+      sendJson(res, 200, { ok: true });
+    } catch (error) {
+      sendJson(res, 500, { error: error.message || 'Failed to delete review' });
+    }
+    return;
+  }
+
   const name = String(payload.customerName || payload.name || '').trim();
   const email = String(payload.email || '').trim();
   const comment = String(payload.comment || payload.message || '').trim();
@@ -1192,6 +1305,82 @@ app.get('/api/admin/reviews', async (req, res) => {
   } catch (error) {
     sendJson(res, 500, { error: error.message || 'Failed to load reviews' });
   }
+});
+
+app.post('/api/admin/reviews', async (req, res) => {
+  if (handleOptions(req, res)) return;
+  if (!requireAdmin(req, res)) return;
+  if (!(await requireDatabase(req, res))) return;
+
+  const payload = req.body && typeof req.body === 'object' ? req.body : {};
+  const action = String(payload.action || '').trim().toLowerCase();
+  const id = String(payload.id || payload.reviewId || '').trim();
+
+  if (action === 'update') {
+    if (!id) {
+      sendJson(res, 400, { error: 'Missing review id' });
+      return;
+    }
+
+    try {
+      const currentRows = await sql.query(`SELECT * FROM reviews WHERE id = $1`, [id]);
+      const current = currentRows?.[0];
+      if (!current) {
+        sendJson(res, 404, { error: 'Review not found' });
+        return;
+      }
+
+      const now = new Date().toISOString();
+      const nextRow = {
+        ...current,
+        customer_name: String(payload.customerName ?? current.customer_name ?? '').trim(),
+        email: String(payload.email ?? current.email ?? '').trim(),
+        rating: Number.isFinite(Number(payload.rating)) ? Number(payload.rating) : Number(current.rating) || 0,
+        comment: String(payload.comment ?? current.comment ?? '').trim(),
+        order_id: String(payload.orderId ?? current.order_id ?? '').trim(),
+        status: String(payload.status ?? current.status ?? 'Approved').trim() || 'Approved',
+        updated_at: now
+      };
+
+      await sql.query(
+        `UPDATE reviews
+         SET customer_name=$1, email=$2, rating=$3, comment=$4, order_id=$5, status=$6, updated_at=$7
+         WHERE id=$8`,
+        [
+          nextRow.customer_name,
+          nextRow.email,
+          nextRow.rating,
+          nextRow.comment,
+          nextRow.order_id,
+          nextRow.status,
+          nextRow.updated_at,
+          id
+        ]
+      );
+
+      sendJson(res, 200, mapReview(nextRow));
+    } catch (error) {
+      sendJson(res, 500, { error: error.message || 'Failed to update review' });
+    }
+    return;
+  }
+
+  if (action === 'delete') {
+    if (!id) {
+      sendJson(res, 400, { error: 'Missing review id' });
+      return;
+    }
+
+    try {
+      await sql.query(`DELETE FROM reviews WHERE id = $1`, [id]);
+      sendJson(res, 200, { ok: true });
+    } catch (error) {
+      sendJson(res, 500, { error: error.message || 'Failed to delete review' });
+    }
+    return;
+  }
+
+  sendJson(res, 400, { error: 'Missing review action' });
 });
 
 app.put('/api/admin/reviews/:id', async (req, res) => {

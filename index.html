@@ -855,10 +855,10 @@
             if (!confirm('Delete your review?')) return;
 
             try {
-                const response = await fetch(`${API_BASE}/reviews/${encodeURIComponent(review.id)}`, {
-                    method: 'DELETE',
+                const response = await fetch(`${API_BASE}/reviews`, {
+                    method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ manageToken: token })
+                    body: JSON.stringify({ action: 'delete', id: review.id, manageToken: token })
                 });
                 const result = await readApiResponse(response);
                 if (!response.ok) throw new Error(result.error || result.raw || 'Failed to delete review');
@@ -1515,11 +1515,15 @@
 
                     const isEditing = Boolean(editingReview?.id);
                     const response = await fetch(
-                        isEditing ? `${API_BASE}/reviews/${encodeURIComponent(editingReview.id)}` : `${API_BASE}/reviews`,
+                        `${API_BASE}/reviews`,
                         {
-                        method: isEditing ? 'PUT' : 'POST',
+                        method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
+                        body: JSON.stringify(
+                            isEditing
+                                ? { ...payload, action: 'update', id: editingReview.id }
+                                : payload
+                        )
                         }
                     );
 
