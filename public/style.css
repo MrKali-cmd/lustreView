@@ -2196,6 +2196,52 @@ body::after {
             font-size: 14px;
         }
 
+        .review-card-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+
+        .review-card-action {
+            border: 1px solid rgba(201,169,98,0.28);
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .review-card-action:hover {
+            transform: translateY(-1px);
+            background: rgba(201,169,98,0.18);
+        }
+
+        .review-card-action.danger {
+            border-color: rgba(231, 96, 96, 0.35);
+            color: #f6b0b0;
+        }
+
+        .review-edit-hint {
+            color: #7d6330;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: rgba(201,169,98,0.12);
+            border: 1px solid rgba(201,169,98,0.18);
+        }
+
+        .review-form-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
         .reviews-empty {
             padding: 18px;
             border-radius: 18px;

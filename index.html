@@ -541,7 +541,11 @@
                     <input type="text" id="review-order-id" placeholder="Order reference">
                 </label>
 
-                <button type="submit" class="btn-primary">Submit Review</button>
+                <p id="review-edit-hint" class="review-edit-hint" style="display:none;"></p>
+                <div class="review-form-actions">
+                    <button type="submit" class="btn-primary" id="review-submit-btn">Submit Review</button>
+                    <button type="button" class="btn-secondary" id="review-cancel-edit" style="display:none;">Cancel Edit</button>
+                </div>
                 <p id="review-status" class="contact-status" style="display:none;"></p>
             </form>
         </div>
@@ -720,9 +724,15 @@
         const reviewComment = document.getElementById('review-comment');
         const reviewOrderId = document.getElementById('review-order-id');
         const reviewStatus = document.getElementById('review-status');
+        const reviewSubmitBtn = document.getElementById('review-submit-btn');
+        const reviewCancelEditBtn = document.getElementById('review-cancel-edit');
+        const reviewEditHint = document.getElementById('review-edit-hint');
         const reviewsList = document.getElementById('reviews-list');
         const ratingPicker = document.getElementById('rating-picker');
+        const reviewTokensKey = 'luxe-review-manage-tokens';
+        let reviewItems = [];
         let reviewRating = 5;
+        let editingReview = null;
 
         const showActionToast = (message) => {
             let toast = document.getElementById('action-toast');
@@ -777,8 +787,65 @@
             });
         };
 
+        const getReviewTokenMap = () => {
+            try {
+                const parsed = JSON.parse(localStorage.getItem(reviewTokensKey) || '{}');
+                return parsed && typeof parsed === 'object' ? parsed : {};
+            } catch {
+                return {};
+            }
+        };
+
+        const setReviewToken = (reviewId, token) => {
+            if (!reviewId || !token) return;
+            const map = getReviewTokenMap();
+            map[reviewId] = token;
+            localStorage.setItem(reviewTokensKey, JSON.stringify(map));
+        };
+
+        const removeReviewToken = (reviewId) => {
+            if (!reviewId) return;
+            const map = getReviewTokenMap();
+            delete map[reviewId];
+            localStorage.setItem(reviewTokensKey, JSON.stringify(map));
+        };
+
+        const getReviewToken = (reviewId) => {
+            const map = getReviewTokenMap();
+            return String(map?.[reviewId] || '').trim();
+        };
+
+        const resetReviewEditor = () => {
+            editingReview = null;
+            reviewForm?.reset();
+            renderRatingPicker(5);
+            if (reviewSubmitBtn) reviewSubmitBtn.textContent = 'Submit Review';
+            if (reviewCancelEditBtn) reviewCancelEditBtn.style.display = 'none';
+            if (reviewEditHint) reviewEditHint.style.display = 'none';
+        };
+
+        const startReviewEdit = (review) => {
+            const token = getReviewToken(review.id);
+            if (!token || !reviewForm) return;
+            editingReview = { id: review.id, token };
+            if (reviewName) reviewName.value = review.customerName || '';
+            if (reviewEmail) reviewEmail.value = review.email || '';
+            if (reviewComment) reviewComment.value = review.comment || '';
+            if (reviewOrderId) reviewOrderId.value = review.orderId || '';
+            renderRatingPicker(review.rating || 5);
+            if (reviewSubmitBtn) reviewSubmitBtn.textContent = 'Update Review';
+            if (reviewCancelEditBtn) reviewCancelEditBtn.style.display = 'inline-flex';
+            if (reviewEditHint) {
+                reviewEditHint.textContent = 'Editing your review on this browser. Save changes or cancel.';
+                reviewEditHint.style.display = 'block';
+            }
+            reviewForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+
         const renderReviews = (items = []) => {
             if (!reviewsList) return;
+            reviewItems = Array.isArray(items) ? items : [];
+            const tokenMap = getReviewTokenMap();
             if (!items.length) {
                 reviewsList.innerHTML = '<div class="reviews-empty">No reviews yet. Be the first to share your experience.</div>';
                 return;
@@ -786,6 +853,7 @@
 
             reviewsList.innerHTML = items.map((review) => {
                 const stars = '★★★★★'.slice(0, Math.round(review.rating || 0)).padEnd(5, '☆');
+                const isMine = Boolean(tokenMap[review.id]);
                 return `
                     <article class="review-card">
                         <div class="review-card-head">
@@ -793,6 +861,12 @@
                             <div class="review-card-stars">${stars}</div>
                         </div>
                         <div class="review-card-comment">${escapeHtml(review.comment || '')}</div>
+                        ${isMine ? `
+                            <div class="review-card-actions">
+                                <button type="button" class="review-card-action" data-review-action="edit" data-review-id="${escapeHtml(review.id)}">Edit</button>
+                                <button type="button" class="review-card-action danger" data-review-action="delete" data-review-id="${escapeHtml(review.id)}">Delete</button>
+                            </div>
+                        ` : ''}
                     </article>
                 `;
             }).join('');
@@ -809,7 +883,6 @@
                 reviewsList.innerHTML = '<div class="reviews-empty">Reviews are temporarily unavailable.</div>';
             }
         };
-
         const getSavedState = () => (window.LuxeState?.getSnapshot ? window.LuxeState.getSnapshot() : { cart: [], wishlist: [], lastOrder: null });
         const getSavedSet = (key) => new Set(Array.isArray(getSavedState()[key]) ? getSavedState()[key].map((entry) => (entry && typeof entry === 'object' ? entry.key : entry)).filter(Boolean) : []);
 
@@ -1352,13 +1425,33 @@
             syncPanels();
         });
 
-        // Appointment form handler
+        // Review handler
         ratingPicker?.addEventListener('click', (event) => {
             const button = event.target.closest('.rating-star');
             if (!button) return;
             renderRatingPicker(button.dataset.rating);
         });
         renderRatingPicker(reviewRating);
+
+        reviewsList?.addEventListener('click', async (event) => {
+            const button = event.target.closest('[data-review-action]');
+            if (!button) return;
+            const reviewId = button.dataset.reviewId;
+            const action = button.dataset.reviewAction;
+            const review = reviewItems.find((item) => item.id === reviewId);
+            if (!review) return;
+
+            if (action === 'edit') {
+                startReviewEdit(review);
+                return;
+            }
+
+            if (action === 'delete') {
+                await deleteReview(review);
+            }
+        });
+
+        reviewCancelEditBtn?.addEventListener('click', resetReviewEditor);
 
         if (reviewForm) {
             reviewForm.addEventListener('submit', async (e) => {
@@ -1370,7 +1463,8 @@
                     rating: reviewRating,
                     comment: reviewComment?.value.trim(),
                     orderId: reviewOrderId?.value.trim(),
-                    source: 'website'
+                    source: 'website',
+                    manageToken: editingReview?.token || ''
                 };
 
                 if (!payload.customerName || !payload.comment) {
@@ -1387,22 +1481,31 @@
                         reviewStatus.style.display = 'none';
                     }
 
-                    const response = await fetch(`${API_BASE}/reviews`, {
-                        method: 'POST',
+                    const isEditing = Boolean(editingReview?.id);
+                    const response = await fetch(
+                        isEditing ? `${API_BASE}/reviews/${encodeURIComponent(editingReview.id)}` : `${API_BASE}/reviews`,
+                        {
+                        method: isEditing ? 'PUT' : 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
-                    });
+                        }
+                    );
 
                     const result = await response.json();
-                    if (!response.ok) throw new Error(result.error || 'Failed to submit review');
+                    if (!response.ok) throw new Error(result.error || (isEditing ? 'Failed to update review' : 'Failed to submit review'));
+
+                    if (result.id && result.manageToken) {
+                        setReviewToken(result.id, result.manageToken);
+                    } else if (editingReview?.id && editingReview?.token) {
+                        setReviewToken(editingReview.id, editingReview.token);
+                    }
 
                     if (reviewStatus) {
-                        reviewStatus.textContent = 'Thanks. Your review was submitted successfully.';
+                        reviewStatus.textContent = isEditing ? 'Thanks. Your review was updated successfully.' : 'Thanks. Your review was submitted successfully.';
                         reviewStatus.className = 'contact-status is-success';
                         reviewStatus.style.display = 'block';
                     }
-                    reviewForm.reset();
-                    renderRatingPicker(5);
+                    resetReviewEditor();
                     await loadReviews();
                 } catch (error) {
                     if (reviewStatus) {
