@@ -2316,6 +2316,160 @@ body::after {
             gap: 12px;
         }
 
+        .reviews-premium {
+            padding: 96px 8% 120px;
+            background: linear-gradient(180deg, #fffdf8 0%, #fbf4e8 100%);
+        }
+
+        .rev-header {
+            text-align: center;
+            margin-bottom: 42px;
+        }
+
+        .rev-subtitle {
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.28em;
+            font-size: 0.84rem;
+            font-weight: 700;
+        }
+
+        .rev-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.4rem, 5vw, 4.1rem);
+            line-height: 1.08;
+            margin-top: 10px;
+            color: var(--dark);
+        }
+
+        .reviews-premium-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+            gap: 28px;
+            align-items: start;
+        }
+
+        .rev-stream {
+            min-width: 0;
+        }
+
+        .rev-grid {
+            display: grid;
+            gap: 24px;
+        }
+
+        .rev-card {
+            position: relative;
+            min-height: 420px;
+            border-radius: 26px;
+            overflow: hidden;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.12);
+            transform: translateZ(0);
+            transition: transform 0.35s ease, box-shadow 0.35s ease;
+            background: #111;
+        }
+
+        .rev-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 38px 70px rgba(0,0,0,0.18);
+        }
+
+        .rev-img {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            transform: scale(1.06);
+            transition: transform 0.9s ease;
+        }
+
+        .rev-card:hover .rev-img {
+            transform: scale(1.12);
+        }
+
+        .rev-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.82) 10%, rgba(0,0,0,0.2) 52%, rgba(0,0,0,0.02) 100%);
+            z-index: 1;
+        }
+
+        .rev-content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            min-height: 420px;
+            padding: 34px;
+            color: #fff;
+        }
+
+        .rev-stars {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 14px;
+            color: var(--primary);
+            font-size: 14px;
+        }
+
+        .rev-stars i.rev-star-muted {
+            color: rgba(255,255,255,0.35);
+        }
+
+        .rev-text {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.1rem, 2.1vw, 1.55rem);
+            line-height: 1.55;
+            font-style: italic;
+            margin-bottom: 22px;
+            color: rgba(255,255,255,0.92);
+        }
+
+        .rev-author {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .rev-author img {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(201,169,98,0.9);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .rev-author strong {
+            display: block;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .rev-author span {
+            display: block;
+            margin-top: 2px;
+            font-size: 12px;
+            color: var(--primary);
+        }
+
+        .review-form-premium {
+            position: sticky;
+            top: 110px;
+            background: rgba(255,255,255,0.92);
+            border: 1px solid rgba(201,169,98,0.16);
+            box-shadow: 0 24px 60px rgba(24,18,10,0.08);
+            backdrop-filter: blur(14px);
+        }
+
+        .review-form-premium h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.8rem, 3vw, 2.3rem);
+            margin-bottom: 6px;
+        }
+
         .rating-picker {
             display: inline-flex;
             gap: 6px;
@@ -2642,14 +2796,26 @@ body::after {
                 right: 4px;
             }
 
-            .reviews {
-                padding: 18px 5% 90px;
+            .reviews-premium {
+                padding: 22px 5% 90px;
             }
 
-            .reviews-panel,
-            .review-form {
-                padding: 20px;
-                border-radius: 20px;
+            .reviews-premium-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .rev-card {
+                min-height: 380px;
+            }
+
+            .rev-content {
+                min-height: 380px;
+                padding: 22px;
+            }
+
+            .review-form-premium {
+                position: relative;
+                top: auto;
             }
 
             .review-form-grid {

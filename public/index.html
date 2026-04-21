@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" dir="ltr">
 
 <head>
@@ -492,23 +492,20 @@
         <div id="appt-message" class="form-message" style="display: none; margin-top: 16px; padding: 12px; border-radius: 8px;"></div>
     </form>
     </section>
-
-    <section class="reviews" id="reviews">
-        <div class="section-header">
-            <span class="section-tag">CUSTOMER REVIEWS</span>
-            <h2 class="section-title">What Our Customers Say</h2>
-            <p class="section-desc">After installation, we share a review link so customers can rate the work and leave a note about the experience.</p>
+    <section class="reviews-premium" id="reviews">
+        <div class="rev-header">
+            <span class="rev-subtitle">Voices of Luxury</span>
+            <h2 class="rev-title">What Our Clients Say</h2>
         </div>
 
-        <div class="reviews-grid">
-            <div class="reviews-panel">
-                <h3>Latest Reviews</h3>
-                <div id="reviews-list" class="reviews-list">
+        <div class="reviews-premium-layout">
+            <div class="rev-stream">
+                <div id="reviews-list" class="rev-grid">
                     <div class="reviews-empty">Loading reviews...</div>
                 </div>
             </div>
 
-            <form id="review-form" class="review-form">
+            <form id="review-form" class="review-form review-form-premium">
                 <h3>Leave a Review</h3>
                 <div class="review-form-grid">
                     <label>
@@ -521,16 +518,16 @@
                     </label>
                 </div>
 
-                    <label>
-                        <span>Rating</span>
-                        <div class="rating-picker" id="rating-picker" aria-label="Select rating">
+                <label>
+                    <span>Rating</span>
+                    <div class="rating-picker" id="rating-picker" aria-label="Select rating">
                         <button type="button" class="rating-star" data-rating="1" aria-label="1 star">★</button>
                         <button type="button" class="rating-star" data-rating="2" aria-label="2 stars">★</button>
                         <button type="button" class="rating-star" data-rating="3" aria-label="3 stars">★</button>
                         <button type="button" class="rating-star" data-rating="4" aria-label="4 stars">★</button>
                         <button type="button" class="rating-star" data-rating="5" aria-label="5 stars">★</button>
-                        </div>
-                    </label>
+                    </div>
+                </label>
 
                 <label>
                     <span>Comment</span>
@@ -728,6 +725,12 @@
         let reviewItems = [];
         let reviewRating = 5;
         let editingReview = null;
+        const reviewVisuals = [
+            'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=1200',
+            'https://images.unsplash.com/photo-1617325247661-675ab4b64ae2?w=1200',
+            'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=1200',
+            'https://images.unsplash.com/photo-1600565193348-f74a4d160a86?w=1200'
+        ];
 
         const showActionToast = (message) => {
             let toast = document.getElementById('action-toast');
@@ -884,22 +887,31 @@
                 return;
             }
 
-            reviewsList.innerHTML = items.map((review) => {
+            reviewsList.innerHTML = items.map((review, index) => {
                 const stars = '★★★★★'.slice(0, Math.round(review.rating || 0)).padEnd(5, '☆');
                 const isMine = Boolean(tokenMap[review.id]);
+                const image = reviewVisuals[index % reviewVisuals.length];
+                const avatar = `https://i.pravatar.cc/150?u=${encodeURIComponent(review.id || review.customerName || index)}`;
                 return `
-                    <article class="review-card">
-                        <div class="review-card-head">
-                            <div class="review-card-name">${escapeHtml(review.customerName || 'Customer')}</div>
-                            <div class="review-card-stars">${stars}</div>
-                        </div>
-                        <div class="review-card-comment">${escapeHtml(review.comment || '')}</div>
-                        ${isMine ? `
-                            <div class="review-card-actions">
-                                <button type="button" class="review-card-action" data-review-action="edit" data-review-id="${escapeHtml(review.id)}">Edit</button>
-                                <button type="button" class="review-card-action danger" data-review-action="delete" data-review-id="${escapeHtml(review.id)}">Delete</button>
+                    <article class="rev-card">
+                        <div class="rev-img" style="background-image: url('${escapeHtml(image)}');"></div>
+                        <div class="rev-content">
+                            <div class="rev-stars">${stars.split('').map((star) => `<i class="fas fa-star${star === '☆' ? ' rev-star-muted' : ''}"></i>`).join('')}</div>
+                            <p class="rev-text">"${escapeHtml(review.comment || '')}"</p>
+                            <div class="rev-author">
+                                <img src="${avatar}" alt="${escapeHtml(review.customerName || 'Client')}">
+                                <div>
+                                    <strong>${escapeHtml(review.customerName || 'Customer')}</strong>
+                                    <span>${escapeHtml(review.email || 'Verified customer')}</span>
+                                </div>
                             </div>
-                        ` : ''}
+                            ${isMine ? `
+                                <div class="review-card-actions">
+                                    <button type="button" class="review-card-action" data-review-action="edit" data-review-id="${escapeHtml(review.id)}">Edit</button>
+                                    <button type="button" class="review-card-action danger" data-review-action="delete" data-review-id="${escapeHtml(review.id)}">Delete</button>
+                                </div>
+                            ` : ''}
+                        </div>
                     </article>
                 `;
             }).join('');
@@ -1636,3 +1648,4 @@
 </body>
 
 </html>
+
