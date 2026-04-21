@@ -816,6 +816,16 @@
             return String(map?.[reviewId] || '').trim();
         };
 
+        const readApiResponse = async (response) => {
+            const text = await response.text();
+            if (!text) return {};
+            try {
+                return JSON.parse(text);
+            } catch {
+                return { raw: text };
+            }
+        };
+
         const resetReviewEditor = () => {
             editingReview = null;
             reviewForm?.reset();
@@ -841,6 +851,31 @@
                 reviewEditHint.style.display = 'block';
             }
             reviewForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+
+        const deleteReview = async (review) => {
+            const token = getReviewToken(review.id);
+            if (!token) {
+                showActionToast('This review can only be removed from the same browser.');
+                return;
+            }
+            if (!confirm('Delete your review?')) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/reviews/${encodeURIComponent(review.id)}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ manageToken: token })
+                });
+                const result = await readApiResponse(response);
+                if (!response.ok) throw new Error(result.error || result.raw || 'Failed to delete review');
+                removeReviewToken(review.id);
+                if (editingReview?.id === review.id) resetReviewEditor();
+                await loadReviews();
+                showActionToast('Review deleted');
+            } catch (error) {
+                showActionToast(`Error: ${error.message}`);
+            }
         };
 
         const renderReviews = (items = []) => {
@@ -1492,7 +1527,7 @@
                         }
                     );
 
-                    const result = await response.json();
+                    const result = await readApiResponse(response);
                     if (!response.ok) throw new Error(result.error || (isEditing ? 'Failed to update review' : 'Failed to submit review'));
 
                     if (result.id && result.manageToken) {
