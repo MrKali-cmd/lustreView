@@ -537,11 +537,6 @@
                     <textarea id="review-comment" rows="4" placeholder="Tell us about your installation experience..." required></textarea>
                 </label>
 
-                <label>
-                    <span>Order ID (optional)</span>
-                    <input type="text" id="review-order-id" placeholder="Order reference">
-                </label>
-
                 <p id="review-edit-hint" class="review-edit-hint" style="display:none;"></p>
                 <div class="review-form-actions">
                     <button type="submit" class="btn-primary" id="review-submit-btn">Submit Review</button>
@@ -723,7 +718,6 @@
         const reviewName = document.getElementById('review-name');
         const reviewEmail = document.getElementById('review-email');
         const reviewComment = document.getElementById('review-comment');
-        const reviewOrderId = document.getElementById('review-order-id');
         const reviewStatus = document.getElementById('review-status');
         const reviewSubmitBtn = document.getElementById('review-submit-btn');
         const reviewCancelEditBtn = document.getElementById('review-cancel-edit');
@@ -842,7 +836,6 @@
             if (reviewName) reviewName.value = review.customerName || '';
             if (reviewEmail) reviewEmail.value = review.email || '';
             if (reviewComment) reviewComment.value = review.comment || '';
-            if (reviewOrderId) reviewOrderId.value = review.orderId || '';
             renderRatingPicker(review.rating || 5);
             if (reviewSubmitBtn) reviewSubmitBtn.textContent = 'Update Review';
             if (reviewCancelEditBtn) reviewCancelEditBtn.style.display = 'inline-flex';
@@ -1502,7 +1495,6 @@
                     email: reviewEmail?.value.trim(),
                     rating: reviewRating,
                     comment: reviewComment?.value.trim(),
-                    orderId: reviewOrderId?.value.trim(),
                     source: 'website',
                     manageToken: editingReview?.token || ''
                 };

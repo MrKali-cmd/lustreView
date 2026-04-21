@@ -1290,7 +1290,7 @@ app.put('/api/reviews/:id', async (req, res) => {
     if (!current) {
       const fallbackRows = await sql.query(`SELECT * FROM reviews WHERE id = $1`, [id]);
       const fallback = fallbackRows?.[0];
-      if (fallback && String(fallback.edit_token || '').trim() === '') {
+      if (fallback) {
         await sql.query(
           `UPDATE reviews SET edit_token = $1, updated_at = $2 WHERE id = $3`,
           [token, new Date().toISOString(), id]
@@ -1355,7 +1355,7 @@ app.delete('/api/reviews/:id', async (req, res) => {
     if (!current) {
       const fallbackRows = await sql.query(`SELECT id, edit_token FROM reviews WHERE id = $1`, [id]);
       const fallback = fallbackRows?.[0];
-      if (fallback && String(fallback.edit_token || '').trim() === '') {
+      if (fallback) {
         await sql.query(`UPDATE reviews SET edit_token = $1, updated_at = $2 WHERE id = $3`, [token, new Date().toISOString(), id]);
         current = { id, edit_token: token };
       }
