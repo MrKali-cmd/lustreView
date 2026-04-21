@@ -1142,24 +1142,27 @@
             left: 12px;
             display: inline-flex;
             align-items: center;
-            max-width: calc(100% - 24px);
-            padding: 5px 9px;
+            width: fit-content;
+            max-width: 118px;
+            padding: 3px 7px;
             border-radius: 999px;
-            font-size: 0.62rem;
+            font-size: 0.53rem;
             font-weight: 700;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.02em;
             color: #2f281e;
-            background: rgba(255, 250, 240, 0.76);
+            background: rgba(255, 250, 240, 0.64);
             border: 1px solid rgba(201, 169, 98, 0.22);
-            box-shadow: 0 10px 22px rgba(43, 37, 26, 0.10);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 6px 14px rgba(43, 37, 26, 0.08);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
             z-index: 3;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             line-height: 1;
             min-height: 0;
+            min-width: 0;
+            box-sizing: border-box;
         }
 
         .product-actions {
