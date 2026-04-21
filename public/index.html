@@ -878,6 +878,10 @@
             }
         };
 
+        window.deleteReview = deleteReview;
+        window.startReviewEdit = startReviewEdit;
+        window.readApiResponse = readApiResponse;
+
         const renderReviews = (items = []) => {
             if (!reviewsList) return;
             reviewItems = Array.isArray(items) ? items : [];
@@ -913,7 +917,7 @@
             try {
                 const response = await fetch(`${API_BASE}/reviews`, { cache: 'no-store' });
                 if (!response.ok) throw new Error('Failed to load reviews');
-                const data = await response.json();
+                const data = await readApiResponse(response);
                 renderReviews(Array.isArray(data) ? data.slice(0, 6) : []);
             } catch {
                 reviewsList.innerHTML = '<div class="reviews-empty">Reviews are temporarily unavailable.</div>';
@@ -1592,7 +1596,7 @@
                         body: JSON.stringify(formData)
                     });
 
-                    const result = await response.json();
+                    const result = await readApiResponse(response);
 
                     if (!response.ok) {
                         throw new Error(result.error || 'Failed to schedule appointment');

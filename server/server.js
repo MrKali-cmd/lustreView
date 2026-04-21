@@ -1286,7 +1286,18 @@ app.put('/api/reviews/:id', async (req, res) => {
 
   try {
     const rows = await sql.query(`SELECT * FROM reviews WHERE id = $1 AND edit_token = $2`, [id, token]);
-    const current = rows?.[0];
+    let current = rows?.[0];
+    if (!current) {
+      const fallbackRows = await sql.query(`SELECT * FROM reviews WHERE id = $1`, [id]);
+      const fallback = fallbackRows?.[0];
+      if (fallback && String(fallback.edit_token || '').trim() === '') {
+        await sql.query(
+          `UPDATE reviews SET edit_token = $1, updated_at = $2 WHERE id = $3`,
+          [token, new Date().toISOString(), id]
+        );
+        current = { ...fallback, edit_token: token };
+      }
+    }
     if (!current) {
       sendJson(res, 404, { error: 'Review not found' });
       return;
@@ -1339,8 +1350,17 @@ app.delete('/api/reviews/:id', async (req, res) => {
   }
 
   try {
-    const rows = await sql.query(`SELECT id FROM reviews WHERE id = $1 AND edit_token = $2`, [id, token]);
-    if (!rows?.[0]) {
+    const rows = await sql.query(`SELECT id, edit_token FROM reviews WHERE id = $1 AND edit_token = $2`, [id, token]);
+    let current = rows?.[0];
+    if (!current) {
+      const fallbackRows = await sql.query(`SELECT id, edit_token FROM reviews WHERE id = $1`, [id]);
+      const fallback = fallbackRows?.[0];
+      if (fallback && String(fallback.edit_token || '').trim() === '') {
+        await sql.query(`UPDATE reviews SET edit_token = $1, updated_at = $2 WHERE id = $3`, [token, new Date().toISOString(), id]);
+        current = { id, edit_token: token };
+      }
+    }
+    if (!current) {
       sendJson(res, 404, { error: 'Review not found' });
       return;
     }
