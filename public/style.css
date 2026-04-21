@@ -2358,6 +2358,28 @@ body::after {
             will-change: transform;
         }
 
+        .rev-bubble {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rev-bubble-stars {
+            color: #c9a962;
+            letter-spacing: 1px;
+            font-size: 0.92rem;
+            flex: none;
+        }
+
+        .rev-bubble-text {
+            color: inherit;
+        }
+
+        .rev-bubble-name {
+            color: rgba(255,255,255,0.75);
+            flex: none;
+        }
+
         .track-left {
             animation: scrollLeft 30s linear infinite;
         }
@@ -2538,6 +2560,11 @@ body::after {
             border: 1px solid rgba(201,169,98,0.16);
             box-shadow: 0 24px 60px rgba(24,18,10,0.08);
             backdrop-filter: blur(14px);
+        }
+
+        .review-form-centered {
+            max-width: 840px;
+            margin: 0 auto;
         }
 
         .review-form-premium h3 {
@@ -2911,6 +2938,10 @@ body::after {
             .review-form-premium {
                 position: relative;
                 top: auto;
+            }
+
+            .review-form-centered {
+                max-width: none;
             }
 
             .review-form-grid {

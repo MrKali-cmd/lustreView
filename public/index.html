@@ -499,26 +499,12 @@
             </div>
 
             <div class="ticker-wrapper">
-                <div class="ticker-track track-left" aria-hidden="true">
-                    <div class="rev-bubble">"کیفیت عالی و نصب سریع" - سارا</div>
-                    <div class="rev-bubble">"پرده‌های زبرا واقعاً خونم رو عوض کرد" - علی</div>
-                    <div class="rev-bubble">"بهترین خدمات پس از فروش" - مریم</div>
-                    <div class="rev-bubble">"طراحی مدرن و پارچه‌های باکیفیت" - رضایی</div>
-                    <div class="rev-bubble">"کیفیت عالی و نصب سریع" - سارا</div>
-                    <div class="rev-bubble">"پرده‌های زبرا واقعاً خونم رو عوض کرد" - علی</div>
-                    <div class="rev-bubble">"بهترین خدمات پس از فروش" - مریم</div>
-                    <div class="rev-bubble">"طراحی مدرن و پارچه‌های باکیفیت" - رضایی</div>
+                <div id="reviews-ticker-left" class="ticker-track track-left" aria-hidden="true">
+                    <div class="rev-bubble">Loading reviews...</div>
                 </div>
 
-                <div class="ticker-track track-right" aria-hidden="true">
-                    <div class="rev-bubble">"سیستم هوشمندش حرف نداره" - حسینی</div>
-                    <div class="rev-bubble">"قیمت مناسب نسبت به بازار" - تهرانی</div>
-                    <div class="rev-bubble">"دقت در اندازه‌گیری بی‌نظیر بود" - کریمی</div>
-                    <div class="rev-bubble">"بسته‌بندی و ارسال خیلی تمیز بود" - شایان</div>
-                    <div class="rev-bubble">"سیستم هوشمندش حرف نداره" - حسینی</div>
-                    <div class="rev-bubble">"قیمت مناسب نسبت به بازار" - تهرانی</div>
-                    <div class="rev-bubble">"دقت در اندازه‌گیری بی‌نظیر بود" - کریمی</div>
-                    <div class="rev-bubble">"بسته‌بندی و ارسال خیلی تمیز بود" - شایان</div>
+                <div id="reviews-ticker-right" class="ticker-track track-right" aria-hidden="true">
+                    <div class="rev-bubble">Loading reviews...</div>
                 </div>
             </div>
         </div>
@@ -526,52 +512,45 @@
         <div class="rev-header">
             <span class="rev-subtitle">Voices of Luxury</span>
             <h2 class="rev-title">What Our Clients Say</h2>
+            <p class="section-desc">After installation, we share a review link so customers can rate the work and leave a note about the experience.</p>
         </div>
 
-        <div class="reviews-premium-layout">
-            <div class="rev-stream">
-                <div id="reviews-list" class="rev-grid">
-                    <div class="reviews-empty">Loading reviews...</div>
-                </div>
+        <form id="review-form" class="review-form review-form-premium review-form-centered">
+            <h3>Leave a Review</h3>
+            <div class="review-form-grid">
+                <label>
+                    <span>Your Name</span>
+                    <input type="text" id="review-name" placeholder="Your name" required>
+                </label>
+                <label>
+                    <span>Email</span>
+                    <input type="email" id="review-email" placeholder="your@email.com">
+                </label>
             </div>
 
-            <form id="review-form" class="review-form review-form-premium">
-                <h3>Leave a Review</h3>
-                <div class="review-form-grid">
-                    <label>
-                        <span>Your Name</span>
-                        <input type="text" id="review-name" placeholder="Your name" required>
-                    </label>
-                    <label>
-                        <span>Email</span>
-                        <input type="email" id="review-email" placeholder="your@email.com">
-                    </label>
+            <label>
+                <span>Rating</span>
+                <div class="rating-picker" id="rating-picker" aria-label="Select rating">
+                    <button type="button" class="rating-star" data-rating="1" aria-label="1 star">★</button>
+                    <button type="button" class="rating-star" data-rating="2" aria-label="2 stars">★</button>
+                    <button type="button" class="rating-star" data-rating="3" aria-label="3 stars">★</button>
+                    <button type="button" class="rating-star" data-rating="4" aria-label="4 stars">★</button>
+                    <button type="button" class="rating-star" data-rating="5" aria-label="5 stars">★</button>
                 </div>
+            </label>
 
-                <label>
-                    <span>Rating</span>
-                    <div class="rating-picker" id="rating-picker" aria-label="Select rating">
-                        <button type="button" class="rating-star" data-rating="1" aria-label="1 star">★</button>
-                        <button type="button" class="rating-star" data-rating="2" aria-label="2 stars">★</button>
-                        <button type="button" class="rating-star" data-rating="3" aria-label="3 stars">★</button>
-                        <button type="button" class="rating-star" data-rating="4" aria-label="4 stars">★</button>
-                        <button type="button" class="rating-star" data-rating="5" aria-label="5 stars">★</button>
-                    </div>
-                </label>
+            <label>
+                <span>Comment</span>
+                <textarea id="review-comment" rows="4" placeholder="Tell us about your installation experience..." required></textarea>
+            </label>
 
-                <label>
-                    <span>Comment</span>
-                    <textarea id="review-comment" rows="4" placeholder="Tell us about your installation experience..." required></textarea>
-                </label>
-
-                <p id="review-edit-hint" class="review-edit-hint" style="display:none;"></p>
-                <div class="review-form-actions">
-                    <button type="submit" class="btn-primary" id="review-submit-btn">Submit Review</button>
-                    <button type="button" class="btn-secondary" id="review-cancel-edit" style="display:none;">Cancel Edit</button>
-                </div>
-                <p id="review-status" class="contact-status" style="display:none;"></p>
-            </form>
-        </div>
+            <p id="review-edit-hint" class="review-edit-hint" style="display:none;"></p>
+            <div class="review-form-actions">
+                <button type="submit" class="btn-primary" id="review-submit-btn">Submit Review</button>
+                <button type="button" class="btn-secondary" id="review-cancel-edit" style="display:none;">Cancel Edit</button>
+            </div>
+            <p id="review-status" class="contact-status" style="display:none;"></p>
+        </form>
     </section>
 
     <div id="quick-view-modal" class="quick-view-modal" aria-hidden="true">
@@ -749,18 +728,13 @@
         const reviewSubmitBtn = document.getElementById('review-submit-btn');
         const reviewCancelEditBtn = document.getElementById('review-cancel-edit');
         const reviewEditHint = document.getElementById('review-edit-hint');
-        const reviewsList = document.getElementById('reviews-list');
+        const reviewsTickerLeft = document.getElementById('reviews-ticker-left');
+        const reviewsTickerRight = document.getElementById('reviews-ticker-right');
         const ratingPicker = document.getElementById('rating-picker');
         const reviewTokensKey = 'luxe-review-manage-tokens';
         let reviewItems = [];
         let reviewRating = 5;
         let editingReview = null;
-        const reviewVisuals = [
-            'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=1200',
-            'https://images.unsplash.com/photo-1617325247661-675ab4b64ae2?w=1200',
-            'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=1200',
-            'https://images.unsplash.com/photo-1600565193348-f74a4d160a86?w=1200'
-        ];
 
         const showActionToast = (message) => {
             let toast = document.getElementById('action-toast');
@@ -909,53 +883,55 @@
         window.readApiResponse = readApiResponse;
 
         const renderReviews = (items = []) => {
-            if (!reviewsList) return;
             reviewItems = Array.isArray(items) ? items : [];
-            const tokenMap = getReviewTokenMap();
-            if (!items.length) {
-                reviewsList.innerHTML = '<div class="reviews-empty">No reviews yet. Be the first to share your experience.</div>';
-                return;
-            }
+            const fallbackBubbles = [
+                '"کیفیت عالی و نصب سریع" - سارا',
+                '"پرده‌های زبرا واقعاً خونم رو عوض کرد" - علی',
+                '"بهترین خدمات پس از فروش" - مریم',
+                '"طراحی مدرن و پارچه‌های باکیفیت" - رضایی'
+            ];
 
-            reviewsList.innerHTML = items.map((review, index) => {
+            const makeBubble = (review, index) => {
                 const stars = '★★★★★'.slice(0, Math.round(review.rating || 0)).padEnd(5, '☆');
-                const isMine = Boolean(tokenMap[review.id]);
-                const image = reviewVisuals[index % reviewVisuals.length];
-                const avatar = `https://i.pravatar.cc/150?u=${encodeURIComponent(review.id || review.customerName || index)}`;
                 return `
-                    <article class="rev-card">
-                        <div class="rev-img" style="background-image: url('${escapeHtml(image)}');"></div>
-                        <div class="rev-content">
-                            <div class="rev-stars">${stars.split('').map((star) => `<i class="fas fa-star${star === '☆' ? ' rev-star-muted' : ''}"></i>`).join('')}</div>
-                            <p class="rev-text">"${escapeHtml(review.comment || '')}"</p>
-                            <div class="rev-author">
-                                <img src="${avatar}" alt="${escapeHtml(review.customerName || 'Client')}">
-                                <div>
-                                    <strong>${escapeHtml(review.customerName || 'Customer')}</strong>
-                                    <span>${escapeHtml(review.email || 'Verified customer')}</span>
-                                </div>
-                            </div>
-                            ${isMine ? `
-                                <div class="review-card-actions">
-                                    <button type="button" class="review-card-action" data-review-action="edit" data-review-id="${escapeHtml(review.id)}">Edit</button>
-                                    <button type="button" class="review-card-action danger" data-review-action="delete" data-review-id="${escapeHtml(review.id)}">Delete</button>
-                                </div>
-                            ` : ''}
-                        </div>
-                    </article>
+                    <div class="rev-bubble">
+                        <span class="rev-bubble-stars">${stars}</span>
+                        <span class="rev-bubble-text">${escapeHtml(review.comment || '')}</span>
+                        <span class="rev-bubble-name">- ${escapeHtml(review.customerName || 'Customer')}</span>
+                    </div>
                 `;
-            }).join('');
+            };
+
+            const buildTrack = (itemsList, fallbackOffset = 0) => {
+                const source = itemsList.length ? itemsList : fallbackBubbles.map((text, idx) => ({
+                    id: `fallback-${fallbackOffset + idx}`,
+                    customerName: text.split(' - ').pop()?.replace(/["“”]/g, '') || 'Customer',
+                    comment: text.replace(/^\"|\"$/g, '').replace(/\s-\s.*$/, ''),
+                    rating: 5
+                }));
+                const doubled = [...source, ...source];
+                return doubled.map((review, index) => makeBubble(review, index)).join('');
+            };
+
+            if (reviewsTickerLeft) {
+                reviewsTickerLeft.innerHTML = buildTrack(reviewItems, 0);
+            }
+            if (reviewsTickerRight) {
+                reviewsTickerRight.innerHTML = buildTrack([...reviewItems].slice().reverse(), reviewItems.length);
+            }
         };
 
         const loadReviews = async () => {
-            if (!reviewsList) return;
+            if (!reviewsTickerLeft || !reviewsTickerRight) return;
             try {
                 const response = await fetch(`${API_BASE}/reviews`, { cache: 'no-store' });
                 if (!response.ok) throw new Error('Failed to load reviews');
                 const data = await readApiResponse(response);
                 renderReviews(Array.isArray(data) ? data.slice(0, 6) : []);
             } catch {
-                reviewsList.innerHTML = '<div class="reviews-empty">Reviews are temporarily unavailable.</div>';
+                const fallback = '<div class="rev-bubble">Reviews are temporarily unavailable.</div>'.repeat(4);
+                reviewsTickerLeft.innerHTML = fallback;
+                reviewsTickerRight.innerHTML = fallback;
             }
         };
         const getSavedState = () => (window.LuxeState?.getSnapshot ? window.LuxeState.getSnapshot() : { cart: [], wishlist: [], lastOrder: null });
@@ -1508,24 +1484,6 @@
         });
         renderRatingPicker(reviewRating);
 
-        reviewsList?.addEventListener('click', async (event) => {
-            const button = event.target.closest('[data-review-action]');
-            if (!button) return;
-            const reviewId = button.dataset.reviewId;
-            const action = button.dataset.reviewAction;
-            const review = reviewItems.find((item) => item.id === reviewId);
-            if (!review) return;
-
-            if (action === 'edit') {
-                startReviewEdit(review);
-                return;
-            }
-
-            if (action === 'delete') {
-                await deleteReview(review);
-            }
-        });
-
         reviewCancelEditBtn?.addEventListener('click', resetReviewEditor);
 
         if (reviewForm) {
@@ -1678,4 +1636,5 @@
 </body>
 
 </html>
+
 
