@@ -1070,6 +1070,7 @@
               <div class="flex flex-wrap items-center gap-3 border-b border-gray-200 pb-4 dark:border-gray-800">
                 <button type="button" data-admin-tab-btn="collections" class="rounded-full bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-theme-xs">Collections</button>
                 <button type="button" data-admin-tab-btn="reviews" class="rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-600 dark:bg-white/5 dark:text-gray-300">Customer Reviews</button>
+                <button type="button" data-admin-tab-btn="appointments" class="rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-600 dark:bg-white/5 dark:text-gray-300">Measurements</button>
               </div>
 
               <div class="admin-tab-panel" data-admin-tab-panel="collections">
@@ -1181,6 +1182,37 @@
                 </div>
               </div>
               </div>
+
+              <div class="admin-tab-panel" data-admin-tab-panel="appointments" hidden>
+              <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-5 py-4 dark:border-gray-800 sm:px-6">
+                  <div>
+                    <h3 class="text-base font-medium text-gray-800 dark:text-white/90">Measurement Requests</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">All submitted measurement / installation requests are stored here first.</p>
+                  </div>
+                  <span id="appointments-count" class="inline-flex items-center rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">0 requests</span>
+                </div>
+                <div class="border-t border-gray-100 p-5 dark:border-gray-800 sm:p-6">
+                  <div class="overflow-x-auto hidden md:block">
+                    <table class="w-full min-w-[980px] text-sm">
+                      <thead>
+                        <tr class="text-left text-gray-500 dark:text-gray-400">
+                          <th class="pb-3 font-medium">Customer</th>
+                          <th class="pb-3 font-medium">Contact</th>
+                          <th class="pb-3 font-medium">Service</th>
+                          <th class="pb-3 font-medium">Preferred Date</th>
+                          <th class="pb-3 font-medium">Preferred Time</th>
+                          <th class="pb-3 font-medium">Status</th>
+                          <th class="pb-3 font-medium">Notes</th>
+                        </tr>
+                      </thead>
+                      <tbody id="appointments-table" class="text-gray-700 dark:text-gray-200"></tbody>
+                    </table>
+                  </div>
+                  <div id="appointments-mobile" class="grid gap-4 md:hidden"></div>
+                </div>
+              </div>
+              </div>
             </div>
           </div>
         </main>
@@ -1210,6 +1242,7 @@
       })();
       const REVIEW_API_BASE = API_BASE.replace('/collections', '/reviews');
       const ADMIN_REVIEW_API_BASE = API_BASE.replace('/collections', '/admin/reviews');
+      const APPOINTMENT_API_BASE = API_BASE.replace('/collections', '/appointments');
 
       const form = document.getElementById('collection-form');
       const tableBody = document.getElementById('collections-table');
@@ -1220,6 +1253,9 @@
       const reviewTableBody = document.getElementById('reviews-table');
       const reviewMobileList = document.getElementById('reviews-mobile');
       const reviewCount = document.getElementById('reviews-count');
+      const appointmentTableBody = document.getElementById('appointments-table');
+      const appointmentMobileList = document.getElementById('appointments-mobile');
+      const appointmentCount = document.getElementById('appointments-count');
 
       const fields = {
         id: document.getElementById('collection-id'),
@@ -1272,6 +1308,9 @@
         });
         if (tab === 'reviews' && !reviews.length) {
           loadReviews();
+        }
+        if (tab === 'appointments' && !appointments.length) {
+          loadAppointments();
         }
       };
 
@@ -1502,6 +1541,7 @@
 
       let collections = [];
       let reviews = [];
+      let appointments = [];
 
       const loadCollections = async () => {
         try {
@@ -1526,6 +1566,108 @@
           }
           if (reviewMobileList) {
             reviewMobileList.innerHTML = `<div class="rounded-2xl border border-gray-200 bg-white p-4 text-sm text-gray-500 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400">${fallback}</div>`;
+          }
+        }
+      };
+
+      const renderAppointments = (items) => {
+        if (appointmentCount) {
+          appointmentCount.textContent = `${items.length} request${items.length === 1 ? '' : 's'}`;
+        }
+
+        if (appointmentTableBody) appointmentTableBody.innerHTML = '';
+        if (appointmentMobileList) appointmentMobileList.innerHTML = '';
+
+        if (!items.length) {
+          if (appointmentTableBody) {
+            appointmentTableBody.innerHTML = `
+              <tr class="border-t border-gray-100 dark:border-gray-800">
+                <td class="py-4 text-gray-500 dark:text-gray-400" colspan="7">No measurement requests yet.</td>
+              </tr>
+            `;
+          }
+          if (appointmentMobileList) {
+            appointmentMobileList.innerHTML = `
+              <div class="rounded-2xl border border-gray-200 bg-white p-4 text-sm text-gray-500 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400">
+                No measurement requests yet.
+              </div>
+            `;
+          }
+          return;
+        }
+
+        items.forEach((item) => {
+          const row = document.createElement('tr');
+          row.className = 'border-t border-gray-100 dark:border-gray-800';
+          row.innerHTML = `
+            <td class="py-4">
+              <div class="font-medium text-gray-800 dark:text-white/90">${item.name || 'Customer'}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">${formatDate(item.createdAt)}</div>
+            </td>
+            <td class="py-4">
+              <div class="text-xs text-gray-500 dark:text-gray-400">${item.email || '-'}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">${item.phone || '-'}</div>
+            </td>
+            <td class="py-4">
+              <div class="text-xs font-medium text-gray-700 dark:text-gray-200">${item.serviceType || 'Measurement'}</div>
+            </td>
+            <td class="py-4">
+              <div class="text-xs text-gray-500 dark:text-gray-400">${item.preferredDate || '-'}</div>
+            </td>
+            <td class="py-4">
+              <div class="text-xs text-gray-500 dark:text-gray-400">${item.preferredTime || '-'}</div>
+            </td>
+            <td class="py-4">
+              <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${statusStyles[item.status] || statusStyles.Draft}">
+                ${item.status || 'Pending'}
+              </span>
+            </td>
+            <td class="py-4">
+              <div class="max-w-[360px] text-xs leading-6 text-gray-500 dark:text-gray-400">${item.notes || '-'}</div>
+            </td>
+          `;
+          appointmentTableBody?.appendChild(row);
+
+          const mobileCard = document.createElement('article');
+          mobileCard.className = 'rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-white/[0.03]';
+          mobileCard.innerHTML = `
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <div class="text-sm font-medium text-gray-800 dark:text-white/90">${item.name || 'Customer'}</div>
+                <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">${item.email || '-'}</div>
+                <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">${item.phone || '-'}</div>
+              </div>
+              <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${statusStyles[item.status] || statusStyles.Draft}">
+                ${item.status || 'Pending'}
+              </span>
+            </div>
+            <div class="mt-3 grid grid-cols-2 gap-3 text-xs text-gray-500 dark:text-gray-400">
+              <div><span class="block font-medium text-gray-700 dark:text-gray-200">Service</span>${item.serviceType || 'Measurement'}</div>
+              <div><span class="block font-medium text-gray-700 dark:text-gray-200">Date</span>${item.preferredDate || '-'}</div>
+              <div><span class="block font-medium text-gray-700 dark:text-gray-200">Time</span>${item.preferredTime || '-'}</div>
+              <div><span class="block font-medium text-gray-700 dark:text-gray-200">Created</span>${formatDate(item.createdAt)}</div>
+            </div>
+            <p class="mt-3 text-xs leading-6 text-gray-500 dark:text-gray-400">${item.notes || '-'}</p>
+          `;
+          appointmentMobileList?.appendChild(mobileCard);
+        });
+      };
+
+      const loadAppointments = async () => {
+        try {
+          const res = await fetch(APPOINTMENT_API_BASE, { cache: 'no-store', credentials: 'include' });
+          if (!res.ok) throw new Error(`Failed to load appointments (${res.status})`);
+          appointments = await res.json();
+          renderAppointments(appointments);
+        } catch (error) {
+          const fallback = error?.message?.includes('Failed to load appointments')
+            ? 'Could not load measurement requests.'
+            : 'Database is not reachable. Start the server first.';
+          if (appointmentTableBody) {
+            appointmentTableBody.innerHTML = `<tr><td class="py-4 text-gray-500 dark:text-gray-400" colspan="7">${fallback}</td></tr>`;
+          }
+          if (appointmentMobileList) {
+            appointmentMobileList.innerHTML = `<div class="rounded-2xl border border-gray-200 bg-white p-4 text-sm text-gray-500 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400">${fallback}</div>`;
           }
         }
       };
