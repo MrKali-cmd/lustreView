@@ -1140,15 +1140,24 @@
             position: absolute;
             top: 14px;
             left: 14px;
-            padding: 8px 12px;
+            display: inline-flex;
+            align-items: center;
+            max-width: calc(100% - 28px);
+            padding: 7px 11px;
             border-radius: 999px;
             font-size: 0.73rem;
             font-weight: 700;
             letter-spacing: 0.04em;
-            color: #fff;
-            background: rgba(29, 27, 23, 0.78);
-            border: 1px solid rgba(255, 255, 255, 0.24);
+            color: #2f281e;
+            background: rgba(255, 250, 240, 0.76);
+            border: 1px solid rgba(201, 169, 98, 0.22);
+            box-shadow: 0 10px 22px rgba(43, 37, 26, 0.10);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             z-index: 3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .product-actions {
