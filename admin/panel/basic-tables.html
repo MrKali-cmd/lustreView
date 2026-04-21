@@ -1465,9 +1465,18 @@
 
       const reviewApi = {
         list: async () => {
-          const res = await fetch(ADMIN_REVIEW_API_BASE, { cache: 'no-store' });
-          if (!res.ok) throw new Error(`Failed to load reviews (${res.status})`);
-          return res.json();
+          const endpoints = [ADMIN_REVIEW_API_BASE, REVIEW_API_BASE];
+          let lastError = null;
+          for (const endpoint of endpoints) {
+            try {
+              const res = await fetch(endpoint, { cache: 'no-store' });
+              if (!res.ok) throw new Error(`Failed to load reviews (${res.status})`);
+              return res.json();
+            } catch (error) {
+              lastError = error;
+            }
+          }
+          throw lastError || new Error('Failed to load reviews');
         },
         update: async (id, payload) => {
           const res = await fetch(ADMIN_REVIEW_API_BASE, {
