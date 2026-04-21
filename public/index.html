@@ -515,6 +515,18 @@
             <p class="section-desc">After installation, we share a review link so customers can rate the work and leave a note about the experience.</p>
         </div>
 
+        <div class="review-share-panel">
+            <div>
+                <strong>Customer review link</strong>
+                <p>Copy this link and send it after installation so customers land directly on the review form.</p>
+            </div>
+            <div class="review-share-actions">
+                <input id="review-link-input" type="text" readonly>
+                <button type="button" id="review-link-copy" class="btn-primary">Copy Link</button>
+            </div>
+        </div>
+
+        <div id="leave-review" class="review-anchor"></div>
         <form id="review-form" class="review-form review-form-premium review-form-centered">
             <h3>Leave a Review</h3>
             <div class="review-form-grid">
@@ -730,6 +742,9 @@
         const reviewEditHint = document.getElementById('review-edit-hint');
         const reviewsTickerLeft = document.getElementById('reviews-ticker-left');
         const reviewsTickerRight = document.getElementById('reviews-ticker-right');
+        const reviewLinkInput = document.getElementById('review-link-input');
+        const reviewLinkCopy = document.getElementById('review-link-copy');
+        const reviewAnchor = document.getElementById('leave-review');
         const ratingPicker = document.getElementById('rating-picker');
         const reviewTokensKey = 'luxe-review-manage-tokens';
         let reviewItems = [];
@@ -752,6 +767,30 @@
                 toast.style.transform = 'translateX(-50%) translateY(0)';
             }, 2000);
         };
+
+        const setReviewShareLink = () => {
+            if (!reviewLinkInput) return;
+            const url = new URL(window.location.href);
+            url.hash = 'leave-review';
+            reviewLinkInput.value = url.toString();
+        };
+
+        reviewLinkCopy?.addEventListener('click', async () => {
+            if (!reviewLinkInput?.value) return;
+            try {
+                await navigator.clipboard.writeText(reviewLinkInput.value);
+                showActionToast('Review link copied');
+            } catch {
+                reviewLinkInput.select();
+                document.execCommand('copy');
+                showActionToast('Review link copied');
+            }
+        });
+
+        if (window.location.hash === '#leave-review') {
+            setTimeout(() => reviewAnchor?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+        }
+        setReviewShareLink();
 
         let currentSlide = 0;
         let heroAutoplayTimer = null;
