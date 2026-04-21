@@ -8,6 +8,8 @@ const adminAuth = require('./_lib/admin-auth');
 const mail = require('./_lib/mail');
 const stripeLib = require('./_lib/stripe');
 
+const path = require('path');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -17,6 +19,9 @@ const sql = String(process.env.DATABASE_URL || '').trim()
 
 app.use(cors());
 app.use(express.json());
+
+// Serve static frontend files from the public directory
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 const sendJson = (res, status, payload) => {
   res.statusCode = status;
@@ -1090,7 +1095,49 @@ app.post('/api/appointments', async (req, res) => {
         row.updatedAt
       ]
     );
-    sendJson(res, 201, row);
+
+    const notifyTo = String(process.env.APPOINTMENT_NOTIFY_EMAIL || process.env.ADMIN_NOTIFICATION_EMAIL || 'info@lustreview.com').trim();
+    const emailResult = await mail.sendMail({
+      to: notifyTo,
+      subject: `New measurement request from ${row.name}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+          <h2>New measurement request</h2>
+          <p><strong>Name:</strong> ${row.name}</p>
+          <p><strong>Email:</strong> ${row.email}</p>
+          <p><strong>Phone:</strong> ${row.phone}</p>
+          <p><strong>Service:</strong> ${row.serviceType}</p>
+          <p><strong>Preferred date:</strong> ${row.preferredDate}</p>
+          <p><strong>Preferred time:</strong> ${row.preferredTime}</p>
+          <p><strong>Notes:</strong> ${row.notes || '—'}</p>
+          <p><strong>Source:</strong> ${row.source}</p>
+          <p><strong>Request ID:</strong> ${row.id}</p>
+        </div>
+      `,
+      text: [
+        'New measurement request',
+        `Name: ${row.name}`,
+        `Email: ${row.email}`,
+        `Phone: ${row.phone}`,
+        `Service: ${row.serviceType}`,
+        `Preferred date: ${row.preferredDate}`,
+        `Preferred time: ${row.preferredTime}`,
+        `Notes: ${row.notes || '—'}`,
+        `Source: ${row.source}`,
+        `Request ID: ${row.id}`
+      ].join('\n')
+    });
+
+    if (!emailResult.delivered) {
+      // eslint-disable-next-line no-console
+      console.warn('[appointments] notification email not delivered:', emailResult.reason);
+    }
+
+    sendJson(res, 201, {
+      ...row,
+      notificationEmailDelivered: Boolean(emailResult.delivered),
+      notificationEmailReason: emailResult.reason || ''
+    });
   } catch (error) {
     sendJson(res, 500, { error: error.message || 'Failed to save appointment' });
   }
