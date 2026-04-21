@@ -655,6 +655,22 @@ body::after {
             max-width: 700px;
         }
 
+        .hero-sale-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 18px;
+            padding: 10px 16px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, rgba(201,169,98,0.96), rgba(255,223,149,0.92));
+            color: #111;
+            font-size: 0.82rem;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            box-shadow: 0 16px 30px rgba(201,169,98,0.2);
+        }
+
         .p-subtitle {
             display: block;
             color: var(--primary);
@@ -2541,9 +2557,14 @@ body::after {
                 width: 0;
             }
 
-            .header-btn { display: none; }
+            .header-btn {
+                display: inline-flex;
+                padding: 10px 16px;
+                font-size: 12px;
+                min-width: auto;
+            }
             #main-header .header-actions {
-                gap: 18px;
+                gap: 12px;
             }
 
             #main-header .action-item i {

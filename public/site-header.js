@@ -63,61 +63,6 @@
         </header>
     `;
 
-    // Floating promo (more noticeable than a thin header bar).
-    const promoDismissed = (() => {
-        try {
-            return window.localStorage.getItem('luxe_promo_50_dismissed') === '1';
-        } catch {
-            return false;
-        }
-    })();
-
-    // Show promo only on public pages (home + collection). Avoid distracting cart/checkout/wishlist.
-    const promoAllowed = page === 'home' || page === 'collection';
-
-    if (promoAllowed && !promoDismissed) {
-        const promo = document.createElement('div');
-        promo.className = 'promo-float';
-        promo.setAttribute('role', 'status');
-        promo.setAttribute('aria-label', 'Promotion');
-        promo.innerHTML = `
-            <div class="promo-float__glow" aria-hidden="true"></div>
-            <div class="promo-float__card">
-                <div class="promo-float__badge">50% OFF</div>
-                <div class="promo-float__meta">
-                    <div class="promo-float__title">Limited-Time Sale</div>
-                    <div class="promo-float__text">Save big on select zebra blinds.</div>
-                </div>
-                <a class="promo-float__cta" href="zebra-collection.html">Shop Sale</a>
-                <button class="promo-float__close" type="button" aria-label="Dismiss promotion" data-promo-close>&times;</button>
-            </div>
-        `;
-        document.body.appendChild(promo);
-
-        const headerEl = document.getElementById('main-header');
-        const setPromoTop = () => {
-            const headerHeight = headerEl ? headerEl.getBoundingClientRect().height : 72;
-            // Keep it under the header, centered, with a bit of breathing room.
-            promo.style.top = `${Math.max(12, headerHeight + 14)}px`;
-        };
-
-        setPromoTop();
-        window.addEventListener('resize', setPromoTop);
-
-        // Animate in once per load.
-        requestAnimationFrame(() => promo.classList.add('is-visible'));
-
-        promo.querySelector('[data-promo-close]')?.addEventListener('click', () => {
-            try {
-                window.localStorage.setItem('luxe_promo_50_dismissed', '1');
-            } catch {
-                // ignore
-            }
-            promo.classList.remove('is-visible');
-            setTimeout(() => promo.remove(), 250);
-        });
-    }
-
     const header = mountPoint.querySelector('#main-header');
     if (!header) return;
 
