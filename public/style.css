@@ -2440,22 +2440,21 @@ body::after {
         }
 
         .rev-bubble-text-row {
-            position: relative;
             display: block;
             min-width: 0;
-            line-height: 1.38;
-            margin-top: 2px;
-            padding-right: 24px;
-            padding-bottom: 10px;
-            min-height: calc(1.38em * 2 + 10px);
+            line-height: 1.52;
+            margin-top: 10px;
+            padding-right: 0;
+            padding-bottom: 0;
+            min-height: 0;
         }
 
         .rev-bubble-stars {
             color: #c9a962;
             letter-spacing: 1px;
-            font-size: 0.76rem;
+            font-size: 0.8rem;
             flex: none;
-            margin-top: 1px;
+            margin-top: 2px;
         }
 
         .rev-bubble-text {
@@ -2463,47 +2462,15 @@ body::after {
             display: block;
             overflow: hidden;
             white-space: normal;
-            line-height: 1.38;
+            line-height: 1.52;
             overflow-wrap: anywhere;
-            max-height: calc(1.38em * 2);
-        }
-
-        .rev-bubble-more {
-            position: absolute;
-            right: 0;
-            bottom: 10px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            appearance: none;
-            border: 0;
-            background: transparent;
-            color: var(--primary);
-            font: inherit;
-            font-weight: 900;
-            letter-spacing: 0.06em;
-            line-height: 1;
-            padding: 0;
-            min-width: 18px;
-            min-height: 18px;
-            cursor: pointer;
-            transition: transform 0.25s ease, opacity 0.25s ease;
-            opacity: 0.9;
-            touch-action: manipulation;
-            text-decoration: underline;
-            text-decoration-thickness: 1.5px;
-            text-underline-offset: 3px;
-        }
-
-        .rev-bubble-more:hover {
-            transform: translateY(-1px);
-            opacity: 1;
+            max-height: calc(1.52em * 3);
         }
 
         .rev-bubble-name {
             color: rgba(255,255,255,0.75);
             flex: none;
-            font-size: 0.92rem;
+            font-size: 1rem;
             font-weight: 700;
             letter-spacing: 0.01em;
         }
@@ -2512,15 +2479,15 @@ body::after {
             background: rgba(201, 169, 98, 0.08);
             border: 1px solid rgba(201, 169, 98, 0.22);
             color: #fff;
-            padding: 18px 18px 16px;
+            padding: 22px 22px 20px;
             border-radius: 24px;
-            font-size: 0.9rem;
-            width: clamp(290px, 31vw, 392px);
-            min-height: 168px;
-            max-height: 196px;
+            font-size: 0.94rem;
+            width: clamp(320px, 34vw, 460px);
+            min-height: 220px;
+            max-height: 250px;
             white-space: normal;
             overflow: hidden;
-            transition: transform 0.35s ease, background-color 0.3s ease, color 0.3s ease, max-height 0.45s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+            transition: transform 0.35s ease, background-color 0.3s ease, color 0.3s ease, box-shadow 0.35s ease, border-color 0.35s ease;
             position: relative;
             cursor: pointer;
             flex: 0 0 auto;
@@ -2537,42 +2504,13 @@ body::after {
 
         .review-card {
             opacity: 0.72;
-            transform: scale(0.94);
+            transform: scale(0.92);
         }
 
         .review-card.is-active {
             opacity: 1;
-            transform: scale(1.045);
+            transform: scale(1.08);
             box-shadow: 0 22px 42px rgba(0,0,0,0.16);
-        }
-
-        .rev-bubble.is-expanded {
-            background: rgba(255, 251, 241, 0.96);
-            color: #1b1409;
-            border-color: rgba(201, 169, 98, 0.42);
-            box-shadow: 0 22px 40px rgba(24, 18, 10, 0.16);
-            transform: translateY(2px) scale(1.01);
-            max-height: var(--bubble-expanded-height, 999px);
-            z-index: 2;
-        }
-
-        .rev-bubble.is-expanded .rev-bubble-stars,
-        .rev-bubble.is-expanded .rev-bubble-name {
-            color: #6f5425;
-        }
-
-        .rev-bubble.is-expanded .rev-bubble-text {
-            display: block;
-            overflow: visible;
-            max-height: none;
-        }
-
-        .rev-bubble.is-expanded .rev-bubble-more {
-            display: inline-flex;
-        }
-
-        .reviews-carousel-stage.reviews-carousel-paused {
-            cursor: default;
         }
 
         .rev-header {
@@ -3135,12 +3073,12 @@ body::after {
             }
 
             .rev-bubble {
-                padding: 14px 12px 12px;
-                font-size: 0.78rem;
-                width: min(84vw, 296px);
-                min-height: 156px;
-                max-height: 184px;
-                gap: 10px;
+                padding: 16px 14px 14px;
+                font-size: 0.82rem;
+                width: min(86vw, 310px);
+                min-height: 188px;
+                max-height: 214px;
+                gap: 11px;
             }
 
             .rev-bubble-avatar {
@@ -3149,22 +3087,8 @@ body::after {
                 font-size: 0.66rem;
             }
 
-            .rev-bubble.is-expanded {
-                max-height: var(--bubble-expanded-height, 999px);
-            }
-
-            .rev-bubble.is-expanded .rev-bubble-more {
-                display: inline-flex;
-                opacity: 0.95;
-            }
-
             .rev-bubble-text-row {
-                padding-bottom: 12px;
-                min-height: calc(1.38em * 2 + 12px);
-            }
-
-            .rev-bubble-more {
-                bottom: 12px;
+                margin-top: 8px;
             }
 
             .reviews-premium-layout {
