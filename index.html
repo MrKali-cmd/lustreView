@@ -499,16 +499,22 @@
         </div>
 
         <div class="news-ticker-reviews">
-            <div class="ticker-title">
-                <span>Customer Experiences</span>
+            <div class="ticker-header">
+                <div class="ticker-title">
+                    <span>Customer Experiences</span>
+                </div>
+                <div class="reviews-nav">
+                    <button type="button" class="reviews-nav-btn" id="reviews-prev" aria-label="Previous review">
+                        <span aria-hidden="true">‹</span>
+                    </button>
+                    <button type="button" class="reviews-nav-btn" id="reviews-next" aria-label="Next review">
+                        <span aria-hidden="true">›</span>
+                    </button>
+                </div>
             </div>
 
-            <div class="ticker-wrapper">
-                <div id="reviews-ticker-left" class="ticker-track track-left" aria-hidden="true">
-                    <div class="rev-bubble">Loading reviews...</div>
-                </div>
-
-                <div id="reviews-ticker-right" class="ticker-track track-right" aria-hidden="true">
+            <div class="reviews-carousel-stage" id="reviews-carousel-stage">
+                <div id="reviews-carousel-track" class="reviews-carousel-track" aria-live="polite">
                     <div class="rev-bubble">Loading reviews...</div>
                 </div>
             </div>
@@ -728,14 +734,17 @@
         const reviewSubmitBtn = document.getElementById('review-submit-btn');
         const reviewCancelEditBtn = document.getElementById('review-cancel-edit');
         const reviewEditHint = document.getElementById('review-edit-hint');
-        const reviewsTickerLeft = document.getElementById('reviews-ticker-left');
-        const reviewsTickerRight = document.getElementById('reviews-ticker-right');
-        const reviewsTickerWrapper = document.querySelector('.news-ticker-reviews .ticker-wrapper');
+        const reviewsCarouselStage = document.getElementById('reviews-carousel-stage');
+        const reviewsCarouselTrack = document.getElementById('reviews-carousel-track');
+        const reviewsPrevBtn = document.getElementById('reviews-prev');
+        const reviewsNextBtn = document.getElementById('reviews-next');
         const reviewAnchor = document.getElementById('leave-review');
         const ratingPicker = document.getElementById('rating-picker');
         const reviewTokensKey = 'luxe-review-manage-tokens';
         let reviewItems = [];
-        let reviewBubbleSeq = 0;
+        let reviewCarouselIndex = 0;
+        let reviewCarouselTimer = null;
+        let reviewCarouselScrollRaf = 0;
         let reviewRating = 5;
         let editingReview = null;
 
@@ -891,7 +900,6 @@
 
         const renderReviews = (items = []) => {
             reviewItems = Array.isArray(items) ? items : [];
-            reviewBubbleSeq = 0;
             const fallbackBubbles = [
                 '"کیفیت عالی و نصب سریع" - سارا',
                 '"پرده‌های زبرا واقعاً خونم رو عوض کرد" - علی',
@@ -917,15 +925,15 @@
                 return initials || 'C';
             };
 
-            const makeBubble = (review, index, trackName) => {
-                const reviewKey = review?.id || review?._id || review?.key || `bubble-${trackName}-${index}`;
+            const makeBubble = (review, index) => {
+                const reviewKey = review?.id || review?._id || review?.key || `bubble-${index}`;
                 const stars = '★★★★★'.slice(0, Math.round(review.rating || 0)).padEnd(5, '☆');
                 const name = escapeHtml(review.customerName || 'Customer');
                 const rawComment = normalizeText(review.comment || '');
                 const comment = escapeHtml(truncateText(rawComment, 88));
                 const isTruncated = rawComment.length > 88;
                 return `
-                    <div class="rev-bubble" data-review-bubble="${escapeHtml(reviewKey)}" data-full-comment="${escapeHtml(rawComment)}" data-short-comment="${escapeHtml(comment)}" aria-expanded="false">
+                    <div class="rev-bubble review-card" data-review-bubble="${escapeHtml(reviewKey)}" data-full-comment="${escapeHtml(rawComment)}" data-short-comment="${escapeHtml(comment)}" data-review-index="${index}" aria-expanded="false">
                         <span class="rev-bubble-avatar" aria-hidden="true">${escapeHtml(getInitials(review.customerName || 'Customer'))}</span>
                         <span class="rev-bubble-body">
                             <span class="rev-bubble-name">${name}</span>
@@ -938,49 +946,120 @@
                 `;
             };
 
-            const buildTrack = (itemsList, fallbackOffset = 0, trackName = 'left') => {
-                const source = itemsList.length ? itemsList : fallbackBubbles.map((text, idx) => ({
-                    id: `fallback-${fallbackOffset + idx}`,
-                    customerName: text.split(' - ').pop()?.replace(/["“”]/g, '') || 'Customer',
-                    comment: text.replace(/^\"|\"$/g, '').replace(/\s-\s.*$/, ''),
-                    rating: 5
-                }));
-                const doubled = [...source, ...source];
-                return doubled.map((review, index) => makeBubble(review, index, trackName)).join('');
-            };
+            const source = reviewItems.length ? reviewItems : fallbackBubbles.map((text, idx) => ({
+                id: `fallback-${idx}`,
+                customerName: text.split(' - ').pop()?.replace(/["“”]/g, '') || 'Customer',
+                comment: text.replace(/^\"|\"$/g, '').replace(/\s-\s.*$/, ''),
+                rating: 5
+            }));
 
-            if (reviewsTickerLeft) {
-                reviewsTickerLeft.innerHTML = buildTrack(reviewItems, 0, 'left');
+            if (reviewsCarouselTrack) {
+                reviewsCarouselTrack.innerHTML = source.map((review, index) => makeBubble(review, index)).join('');
             }
-            if (reviewsTickerRight) {
-                reviewsTickerRight.innerHTML = buildTrack([...reviewItems].slice().reverse(), reviewItems.length, 'right');
-            }
+
+            reviewCarouselIndex = source.length > 1 ? Math.min(1, source.length - 1) : 0;
             bindReviewBubbleEvents();
+            applyReviewCarouselState();
+            syncExpandedReviewState();
 
             window.requestAnimationFrame(() => {
-                updateTickerSpeeds();
+                scrollToReviewCard(reviewCarouselIndex, 'auto');
+                startReviewAutoplay();
             });
-            syncExpandedReviewState();
         };
 
-        const updateTickerSpeeds = () => {
-            [reviewsTickerLeft, reviewsTickerRight].filter(Boolean).forEach((track) => {
-                const width = Math.max(track.scrollWidth || 0, track.getBoundingClientRect().width || 0);
-                const duration = Math.min(96, Math.max(48, Math.round(width / 18)));
-                track.style.animationDuration = `${duration}s`;
+        const getReviewCards = () => Array.from(reviewsCarouselTrack?.querySelectorAll('.review-card') || []);
+
+        const applyReviewCarouselState = () => {
+            const cards = getReviewCards();
+            cards.forEach((card, index) => {
+                card.classList.toggle('is-active', index === reviewCarouselIndex);
             });
         };
 
         const syncExpandedReviewState = () => {
-            if (!reviewsTickerWrapper) return;
-            const isExpanded = Boolean(reviewsTickerWrapper.querySelector('.rev-bubble.is-expanded'));
-            reviewsTickerWrapper.classList.toggle('reviews-is-paused', isExpanded);
+            if (!reviewsCarouselStage) return;
+            const isExpanded = Boolean(reviewsCarouselTrack?.querySelector('.review-card.is-expanded'));
+            reviewsCarouselStage.classList.toggle('reviews-carousel-paused', isExpanded);
         };
+
+        const scrollToReviewCard = (index, behavior = 'smooth') => {
+            const cards = getReviewCards();
+            const card = cards[index];
+            if (!card || !reviewsCarouselStage) return;
+            reviewCarouselIndex = index;
+            applyReviewCarouselState();
+            card.scrollIntoView({ behavior, inline: 'center', block: 'nearest' });
+        };
+
+        const goToReview = (index, behavior = 'smooth') => {
+            const cards = getReviewCards();
+            if (!cards.length) return;
+            const nextIndex = ((index % cards.length) + cards.length) % cards.length;
+            reviewCarouselIndex = nextIndex;
+            scrollToReviewCard(nextIndex, behavior);
+        };
+
+        const stopReviewAutoplay = () => {
+            if (reviewCarouselTimer) {
+                clearInterval(reviewCarouselTimer);
+                reviewCarouselTimer = null;
+            }
+        };
+
+        const startReviewAutoplay = () => {
+            stopReviewAutoplay();
+            const cards = getReviewCards();
+            if (cards.length <= 1) return;
+            reviewCarouselTimer = setInterval(() => {
+                if (reviewsCarouselTrack?.querySelector('.review-card.is-expanded')) return;
+                goToReview(reviewCarouselIndex + 1, 'smooth');
+            }, 4200);
+        };
+
+        const syncCarouselFromScroll = () => {
+            if (!reviewsCarouselStage || !reviewsCarouselTrack) return;
+            const cards = getReviewCards();
+            if (!cards.length) return;
+            const stageRect = reviewsCarouselStage.getBoundingClientRect();
+            const stageCenter = stageRect.left + stageRect.width / 2;
+            let bestIndex = 0;
+            let bestDistance = Infinity;
+            cards.forEach((card, index) => {
+                const rect = card.getBoundingClientRect();
+                const center = rect.left + rect.width / 2;
+                const distance = Math.abs(center - stageCenter);
+                if (distance < bestDistance) {
+                    bestDistance = distance;
+                    bestIndex = index;
+                }
+            });
+            reviewCarouselIndex = bestIndex;
+            applyReviewCarouselState();
+        };
+
+        reviewsCarouselStage?.addEventListener('scroll', () => {
+            if (reviewCarouselScrollRaf) cancelAnimationFrame(reviewCarouselScrollRaf);
+            reviewCarouselScrollRaf = requestAnimationFrame(syncCarouselFromScroll);
+        });
+
+        reviewsCarouselStage?.addEventListener('mouseenter', stopReviewAutoplay);
+        reviewsCarouselStage?.addEventListener('mouseleave', startReviewAutoplay);
+
+        reviewsPrevBtn?.addEventListener('click', () => {
+            goToReview(reviewCarouselIndex - 1, 'smooth');
+            startReviewAutoplay();
+        });
+
+        reviewsNextBtn?.addEventListener('click', () => {
+            goToReview(reviewCarouselIndex + 1, 'smooth');
+            startReviewAutoplay();
+        });
 
         const expandReviewBubble = (bubble) => {
             if (!bubble) return;
             if (bubble.classList.contains('is-expanded')) return;
-            reviewsTickerWrapper?.querySelectorAll('.rev-bubble.is-expanded').forEach((expandedBubble) => {
+            reviewsCarouselTrack?.querySelectorAll('.review-card.is-expanded').forEach((expandedBubble) => {
                 if (expandedBubble !== bubble) collapseReviewBubble(expandedBubble);
             });
             const fullComment = bubble.dataset.fullComment || '';
@@ -989,10 +1068,10 @@
             bubble.style.removeProperty('--bubble-expanded-height');
             bubble.classList.add('is-expanded');
             bubble.setAttribute('aria-expanded', 'true');
+            stopReviewAutoplay();
             requestAnimationFrame(() => {
                 const measuredHeight = Math.ceil(bubble.scrollHeight || bubble.getBoundingClientRect().height || 0);
                 bubble.style.setProperty('--bubble-expanded-height', `${Math.max(140, measuredHeight)}px`);
-                syncExpandedReviewState();
             });
         };
 
@@ -1004,6 +1083,7 @@
             bubble.classList.remove('is-expanded');
             bubble.style.removeProperty('--bubble-expanded-height');
             bubble.setAttribute('aria-expanded', 'false');
+            startReviewAutoplay();
             syncExpandedReviewState();
         };
 
@@ -1011,10 +1091,11 @@
             if (!bubble) return;
             if (bubble.classList.contains('is-expanded')) collapseReviewBubble(bubble);
             else expandReviewBubble(bubble);
+            syncExpandedReviewState();
         };
 
         const bindReviewBubbleEvents = () => {
-            reviewsTickerWrapper?.querySelectorAll('.rev-bubble').forEach((bubble) => {
+            reviewsCarouselTrack?.querySelectorAll('.review-card').forEach((bubble) => {
                 if (bubble.dataset.boundReviewBubble === '1') return;
                 bubble.dataset.boundReviewBubble = '1';
                 bubble.addEventListener('click', (event) => {
@@ -1030,29 +1111,20 @@
             });
         };
 
-        reviewsTickerWrapper?.addEventListener('click', (event) => {
-            const bubble = event.target.closest('.rev-bubble');
-            if (!bubble || !reviewsTickerWrapper.contains(bubble)) return;
-            const trigger = event.target.closest('.rev-bubble-more');
-            if (!trigger) return;
-            event.preventDefault();
-            event.stopPropagation();
-            toggleReviewBubble(bubble);
-        });
-
         const loadReviews = async () => {
-            if (!reviewsTickerLeft || !reviewsTickerRight) return;
+            if (!reviewsCarouselTrack) return;
             try {
                 const response = await fetch(`${API_BASE}/reviews`, { cache: 'no-store' });
                 if (!response.ok) throw new Error('Failed to load reviews');
                 const data = await readApiResponse(response);
                 renderReviews(Array.isArray(data) ? data.slice(0, 6) : []);
             } catch {
-                const fallback = '<div class="rev-bubble">Reviews are temporarily unavailable.</div>'.repeat(4);
-                reviewsTickerLeft.innerHTML = fallback;
-                reviewsTickerRight.innerHTML = fallback;
+                const fallback = '<div class="rev-bubble review-card">Reviews are temporarily unavailable.</div>'.repeat(4);
+                reviewsCarouselTrack.innerHTML = fallback;
+                bindReviewBubbleEvents();
+                applyReviewCarouselState();
                 window.requestAnimationFrame(() => {
-                    updateTickerSpeeds();
+                    scrollToReviewCard(0, 'auto');
                 });
             }
         };
