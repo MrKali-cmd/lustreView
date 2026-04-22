@@ -2496,7 +2496,7 @@ body::after {
         }
 
         .rev-bubble.is-expanded .rev-bubble-more {
-            color: #6f5425;
+            display: none;
         }
 
         .news-ticker-reviews.reviews-is-paused .ticker-track {

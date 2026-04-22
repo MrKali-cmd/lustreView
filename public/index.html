@@ -925,7 +925,7 @@
                 const comment = escapeHtml(truncateText(rawComment, 88));
                 const isTruncated = rawComment.length > 88;
                 return `
-                    <div class="rev-bubble" data-review-bubble="${escapeHtml(reviewKey)}" aria-expanded="false">
+                    <div class="rev-bubble" data-review-bubble="${escapeHtml(reviewKey)}" data-full-comment="${escapeHtml(rawComment)}" data-short-comment="${escapeHtml(comment)}" aria-expanded="false">
                         <span class="rev-bubble-avatar" aria-hidden="true">${escapeHtml(getInitials(review.customerName || 'Customer'))}</span>
                         <span class="rev-bubble-body">
                             <span class="rev-bubble-stars">${stars}</span>
@@ -983,14 +983,25 @@
             reviewsTickerWrapper?.querySelectorAll('.rev-bubble.is-expanded').forEach((expandedBubble) => {
                 if (expandedBubble === bubble) return;
                 expandedBubble.classList.remove('is-expanded');
+                const collapsedText = expandedBubble.dataset.shortComment || '';
+                const collapsedComment = expandedBubble.querySelector('.rev-bubble-text');
+                if (collapsedComment) collapsedComment.textContent = collapsedText;
                 expandedBubble.style.removeProperty('--bubble-expanded-height');
                 expandedBubble.setAttribute('aria-expanded', 'false');
             });
             if (!isExpanded) {
-                const body = bubble.querySelector('.rev-bubble-body');
-                const measuredHeight = Math.ceil((body?.scrollHeight || bubble.scrollHeight || 0) + 24);
-                bubble.style.setProperty('--bubble-expanded-height', `${Math.max(140, measuredHeight)}px`);
+                const fullComment = bubble.dataset.fullComment || '';
+                const commentNode = bubble.querySelector('.rev-bubble-text');
+                if (commentNode) commentNode.textContent = fullComment;
+                bubble.style.removeProperty('--bubble-expanded-height');
+                requestAnimationFrame(() => {
+                    const measuredHeight = Math.ceil(bubble.scrollHeight || bubble.getBoundingClientRect().height || 0);
+                    bubble.style.setProperty('--bubble-expanded-height', `${Math.max(140, measuredHeight)}px`);
+                });
             } else {
+                const collapsedText = bubble.dataset.shortComment || '';
+                const commentNode = bubble.querySelector('.rev-bubble-text');
+                if (commentNode) commentNode.textContent = collapsedText;
                 bubble.style.removeProperty('--bubble-expanded-height');
             }
             bubble.classList.toggle('is-expanded', !isExpanded);
