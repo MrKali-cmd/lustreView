@@ -930,8 +930,7 @@
                         <span class="rev-bubble-body">
                             <span class="rev-bubble-stars">${stars}</span>
                             <span class="rev-bubble-text-row">
-                                <span class="rev-bubble-text">${comment}</span>
-                                ${isTruncated ? '<button type="button" class="rev-bubble-more" aria-label="Expand review" title="Show full review">...</button>' : ''}
+                                <span class="rev-bubble-text">${comment}</span>${isTruncated ? '<button type="button" class="rev-bubble-more" aria-label="Expand review" title="Show full review">...</button>' : ''}
                             </span>
                             <span class="rev-bubble-name">${name}</span>
                         </span>
@@ -956,6 +955,7 @@
             if (reviewsTickerRight) {
                 reviewsTickerRight.innerHTML = buildTrack([...reviewItems].slice().reverse(), reviewItems.length, 'right');
             }
+            bindReviewBubbleEvents();
 
             window.requestAnimationFrame(() => {
                 updateTickerSpeeds();
@@ -977,43 +977,64 @@
             reviewsTickerWrapper.classList.toggle('reviews-is-paused', isExpanded);
         };
 
-        const toggleReviewBubble = (bubble) => {
+        const expandReviewBubble = (bubble) => {
             if (!bubble) return;
-            const isExpanded = bubble.classList.contains('is-expanded');
+            if (bubble.classList.contains('is-expanded')) return;
             reviewsTickerWrapper?.querySelectorAll('.rev-bubble.is-expanded').forEach((expandedBubble) => {
-                if (expandedBubble === bubble) return;
-                expandedBubble.classList.remove('is-expanded');
-                const collapsedText = expandedBubble.dataset.shortComment || '';
-                const collapsedComment = expandedBubble.querySelector('.rev-bubble-text');
-                if (collapsedComment) collapsedComment.textContent = collapsedText;
-                expandedBubble.style.removeProperty('--bubble-expanded-height');
-                expandedBubble.setAttribute('aria-expanded', 'false');
+                if (expandedBubble !== bubble) collapseReviewBubble(expandedBubble);
             });
-            if (!isExpanded) {
-                const fullComment = bubble.dataset.fullComment || '';
-                const commentNode = bubble.querySelector('.rev-bubble-text');
-                if (commentNode) commentNode.textContent = fullComment;
-                bubble.style.removeProperty('--bubble-expanded-height');
-                requestAnimationFrame(() => {
-                    const measuredHeight = Math.ceil(bubble.scrollHeight || bubble.getBoundingClientRect().height || 0);
-                    bubble.style.setProperty('--bubble-expanded-height', `${Math.max(140, measuredHeight)}px`);
-                });
-            } else {
-                const collapsedText = bubble.dataset.shortComment || '';
-                const commentNode = bubble.querySelector('.rev-bubble-text');
-                if (commentNode) commentNode.textContent = collapsedText;
-                bubble.style.removeProperty('--bubble-expanded-height');
-            }
-            bubble.classList.toggle('is-expanded', !isExpanded);
-            bubble.setAttribute('aria-expanded', String(!isExpanded));
+            const fullComment = bubble.dataset.fullComment || '';
+            const commentNode = bubble.querySelector('.rev-bubble-text');
+            if (commentNode) commentNode.textContent = fullComment;
+            bubble.style.removeProperty('--bubble-expanded-height');
+            bubble.classList.add('is-expanded');
+            bubble.setAttribute('aria-expanded', 'true');
+            requestAnimationFrame(() => {
+                const measuredHeight = Math.ceil(bubble.scrollHeight || bubble.getBoundingClientRect().height || 0);
+                bubble.style.setProperty('--bubble-expanded-height', `${Math.max(140, measuredHeight)}px`);
+                syncExpandedReviewState();
+            });
+        };
+
+        const collapseReviewBubble = (bubble) => {
+            if (!bubble || !bubble.classList.contains('is-expanded')) return;
+            const collapsedText = bubble.dataset.shortComment || '';
+            const commentNode = bubble.querySelector('.rev-bubble-text');
+            if (commentNode) commentNode.textContent = collapsedText;
+            bubble.classList.remove('is-expanded');
+            bubble.style.removeProperty('--bubble-expanded-height');
+            bubble.setAttribute('aria-expanded', 'false');
             syncExpandedReviewState();
         };
 
-        reviewsTickerWrapper?.addEventListener('click', (event) => {
-            const trigger = event.target.closest('.rev-bubble-more');
-            if (!trigger || !reviewsTickerWrapper.contains(trigger)) return;
-            const bubble = trigger.closest('.rev-bubble');
+        const toggleReviewBubble = (bubble) => {
             if (!bubble) return;
+            if (bubble.classList.contains('is-expanded')) collapseReviewBubble(bubble);
+            else expandReviewBubble(bubble);
+        };
+
+        const bindReviewBubbleEvents = () => {
+            reviewsTickerWrapper?.querySelectorAll('.rev-bubble').forEach((bubble) => {
+                if (bubble.dataset.boundReviewBubble === '1') return;
+                bubble.dataset.boundReviewBubble = '1';
+                bubble.addEventListener('click', (event) => {
+                    const trigger = event.target.closest('.rev-bubble-more');
+                    if (!trigger) return;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    toggleReviewBubble(bubble);
+                });
+                bubble.addEventListener('mouseleave', () => {
+                    collapseReviewBubble(bubble);
+                });
+            });
+        };
+
+        reviewsTickerWrapper?.addEventListener('click', (event) => {
+            const bubble = event.target.closest('.rev-bubble');
+            if (!bubble || !reviewsTickerWrapper.contains(bubble)) return;
+            const trigger = event.target.closest('.rev-bubble-more');
+            if (!trigger) return;
             event.preventDefault();
             event.stopPropagation();
             toggleReviewBubble(bubble);

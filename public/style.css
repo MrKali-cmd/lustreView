@@ -2389,10 +2389,9 @@ body::after {
         }
 
         .rev-bubble-text-row {
-            display: flex;
-            align-items: flex-start;
-            gap: 6px;
+            display: block;
             min-width: 0;
+            line-height: 1.38;
         }
 
         .rev-bubble-stars {
@@ -2404,18 +2403,14 @@ body::after {
 
         .rev-bubble-text {
             color: inherit;
-            display: -webkit-box;
-            -webkit-box-orient: vertical;
-            -webkit-line-clamp: 2;
-            overflow: hidden;
+            display: inline;
             white-space: normal;
             line-height: 1.38;
             overflow-wrap: anywhere;
-            min-height: calc(1.38em * 2);
         }
 
         .rev-bubble-more {
-            flex: none;
+            display: inline;
             appearance: none;
             border: 0;
             background: transparent;
@@ -2424,7 +2419,7 @@ body::after {
             font-weight: 900;
             letter-spacing: 0.08em;
             line-height: 1;
-            padding: 0;
+            padding: 0 0 0 2px;
             cursor: pointer;
             transition: transform 0.25s ease, opacity 0.25s ease;
             opacity: 0.9;
@@ -2489,10 +2484,7 @@ body::after {
         }
 
         .rev-bubble.is-expanded .rev-bubble-text {
-            display: block;
-            -webkit-line-clamp: unset;
-            overflow: visible;
-            min-height: 0;
+            display: inline;
         }
 
         .rev-bubble.is-expanded .rev-bubble-more {
