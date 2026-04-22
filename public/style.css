@@ -2423,6 +2423,7 @@ body::after {
             cursor: pointer;
             transition: transform 0.25s ease, opacity 0.25s ease;
             opacity: 0.9;
+            touch-action: manipulation;
         }
 
         .rev-bubble-more:hover {
@@ -3074,6 +3075,11 @@ body::after {
 
             .rev-bubble.is-expanded {
                 max-height: var(--bubble-expanded-height, 999px);
+            }
+
+            .rev-bubble.is-expanded .rev-bubble-more {
+                display: inline;
+                opacity: 0.95;
             }
 
             .reviews-premium-layout {
