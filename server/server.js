@@ -157,10 +157,14 @@ const ensureTables = async () => {
       notes TEXT DEFAULT '',
       status TEXT NOT NULL,
       source TEXT DEFAULT 'website',
+      reply_message TEXT DEFAULT '',
+      replied_at TEXT DEFAULT '',
       created_at TIMESTAMPTZ NOT NULL,
       updated_at TIMESTAMPTZ NOT NULL
     )
   `);
+  await sql.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS reply_message TEXT DEFAULT ''`);
+  await sql.query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS replied_at TEXT DEFAULT ''`);
 
   await sql.query(`
     CREATE TABLE IF NOT EXISTS reviews (
@@ -340,6 +344,8 @@ const mapAppointment = (row) => ({
   notes: row.notes || '',
   status: row.status,
   source: row.source,
+  replyMessage: row.reply_message || '',
+  repliedAt: row.replied_at || '',
   createdAt: row.created_at,
   updatedAt: row.updated_at
 });
@@ -1140,6 +1146,127 @@ app.post('/api/appointments', async (req, res) => {
     });
   } catch (error) {
     sendJson(res, 500, { error: error.message || 'Failed to save appointment' });
+  }
+});
+
+app.patch('/api/appointments/:id', async (req, res) => {
+  if (handleOptions(req, res)) return;
+  if (!requireAdmin(req, res)) return;
+  if (!(await requireDatabase(req, res))) return;
+
+  const payload = req.body && typeof req.body === 'object' ? req.body : {};
+  const id = String(req.params.id || '').trim();
+  const nextStatus = String(payload.status || '').trim();
+  if (!id) {
+    sendJson(res, 400, { error: 'Missing appointment id' });
+    return;
+  }
+
+  try {
+    const rows = await sql.query('SELECT * FROM appointments WHERE id = $1', [id]);
+    const existing = rows?.[0];
+    if (!existing) {
+      sendJson(res, 404, { error: 'Appointment not found' });
+      return;
+    }
+
+    const updated = {
+      ...existing,
+      status: nextStatus || existing.status,
+      updated_at: new Date().toISOString()
+    };
+
+    await sql.query(
+      `UPDATE appointments SET status=$1, updated_at=$2 WHERE id=$3`,
+      [updated.status, updated.updated_at, id]
+    );
+
+    sendJson(res, 200, mapAppointment(updated));
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || 'Failed to update appointment' });
+  }
+});
+
+app.post('/api/appointments/:id/reply', async (req, res) => {
+  if (handleOptions(req, res)) return;
+  if (!requireAdmin(req, res)) return;
+  if (!(await requireDatabase(req, res))) return;
+
+  const payload = req.body && typeof req.body === 'object' ? req.body : {};
+  const id = String(req.params.id || '').trim();
+  const replyMessage = String(payload.reply || payload.replyMessage || '').trim();
+  const subject = String(payload.subject || 'Reply from Luxe Drapes').trim();
+
+  if (!id) {
+    sendJson(res, 400, { error: 'Missing appointment id' });
+    return;
+  }
+
+  if (!replyMessage) {
+    sendJson(res, 400, { error: 'Reply text is required' });
+    return;
+  }
+
+  try {
+    const rows = await sql.query('SELECT * FROM appointments WHERE id = $1', [id]);
+    const existing = rows?.[0];
+    if (!existing) {
+      sendJson(res, 404, { error: 'Appointment not found' });
+      return;
+    }
+
+    let emailDelivered = false;
+    let emailWarning = mail.getMailConfigError();
+
+    if (!emailWarning) {
+      try {
+        await mail.sendMail({
+          to: String(existing.email || '').trim(),
+          subject,
+          html: `<div style="font-family: Arial, sans-serif; line-height: 1.6;"><p style="white-space: pre-wrap;">${replyMessage}</p></div>`,
+          text: replyMessage
+        });
+        emailDelivered = true;
+      } catch (error) {
+        emailWarning = error?.message || 'Failed to send email';
+      }
+    }
+
+    const updated = {
+      ...existing,
+      status: 'Replied',
+      reply_message: replyMessage,
+      replied_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    await sql.query(
+      `UPDATE appointments SET status=$1, reply_message=$2, replied_at=$3, updated_at=$4 WHERE id=$5`,
+      [updated.status, updated.reply_message, updated.replied_at, updated.updated_at, id]
+    );
+
+    sendJson(res, 200, { ...mapAppointment(updated), emailDelivered, emailWarning });
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || 'Failed to save appointment reply' });
+  }
+});
+
+app.delete('/api/appointments/:id', async (req, res) => {
+  if (handleOptions(req, res)) return;
+  if (!requireAdmin(req, res)) return;
+  if (!(await requireDatabase(req, res))) return;
+
+  const id = String(req.params.id || '').trim();
+  if (!id) {
+    sendJson(res, 400, { error: 'Missing appointment id' });
+    return;
+  }
+
+  try {
+    await sql.query('DELETE FROM appointments WHERE id = $1', [id]);
+    sendJson(res, 204, null);
+  } catch (error) {
+    sendJson(res, 500, { error: error.message || 'Failed to delete appointment' });
   }
 });
 

@@ -1204,6 +1204,7 @@
                           <th class="pb-3 font-medium">Preferred Time</th>
                           <th class="pb-3 font-medium">Status</th>
                           <th class="pb-3 font-medium">Notes</th>
+                          <th class="pb-3 font-medium">Actions</th>
                         </tr>
                       </thead>
                       <tbody id="appointments-table" class="text-gray-700 dark:text-gray-200"></tbody>
@@ -1275,6 +1276,12 @@
         Approved: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10',
         Hidden: 'bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300',
         Pending: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10'
+      };
+
+      const appointmentStatusStyles = {
+        Pending: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10',
+        Replied: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10',
+        Done: 'bg-sky-50 text-sky-700 dark:bg-sky-500/10'
       };
 
       const formatDate = (value) => {
@@ -1539,6 +1546,44 @@
         }
       };
 
+      const appointmentApi = {
+        list: async () => {
+          const res = await fetch(APPOINTMENT_API_BASE, { cache: 'no-store', credentials: 'include' });
+          if (!res.ok) throw new Error(`Failed to load appointments (${res.status})`);
+          return res.json();
+        },
+        updateStatus: async (id, status) => {
+          const res = await fetch(`${APPOINTMENT_API_BASE}/${id}`, {
+            method: 'PATCH',
+            cache: 'no-store',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status })
+          });
+          if (!res.ok) throw new Error(`Failed to update appointment (${res.status})`);
+          return res.json();
+        },
+        reply: async (id, reply, subject) => {
+          const res = await fetch(`${APPOINTMENT_API_BASE}/${id}/reply`, {
+            method: 'POST',
+            cache: 'no-store',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reply, subject })
+          });
+          if (!res.ok) throw new Error(`Failed to reply to appointment (${res.status})`);
+          return res.json();
+        },
+        remove: async (id) => {
+          const res = await fetch(`${APPOINTMENT_API_BASE}/${id}`, {
+            method: 'DELETE',
+            cache: 'no-store',
+            credentials: 'include'
+          });
+          if (!res.ok && res.status !== 204) throw new Error(`Failed to delete appointment (${res.status})`);
+        }
+      };
+
       let collections = [];
       let reviews = [];
       let appointments = [];
@@ -1582,7 +1627,7 @@
           if (appointmentTableBody) {
             appointmentTableBody.innerHTML = `
               <tr class="border-t border-gray-100 dark:border-gray-800">
-                <td class="py-4 text-gray-500 dark:text-gray-400" colspan="7">No measurement requests yet.</td>
+                <td class="py-4 text-gray-500 dark:text-gray-400" colspan="8">No measurement requests yet.</td>
               </tr>
             `;
           }
@@ -1618,12 +1663,19 @@
               <div class="text-xs text-gray-500 dark:text-gray-400">${item.preferredTime || '-'}</div>
             </td>
             <td class="py-4">
-              <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${statusStyles[item.status] || statusStyles.Draft}">
+              <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${appointmentStatusStyles[item.status] || appointmentStatusStyles.Pending}">
                 ${item.status || 'Pending'}
               </span>
             </td>
             <td class="py-4">
               <div class="max-w-[360px] text-xs leading-6 text-gray-500 dark:text-gray-400">${item.notes || '-'}</div>
+            </td>
+            <td class="py-4">
+              <div class="flex flex-wrap gap-2">
+                <button data-appointment-action="reply" data-id="${item.id}" class="rounded-md bg-brand-500 px-3 py-1 text-xs font-medium text-white hover:bg-brand-600">Reply</button>
+                <button data-appointment-action="done" data-id="${item.id}" class="rounded-md border border-gray-200 px-3 py-1 text-xs font-medium hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-white/5">Done</button>
+                <button data-appointment-action="delete" data-id="${item.id}" class="rounded-md bg-gray-900 px-3 py-1 text-xs font-medium text-white hover:bg-gray-800">Delete</button>
+              </div>
             </td>
           `;
           appointmentTableBody?.appendChild(row);
@@ -1637,7 +1689,7 @@
                 <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">${item.email || '-'}</div>
                 <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">${item.phone || '-'}</div>
               </div>
-              <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${statusStyles[item.status] || statusStyles.Draft}">
+              <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${appointmentStatusStyles[item.status] || appointmentStatusStyles.Pending}">
                 ${item.status || 'Pending'}
               </span>
             </div>
@@ -1648,6 +1700,11 @@
               <div><span class="block font-medium text-gray-700 dark:text-gray-200">Created</span>${formatDate(item.createdAt)}</div>
             </div>
             <p class="mt-3 text-xs leading-6 text-gray-500 dark:text-gray-400">${item.notes || '-'}</p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <button data-appointment-action="reply" data-id="${item.id}" class="rounded-md bg-brand-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-600">Reply</button>
+              <button data-appointment-action="done" data-id="${item.id}" class="rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-white/5">Done</button>
+              <button data-appointment-action="delete" data-id="${item.id}" class="rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800">Delete</button>
+            </div>
           `;
           appointmentMobileList?.appendChild(mobileCard);
         });
@@ -1655,9 +1712,7 @@
 
       const loadAppointments = async () => {
         try {
-          const res = await fetch(APPOINTMENT_API_BASE, { cache: 'no-store', credentials: 'include' });
-          if (!res.ok) throw new Error(`Failed to load appointments (${res.status})`);
-          appointments = await res.json();
+          appointments = await appointmentApi.list();
           renderAppointments(appointments);
         } catch (error) {
           const fallback = error?.message?.includes('Failed to load appointments')
@@ -1783,6 +1838,54 @@
           }
         }
       });
+
+      const handleAppointmentAction = async (event) => {
+        const button = event.target.closest('button[data-appointment-action]');
+        if (!button) return;
+
+        const id = button.dataset.id;
+        const action = button.dataset.appointmentAction;
+        const target = appointments.find((item) => item.id === id);
+        if (!target) return;
+
+        if (action === 'reply') {
+          const reply = window.prompt(`Reply to ${target.name || 'customer'}`, target.replyMessage || '');
+          if (reply === null) return;
+          const trimmed = reply.trim();
+          if (!trimmed) {
+            alert('Reply text is required.');
+            return;
+          }
+          try {
+            await appointmentApi.reply(id, trimmed, `Reply from Luxe Drapes`);
+            await loadAppointments();
+          } catch (error) {
+            alert('Could not send reply.');
+          }
+        }
+
+        if (action === 'done') {
+          try {
+            await appointmentApi.updateStatus(id, target.status === 'Done' ? 'Pending' : 'Done');
+            await loadAppointments();
+          } catch (error) {
+            alert('Could not update request.');
+          }
+        }
+
+        if (action === 'delete') {
+          if (!confirm('Delete this measurement request?')) return;
+          try {
+            await appointmentApi.remove(id);
+            await loadAppointments();
+          } catch (error) {
+            alert('Could not delete request.');
+          }
+        }
+      };
+
+      appointmentTableBody?.addEventListener('click', handleAppointmentAction);
+      appointmentMobileList?.addEventListener('click', handleAppointmentAction);
 
       addButton.addEventListener('click', () => {
         resetForm();

@@ -1,11 +1,12 @@
 const nodemailer = require('nodemailer');
 
+const DEFAULT_SITE_FROM = 'Luxe Drapes <info@lustreview.com>';
+
 const getMailConfigError = () => {
   const missing = [];
   if (!process.env.SMTP_HOST) missing.push('SMTP_HOST');
   if (!process.env.SMTP_USER) missing.push('SMTP_USER');
   if (!process.env.SMTP_PASS) missing.push('SMTP_PASS');
-  if (!process.env.MAIL_FROM) missing.push('MAIL_FROM');
 
   if (missing.length) {
     return `SMTP is not configured. Missing: ${missing.join(', ')}.`;
@@ -46,14 +47,10 @@ const sendMail = async ({ to, subject, html, text }) => {
     };
   }
 
-  const fromAddress = process.env.MAIL_FROM || process.env.SMTP_USER;
-  if (!fromAddress) {
-    return {
-      delivered: false,
-      reason: 'MAIL_FROM is not configured'
-    };
-  }
-
+  const configuredFrom = String(process.env.MAIL_FROM || '').trim();
+  const fromAddress = configuredFrom && !configuredFrom.toLowerCase().includes('gmail.com')
+    ? configuredFrom
+    : DEFAULT_SITE_FROM;
   await transport.sendMail({
     from: fromAddress,
     to,
@@ -72,4 +69,3 @@ module.exports = {
   getMailConfigError,
   sendMail
 };
-
