@@ -2355,6 +2355,7 @@ body::after {
             display: flex;
             width: max-content;
             gap: 14px;
+            align-items: flex-start;
             will-change: transform;
         }
 
@@ -2387,6 +2388,13 @@ body::after {
             flex: 1;
         }
 
+        .rev-bubble-text-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            min-width: 0;
+        }
+
         .rev-bubble-stars {
             color: #c9a962;
             letter-spacing: 1px;
@@ -2404,6 +2412,27 @@ body::after {
             line-height: 1.38;
             overflow-wrap: anywhere;
             min-height: calc(1.38em * 2);
+        }
+
+        .rev-bubble-more {
+            flex: none;
+            appearance: none;
+            border: 0;
+            background: transparent;
+            color: var(--primary);
+            font: inherit;
+            font-weight: 900;
+            letter-spacing: 0.06em;
+            line-height: 1;
+            padding: 0 2px 0 0;
+            cursor: pointer;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+            opacity: 0.9;
+        }
+
+        .rev-bubble-more:hover {
+            transform: translateY(-1px);
+            opacity: 1;
         }
 
         .rev-bubble-name {
@@ -2430,14 +2459,48 @@ body::after {
             font-size: 0.9rem;
             width: clamp(220px, 34vw, 330px);
             min-height: 76px;
+            max-height: 96px;
             white-space: normal;
-            transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+            overflow: hidden;
+            transition: transform 0.35s ease, background-color 0.3s ease, color 0.3s ease, max-height 0.45s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+            position: relative;
+            cursor: pointer;
         }
 
         .rev-bubble:hover {
             background: var(--primary);
             color: #111;
             transform: scale(1.04);
+        }
+
+        .rev-bubble.is-expanded {
+            background: rgba(255, 251, 241, 0.96);
+            color: #1b1409;
+            border-color: rgba(201, 169, 98, 0.42);
+            box-shadow: 0 22px 40px rgba(24, 18, 10, 0.16);
+            transform: translateY(2px) scale(1.01);
+            max-height: 999px;
+            z-index: 2;
+        }
+
+        .rev-bubble.is-expanded .rev-bubble-stars,
+        .rev-bubble.is-expanded .rev-bubble-name {
+            color: #6f5425;
+        }
+
+        .rev-bubble.is-expanded .rev-bubble-text {
+            display: block;
+            -webkit-line-clamp: unset;
+            overflow: visible;
+            min-height: 0;
+        }
+
+        .rev-bubble.is-expanded .rev-bubble-more {
+            color: #6f5425;
+        }
+
+        .news-ticker-reviews.reviews-is-paused .ticker-track {
+            animation-play-state: paused;
         }
 
         .ticker-wrapper:hover .ticker-track {
@@ -3007,6 +3070,7 @@ body::after {
                 font-size: 0.78rem;
                 width: min(78vw, 270px);
                 min-height: 70px;
+                max-height: 90px;
                 gap: 10px;
             }
 
@@ -3014,6 +3078,10 @@ body::after {
                 width: 30px;
                 height: 30px;
                 font-size: 0.66rem;
+            }
+
+            .rev-bubble.is-expanded {
+                max-height: 999px;
             }
 
             .reviews-premium-layout {
