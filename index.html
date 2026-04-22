@@ -924,6 +924,18 @@
             if (reviewsTickerRight) {
                 reviewsTickerRight.innerHTML = buildTrack([...reviewItems].slice().reverse(), reviewItems.length);
             }
+
+            window.requestAnimationFrame(() => {
+                updateTickerSpeeds();
+            });
+        };
+
+        const updateTickerSpeeds = () => {
+            [reviewsTickerLeft, reviewsTickerRight].filter(Boolean).forEach((track) => {
+                const width = Math.max(track.scrollWidth || 0, track.getBoundingClientRect().width || 0);
+                const duration = Math.min(96, Math.max(48, Math.round(width / 18)));
+                track.style.animationDuration = `${duration}s`;
+            });
         };
 
         const loadReviews = async () => {
@@ -937,6 +949,9 @@
                 const fallback = '<div class="rev-bubble">Reviews are temporarily unavailable.</div>'.repeat(4);
                 reviewsTickerLeft.innerHTML = fallback;
                 reviewsTickerRight.innerHTML = fallback;
+                window.requestAnimationFrame(() => {
+                    updateTickerSpeeds();
+                });
             }
         };
         const getSavedState = () => (window.LuxeState?.getSnapshot ? window.LuxeState.getSnapshot() : { cart: [], wishlist: [], lastOrder: null });
