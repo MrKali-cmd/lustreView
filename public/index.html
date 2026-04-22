@@ -896,13 +896,34 @@
                 '"طراحی مدرن و پارچه‌های باکیفیت" - رضایی'
             ];
 
+            const truncateText = (text, max = 92) => {
+                const value = String(text || '').replace(/\s+/g, ' ').trim();
+                if (value.length <= max) return value;
+                return `${value.slice(0, max - 1).trim()}…`;
+            };
+
+            const getInitials = (name) => {
+                const parts = String(name || 'Customer')
+                    .replace(/[^a-zA-Z0-9\s]/g, ' ')
+                    .trim()
+                    .split(/\s+/)
+                    .filter(Boolean);
+                const initials = parts.slice(0, 2).map((part) => part[0]).join('').toUpperCase();
+                return initials || 'C';
+            };
+
             const makeBubble = (review, index) => {
                 const stars = '★★★★★'.slice(0, Math.round(review.rating || 0)).padEnd(5, '☆');
+                const name = escapeHtml(review.customerName || 'Customer');
+                const comment = escapeHtml(truncateText(review.comment || '', 88));
                 return `
                     <div class="rev-bubble">
-                        <span class="rev-bubble-stars">${stars}</span>
-                        <span class="rev-bubble-text">${escapeHtml(review.comment || '')}</span>
-                        <span class="rev-bubble-name">- ${escapeHtml(review.customerName || 'Customer')}</span>
+                        <span class="rev-bubble-avatar" aria-hidden="true">${escapeHtml(getInitials(review.customerName || 'Customer'))}</span>
+                        <span class="rev-bubble-body">
+                            <span class="rev-bubble-stars">${stars}</span>
+                            <span class="rev-bubble-text">${comment}</span>
+                            <span class="rev-bubble-name">${name}</span>
+                        </span>
                     </div>
                 `;
             };
