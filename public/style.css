@@ -2392,6 +2392,7 @@ body::after {
             display: block;
             min-width: 0;
             line-height: 1.38;
+            margin-top: 1px;
         }
 
         .rev-bubble-stars {
@@ -2417,13 +2418,16 @@ body::after {
             color: var(--primary);
             font: inherit;
             font-weight: 900;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.06em;
             line-height: 1;
-            padding: 0 0 0 2px;
+            padding: 0 0 1px 3px;
             cursor: pointer;
             transition: transform 0.25s ease, opacity 0.25s ease;
             opacity: 0.9;
             touch-action: manipulation;
+            text-decoration: underline;
+            text-decoration-thickness: 1.5px;
+            text-underline-offset: 3px;
         }
 
         .rev-bubble-more:hover {
@@ -2434,8 +2438,9 @@ body::after {
         .rev-bubble-name {
             color: rgba(255,255,255,0.75);
             flex: none;
-            font-size: 0.78rem;
+            font-size: 0.88rem;
             font-weight: 700;
+            letter-spacing: 0.01em;
         }
 
         .track-left {

@@ -928,11 +928,11 @@
                     <div class="rev-bubble" data-review-bubble="${escapeHtml(reviewKey)}" data-full-comment="${escapeHtml(rawComment)}" data-short-comment="${escapeHtml(comment)}" aria-expanded="false">
                         <span class="rev-bubble-avatar" aria-hidden="true">${escapeHtml(getInitials(review.customerName || 'Customer'))}</span>
                         <span class="rev-bubble-body">
-                            <span class="rev-bubble-stars">${stars}</span>
+                            <span class="rev-bubble-name">${name}</span>
                             <span class="rev-bubble-text-row">
                                 <span class="rev-bubble-text">${comment}</span>${isTruncated ? '<button type="button" class="rev-bubble-more" aria-label="Expand review" title="Show full review">...</button>' : ''}
                             </span>
-                            <span class="rev-bubble-name">${name}</span>
+                            <span class="rev-bubble-stars">${stars}</span>
                         </span>
                     </div>
                 `;
