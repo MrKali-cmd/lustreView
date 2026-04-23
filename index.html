@@ -907,12 +907,6 @@
                 '"طراحی مدرن و پارچه‌های باکیفیت" - رضایی'
             ];
 
-            const truncateText = (text, max = 92) => {
-                const value = String(text || '').replace(/\s+/g, ' ').trim();
-                if (value.length <= max) return value;
-                return value.slice(0, max).trim();
-            };
-
             const normalizeText = (text) => String(text || '').replace(/\s+/g, ' ').trim();
 
             const getInitials = (name) => {
@@ -930,7 +924,7 @@
                 const stars = '★★★★★'.slice(0, Math.round(review.rating || 0)).padEnd(5, '☆');
                 const name = escapeHtml(review.customerName || 'Customer');
                 const rawComment = normalizeText(review.comment || '');
-                const comment = escapeHtml(truncateText(rawComment, 180));
+                const comment = escapeHtml(rawComment);
                 return `
                     <div class="rev-bubble review-card" data-review-bubble="${escapeHtml(reviewKey)}" data-review-index="${index}">
                         <span class="rev-bubble-avatar" aria-hidden="true">${escapeHtml(getInitials(review.customerName || 'Customer'))}</span>
