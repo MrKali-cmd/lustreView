@@ -930,7 +930,7 @@
                 const stars = '★★★★★'.slice(0, Math.round(review.rating || 0)).padEnd(5, '☆');
                 const name = escapeHtml(review.customerName || 'Customer');
                 const rawComment = normalizeText(review.comment || '');
-                const comment = escapeHtml(truncateText(rawComment, 154));
+                const comment = escapeHtml(truncateText(rawComment, 120));
                 return `
                     <div class="rev-bubble review-card" data-review-bubble="${escapeHtml(reviewKey)}" data-review-index="${index}">
                         <span class="rev-bubble-avatar" aria-hidden="true">${escapeHtml(getInitials(review.customerName || 'Customer'))}</span>
@@ -960,7 +960,6 @@
             applyReviewCarouselState();
 
             window.requestAnimationFrame(() => {
-                scrollToReviewCard(reviewCarouselIndex, 'auto');
                 startReviewAutoplay();
             });
         };
@@ -980,7 +979,14 @@
             if (!card || !reviewsCarouselStage) return;
             reviewCarouselIndex = index;
             applyReviewCarouselState();
-            card.scrollIntoView({ behavior, inline: 'center', block: 'nearest' });
+            const cardRect = card.getBoundingClientRect();
+            const leftOffset = card.offsetLeft - (reviewsCarouselStage.clientWidth - card.offsetWidth) / 2;
+            const targetLeft = Math.max(0, leftOffset);
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            reviewsCarouselStage.scrollTo({
+                left: targetLeft,
+                behavior: prefersReducedMotion ? 'auto' : behavior
+            });
         };
 
         const goToReview = (index, behavior = 'smooth') => {
@@ -1057,9 +1063,6 @@
                 const fallback = '<div class="rev-bubble review-card">Reviews are temporarily unavailable.</div>'.repeat(4);
                 reviewsCarouselTrack.innerHTML = fallback;
                 applyReviewCarouselState();
-                window.requestAnimationFrame(() => {
-                    scrollToReviewCard(0, 'auto');
-                });
             }
         };
         const getSavedState = () => (window.LuxeState?.getSnapshot ? window.LuxeState.getSnapshot() : { cart: [], wishlist: [], lastOrder: null });
