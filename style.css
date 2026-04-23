@@ -1858,6 +1858,83 @@ body::after {
             text-decoration: none;
         }
 
+        .about-video-block {
+            margin: 36px 0 28px;
+            padding: 22px;
+            border-radius: 26px;
+            background: rgba(17, 17, 17, 0.95);
+            border: 1px solid rgba(201, 169, 98, 0.18);
+            box-shadow: 0 22px 56px rgba(0, 0, 0, 0.12);
+        }
+
+        .about-video-block-head {
+            text-align: right;
+            margin-bottom: 18px;
+        }
+
+        .about-video-block-head .section-tag {
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        .about-video-block-head h3 {
+            color: #f7f1df;
+            font-size: 30px;
+            font-weight: 800;
+            line-height: 1.15;
+        }
+
+        .about-video-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .about-video-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(201, 169, 98, 0.12);
+            border-radius: 22px;
+            overflow: hidden;
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .about-video-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(201, 169, 98, 0.28);
+            box-shadow: 0 20px 44px rgba(0, 0, 0, 0.14);
+        }
+
+        .about-video-frame {
+            position: relative;
+            aspect-ratio: 16 / 9;
+            background: #000;
+        }
+
+        .about-video-frame video {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+            background: #000;
+        }
+
+        .about-video-meta {
+            padding: 14px 14px 16px;
+        }
+
+        .about-video-meta h4 {
+            color: #f7f1df;
+            font-size: 16px;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .about-video-meta p {
+            color: rgba(247, 241, 223, 0.72);
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
         .about-btn:hover {
             background: var(--primary-dark);
             transform: translateY(-4px);
@@ -3463,6 +3540,38 @@ body::after {
                 padding: 14px 28px;
                 font-size: 14px;
             }
+
+            .about-video-block {
+                margin: 28px 0 22px;
+                padding: 16px;
+                border-radius: 20px;
+            }
+
+            .about-video-block-head {
+                margin-bottom: 14px;
+            }
+
+            .about-video-block-head h3 {
+                font-size: 22px;
+            }
+
+            .about-video-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .about-video-meta {
+                padding: 12px 12px 14px;
+            }
+
+            .about-video-meta h4 {
+                font-size: 15px;
+            }
+
+            .about-video-meta p {
+                font-size: 12px;
+            }
+
             .testimonials {
                 padding-top: 88px;
                 padding-bottom: 88px;
