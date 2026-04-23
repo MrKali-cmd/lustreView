@@ -930,7 +930,7 @@
                 const stars = '★★★★★'.slice(0, Math.round(review.rating || 0)).padEnd(5, '☆');
                 const name = escapeHtml(review.customerName || 'Customer');
                 const rawComment = normalizeText(review.comment || '');
-                const comment = escapeHtml(truncateText(rawComment, 120));
+                const comment = escapeHtml(truncateText(rawComment, 180));
                 return `
                     <div class="rev-bubble review-card" data-review-bubble="${escapeHtml(reviewKey)}" data-review-index="${index}">
                         <span class="rev-bubble-avatar" aria-hidden="true">${escapeHtml(getInitials(review.customerName || 'Customer'))}</span>

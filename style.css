@@ -2464,7 +2464,7 @@ body::after {
             white-space: normal;
             line-height: 1.52;
             overflow-wrap: anywhere;
-            max-height: calc(1.52em * 3);
+            max-height: calc(1.52em * 4);
         }
 
         .rev-bubble-name {
