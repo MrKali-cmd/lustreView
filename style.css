@@ -2443,7 +2443,7 @@ body::after {
             display: block;
             min-width: 0;
             line-height: 1.52;
-            margin-top: 8px;
+            margin-top: 6px;
             padding-right: 0;
             padding-bottom: 0;
             min-height: 0;
@@ -2479,12 +2479,12 @@ body::after {
             background: rgba(201, 169, 98, 0.08);
             border: 1px solid rgba(201, 169, 98, 0.22);
             color: #fff;
-            padding: 22px 22px 10px;
+            padding: 24px 22px 8px;
             border-radius: 24px;
             font-size: 0.94rem;
-            width: clamp(320px, 34vw, 460px);
-            min-height: 220px;
-            max-height: 250px;
+            width: clamp(340px, 36vw, 480px);
+            min-height: 240px;
+            max-height: 276px;
             white-space: normal;
             overflow: hidden;
             transition: transform 0.35s ease, background-color 0.3s ease, color 0.3s ease, box-shadow 0.35s ease, border-color 0.35s ease;
@@ -3073,11 +3073,11 @@ body::after {
             }
 
             .rev-bubble {
-                padding: 16px 14px 8px;
+                padding: 18px 14px 6px;
                 font-size: 0.82rem;
-                width: min(86vw, 310px);
-                min-height: 188px;
-                max-height: 214px;
+                width: min(88vw, 326px);
+                min-height: 202px;
+                max-height: 228px;
                 gap: 11px;
             }
 
@@ -3088,7 +3088,7 @@ body::after {
             }
 
             .rev-bubble-text-row {
-                margin-top: 5px;
+                margin-top: 4px;
             }
 
             .reviews-premium-layout {
