@@ -871,18 +871,18 @@ body::after {
 
         @media (max-width: 768px) {
             .hero-premium {
-                height: auto;
-                min-height: 700px;
+                height: 74svh;
+                min-height: 610px;
             }
 
             .p-slide {
-                padding: 112px 6% 136px;
+                padding: 104px 6% 116px;
                 align-items: flex-start;
             }
 
             .p-slide-content {
                 width: 100%;
-                padding-bottom: 96px;
+                padding-bottom: 68px;
             }
 
             .hero-sale-slide {
@@ -890,50 +890,60 @@ body::after {
             }
 
             .hero-sale-slide .p-slide-content {
-                margin-top: 8px;
+                margin-top: 0;
+            }
+
+            .hero-sale-pill {
+                padding: 12px 22px;
+                margin-bottom: 18px;
+                font-size: 0.82rem;
+                letter-spacing: 0.08em;
+                line-height: 1.12;
             }
 
             .p-subtitle {
-                font-size: 0.72rem;
-                letter-spacing: 0.28em;
-                margin-bottom: 16px;
+                font-size: 0.68rem;
+                letter-spacing: 0.24em;
+                margin-bottom: 12px;
             }
 
             .p-title {
-                font-size: clamp(2.2rem, 10vw, 3.5rem);
-                margin-bottom: 16px;
+                font-size: clamp(1.95rem, 9vw, 2.95rem);
+                margin-bottom: 12px;
             }
 
             .p-desc {
-                font-size: 0.9rem;
-                line-height: 1.6;
-                margin-bottom: 32px;
+                font-size: 0.84rem;
+                line-height: 1.5;
+                margin-bottom: 20px;
+                max-width: 92%;
             }
 
             .p-actions {
                 width: 100%;
                 flex-direction: column;
-                gap: 14px;
+                gap: 10px;
             }
 
             .p-btn-gold,
             .p-btn-outline {
                 width: 100%;
                 min-width: 0;
-                padding: 15px 24px;
+                padding: 13px 20px;
+                font-size: 0.9rem;
             }
 
             .p-slider-nav {
                 right: 6%;
                 left: 6%;
-                bottom: 28px;
+                bottom: 20px;
                 justify-content: space-between;
                 gap: 12px;
             }
 
             .nav-arrow {
-                width: 44px;
-                height: 44px;
+                width: 42px;
+                height: 42px;
             }
 
             .nav-count {
