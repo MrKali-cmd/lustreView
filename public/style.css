@@ -176,6 +176,10 @@ body::after {
             box-shadow: 0 8px 24px rgba(201,169,98,0.25);
         }
 
+        .mobile-free-estimate {
+            display: none;
+        }
+
         /* Floating promo (more noticeable, doesn't fight the header layout). */
         .promo-float {
             position: fixed;
@@ -2982,7 +2986,7 @@ body::after {
             }
 
             .header-btn {
-                display: inline-flex !important;
+                display: none !important;
                 padding: 7px 10px;
                 font-size: 10px;
                 min-width: auto;
@@ -2995,6 +2999,33 @@ body::after {
                 gap: 6px;
                 flex-wrap: nowrap;
                 flex: 0 0 auto;
+            }
+
+            .mobile-free-estimate {
+                display: inline-flex;
+                position: fixed;
+                left: 50%;
+                bottom: calc(14px + env(safe-area-inset-bottom));
+                transform: translateX(-50%);
+                z-index: 1300;
+                align-items: center;
+                justify-content: center;
+                padding: 12px 18px;
+                min-width: 170px;
+                border-radius: 999px;
+                background: linear-gradient(135deg, #111, #252525);
+                color: #fff;
+                font-size: 12px;
+                font-weight: 700;
+                text-decoration: none;
+                box-shadow: 0 16px 32px rgba(0,0,0,0.22);
+                border: 1px solid rgba(201,169,98,0.3);
+                backdrop-filter: blur(10px);
+            }
+
+            .mobile-free-estimate:hover {
+                color: var(--primary);
+                border-color: var(--primary);
             }
 
             #main-header .action-item i {
