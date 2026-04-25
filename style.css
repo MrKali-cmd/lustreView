@@ -876,8 +876,12 @@ body::after {
             }
 
             .p-slide {
-                padding: 132px 6% 100px;
+                padding: 148px 6% 100px;
                 align-items: flex-end;
+            }
+
+            .hero-sale-slide .p-slide-content {
+                padding-top: 14px;
             }
 
             .p-subtitle {
@@ -3015,6 +3019,11 @@ body::after {
                 color: #fff;
                 font-weight: 700;
                 text-decoration: none;
+            }
+
+            .nav-links .mobile-only-estimate-link {
+                color: #fff;
+                background: #111;
             }
 
             #main-header .action-item i {
