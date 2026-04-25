@@ -871,21 +871,26 @@ body::after {
 
         @media (max-width: 768px) {
             .hero-premium {
-                height: 74svh;
-                min-height: 560px;
+                height: auto;
+                min-height: 700px;
             }
 
             .p-slide {
-                padding: 120px 6% 100px;
-                align-items: flex-end;
+                padding: 112px 6% 136px;
+                align-items: flex-start;
             }
 
-            .hero-sale-slide .p-slide-content {
-                margin-top: 36px;
+            .p-slide-content {
+                width: 100%;
+                padding-bottom: 96px;
             }
 
             .hero-sale-slide {
                 align-items: flex-start;
+            }
+
+            .hero-sale-slide .p-slide-content {
+                margin-top: 8px;
             }
 
             .p-subtitle {
@@ -921,7 +926,7 @@ body::after {
             .p-slider-nav {
                 right: 6%;
                 left: 6%;
-                bottom: 38px;
+                bottom: 28px;
                 justify-content: space-between;
                 gap: 12px;
             }
