@@ -1561,19 +1561,19 @@
                 width: 100%;
                 padding-inline: 14px;
                 box-sizing: border-box;
-                display: flex !important;
-                flex-wrap: wrap;
-                gap: 12px;
+                display: grid !important;
+                grid-template-columns: 1fr !important;
+                gap: 14px;
             }
 
             .products-grid > .product-card {
-                flex: 0 0 calc(50% - 6px);
-                max-width: calc(50% - 6px);
+                width: 100%;
+                max-width: 100%;
                 min-width: 0;
             }
 
             .product-image {
-                height: 180px;
+                height: 220px;
             }
 
             .hero-stats {
@@ -1700,18 +1700,18 @@
                 width: 100%;
                 padding-inline: 12px;
                 box-sizing: border-box;
-                display: flex !important;
-                flex-wrap: wrap;
-                gap: 10px;
+                display: grid !important;
+                grid-template-columns: 1fr !important;
+                gap: 12px;
             }
 
             .products-grid > .product-card {
-                flex: 0 0 calc(50% - 5px);
-                max-width: calc(50% - 5px);
+                width: 100%;
+                max-width: 100%;
             }
 
             .product-image {
-                height: 150px;
+                height: 200px;
             }
 
             .product-info {
@@ -2189,8 +2189,8 @@
 
             if (isMobile) {
                 grid.style.setProperty('display', 'grid', 'important');
-                grid.style.setProperty('grid-template-columns', 'repeat(2, minmax(0, 1fr))', 'important');
-                grid.style.setProperty('gap', '10px', 'important');
+                grid.style.setProperty('grid-template-columns', '1fr', 'important');
+                grid.style.setProperty('gap', '14px', 'important');
                 grid.style.setProperty('width', '100%', 'important');
                 grid.style.setProperty('padding-inline', '14px', 'important');
                 grid.style.setProperty('box-sizing', 'border-box', 'important');
@@ -2209,7 +2209,7 @@
                 if (isMobile) {
                     card.style.setProperty('width', '100%', 'important');
                     card.style.setProperty('min-width', '0', 'important');
-                    card.style.setProperty('max-width', 'none', 'important');
+                    card.style.setProperty('max-width', '100%', 'important');
                 } else {
                     card.style.removeProperty('width');
                     card.style.removeProperty('min-width');
