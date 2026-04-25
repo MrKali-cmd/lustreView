@@ -876,12 +876,16 @@ body::after {
             }
 
             .p-slide {
-                padding: 148px 6% 100px;
+                padding: 120px 6% 100px;
                 align-items: flex-end;
             }
 
             .hero-sale-slide .p-slide-content {
-                padding-top: 14px;
+                margin-top: 78px;
+            }
+
+            .hero-sale-slide {
+                align-items: flex-start;
             }
 
             .p-subtitle {
