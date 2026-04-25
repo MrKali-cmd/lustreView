@@ -660,6 +660,16 @@ body::after {
             max-width: 700px;
         }
 
+        .hero-sale-slide .p-slide-content {
+            max-width: 760px;
+        }
+
+        .hero-sale-slide .p-slide-bg::after {
+            background:
+                linear-gradient(100deg, rgba(0, 0, 0, 0.78) 14%, rgba(0, 0, 0, 0.38) 54%, rgba(0, 0, 0, 0.58) 100%),
+                radial-gradient(circle at 74% 24%, rgba(255, 214, 124, 0.34), transparent 22%);
+        }
+
         .hero-sale-pill {
             display: inline-flex;
             align-items: center;
