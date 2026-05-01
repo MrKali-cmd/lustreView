@@ -865,6 +865,38 @@
             if (reviewEditHint) reviewEditHint.style.display = 'none';
         };
 
+        const syncReviewItems = (nextItems = []) => {
+            reviewItems = Array.isArray(nextItems) ? nextItems.slice(0, 6) : [];
+            renderReviews(reviewItems);
+        };
+
+        const upsertReviewItem = (review) => {
+            if (!review?.id) return;
+            const existing = Array.isArray(reviewItems) ? reviewItems : [];
+            const withoutCurrent = existing.filter((item) => item?.id !== review.id);
+            syncReviewItems([review, ...withoutCurrent]);
+        };
+
+        const removeReviewItem = (reviewId) => {
+            if (!reviewId) return;
+            const existing = Array.isArray(reviewItems) ? reviewItems : [];
+            syncReviewItems(existing.filter((item) => item?.id !== reviewId));
+        };
+
+        const focusReviewCard = (reviewId, behavior = 'smooth') => {
+            if (!reviewId) return;
+            const cards = getReviewCards();
+            const targetIndex = cards.findIndex((card) => {
+                const currentId = card.getAttribute('data-review-bubble') || '';
+                return currentId === reviewId;
+            });
+            if (targetIndex < 0) return;
+            document.getElementById('reviews')?.scrollIntoView({ behavior, block: 'start' });
+            window.setTimeout(() => {
+                goToReview(targetIndex, behavior);
+            }, behavior === 'smooth' ? 260 : 0);
+        };
+
         const startReviewEdit = (review) => {
             const token = getReviewToken(review.id);
             if (!token || !reviewForm) return;
@@ -900,7 +932,10 @@
                 if (!response.ok) throw new Error(result.error || result.raw || 'Failed to delete review');
                 removeReviewToken(review.id);
                 if (editingReview?.id === review.id) resetReviewEditor();
-                await loadReviews();
+                removeReviewItem(review.id);
+                if (!reviewItems.length) {
+                    await loadReviews();
+                }
                 showActionToast('Review deleted');
             } catch (error) {
                 showActionToast(`Error: ${error.message}`);
@@ -1679,8 +1714,22 @@
                         reviewStatus.className = 'contact-status is-success';
                         reviewStatus.style.display = 'block';
                     }
+                    const savedReview = result && result.id ? {
+                        id: result.id,
+                        customerName: result.customerName || payload.customerName,
+                        email: result.email || payload.email || '',
+                        rating: Number(result.rating || payload.rating || 5),
+                        comment: result.comment || payload.comment,
+                        status: result.status || 'Approved',
+                        createdAt: result.createdAt || new Date().toISOString()
+                    } : null;
                     resetReviewEditor();
-                    await loadReviews();
+                    if (savedReview) {
+                        upsertReviewItem(savedReview);
+                        focusReviewCard(savedReview.id);
+                    } else {
+                        await loadReviews();
+                    }
                 } catch (error) {
                     if (reviewStatus) {
                         reviewStatus.textContent = `Error: ${error.message}`;
