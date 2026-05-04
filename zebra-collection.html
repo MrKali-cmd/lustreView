@@ -1978,6 +1978,18 @@
                 : []
         );
         const getUsdPrice = (item) => Number(item?.price || 0) / USD_RATE;
+        const toSavedItem = (item) => {
+            if (!item) return null;
+            return {
+                key: item.name,
+                image: item.image || '',
+                category: item.label || item.category || '',
+                name: item.name || '',
+                description: item.description || '',
+                priceText: item.price ? `From ${formatPrice(item.price)} / m²` : '',
+                basePrice: getUsdPrice(item)
+            };
+        };
         const calculateEstimate = (baseRate, widthCm, heightCm) => {
             const widthM = Math.max(0, Number(widthCm || 0) / 100);
             const heightM = Math.max(0, Number(heightCm || 0) / 100);
@@ -2092,7 +2104,7 @@
             const values = storageKey === 'cart' ? getSavedSet('cart') : getSavedSet('wishlist');
             const alreadyExists = values.has(itemKey);
             if (window.LuxeState?.[storageKey === 'cart' ? 'addToCart' : 'addToWishlist']) {
-                await window.LuxeState[storageKey === 'cart' ? 'addToCart' : 'addToWishlist'](storageKey === 'cart' ? item : itemKey);
+                await window.LuxeState[storageKey === 'cart' ? 'addToCart' : 'addToWishlist'](item);
             }
             return !alreadyExists;
         };
@@ -2104,12 +2116,12 @@
 
             if (alreadyExists) {
                 if (window.LuxeState?.[storageKey === 'cart' ? 'removeFromCart' : 'removeFromWishlist']) {
-                    await window.LuxeState[storageKey === 'cart' ? 'removeFromCart' : 'removeFromWishlist'](storageKey === 'cart' ? item : itemKey);
+                    await window.LuxeState[storageKey === 'cart' ? 'removeFromCart' : 'removeFromWishlist'](itemKey);
                 }
                 return 'removed';
             } else {
                 if (window.LuxeState?.[storageKey === 'cart' ? 'addToCart' : 'addToWishlist']) {
-                    await window.LuxeState[storageKey === 'cart' ? 'addToCart' : 'addToWishlist'](storageKey === 'cart' ? item : itemKey);
+                    await window.LuxeState[storageKey === 'cart' ? 'addToCart' : 'addToWishlist'](item);
                 }
                 return 'added';
             }
@@ -2413,7 +2425,7 @@
 
             if (event.target.closest('.favorite-btn')) {
                 (async () => {
-                    const result = await toggleSavedList('wishlist', itemKey);
+                    const result = await toggleSavedList('wishlist', toSavedItem(getItemByKey(itemKey)));
                     const message = result === 'added' ? 'Added to wishlist' : 'Removed from wishlist';
                     showToast(message);
                     updateActionState();

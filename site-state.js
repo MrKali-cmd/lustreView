@@ -88,7 +88,7 @@
         return syncState(next);
     };
 
-    const normalizeCartItem = (keyOrItem) => {
+    const normalizeSavedItem = (keyOrItem) => {
         if (!keyOrItem) return null;
         if (typeof keyOrItem === 'string') return { key: keyOrItem };
         if (typeof keyOrItem === 'object') {
@@ -96,6 +96,11 @@
             if (!key) return null;
             return {
                 key,
+                image: String(keyOrItem.image || '').trim(),
+                category: String(keyOrItem.category || '').trim(),
+                name: String(keyOrItem.name || '').trim(),
+                description: String(keyOrItem.description || '').trim(),
+                priceText: String(keyOrItem.priceText || '').trim(),
                 width: Number(keyOrItem.width || 0),
                 height: Number(keyOrItem.height || 0),
                 estimatedPrice: Number(keyOrItem.estimatedPrice || 0),
@@ -108,14 +113,14 @@
     window.LuxeState = {
         ready,
         getSnapshot: () => currentState,
-        addToCart: (item) => mutate('add-cart', { item: normalizeCartItem(item) }),
+        addToCart: (item) => mutate('add-cart', { item: normalizeSavedItem(item) }),
         removeFromCart: (key) => mutate('remove-cart', { key }),
         clearCart: () => mutate('clear-cart'),
-        addToWishlist: (key) => mutate('add-wishlist', { key }),
+        addToWishlist: (item) => mutate('add-wishlist', { item: normalizeSavedItem(item), key: typeof item === 'string' ? item : item?.key }),
         removeFromWishlist: (key) => mutate('remove-wishlist', { key }),
         clearWishlist: () => mutate('clear-wishlist'),
-        moveToCart: (item) => mutate('move-to-cart', { item: normalizeCartItem(item) }),
-        moveToWishlist: (key) => mutate('move-to-wishlist', { key }),
+        moveToCart: (item) => mutate('move-to-cart', { item: normalizeSavedItem(item), key: typeof item === 'string' ? item : item?.key }),
+        moveToWishlist: (item) => mutate('move-to-wishlist', { item: normalizeSavedItem(item), key: typeof item === 'string' ? item : item?.key }),
         setLastOrder: (order) => mutate('set-last-order', { order }),
         clearLastOrder: () => mutate('clear-last-order')
     };

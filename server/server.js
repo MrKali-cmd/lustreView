@@ -469,11 +469,16 @@ app.all('/api/session-state', async (req, res) => {
     const normalizeKey = (value) => String(value || '').trim();
     const getItemKey = (value) =>
       typeof value === 'object' && value ? normalizeKey(value.key) : normalizeKey(value);
-    const normalizeCartItem = (value, fallbackKey = '') => {
+    const normalizeSavedItem = (value, fallbackKey = '') => {
       const key = normalizeKey(value?.key || value?.id || fallbackKey);
       if (!key) return null;
       return {
         key,
+        image: String(value?.image || '').trim(),
+        category: String(value?.category || '').trim(),
+        name: String(value?.name || '').trim(),
+        description: String(value?.description || '').trim(),
+        priceText: String(value?.priceText || '').trim(),
         width: Number(value?.width || 0),
         height: Number(value?.height || 0),
         estimatedPrice: Number(value?.estimatedPrice || 0),
@@ -482,7 +487,7 @@ app.all('/api/session-state', async (req, res) => {
     };
 
     const key = normalizeKey(payload.key || payload.itemKey);
-    const item = normalizeCartItem(payload.item, key);
+    const item = normalizeSavedItem(payload.item, key);
 
     const current = await loadState();
     const cart = (Array.isArray(current.cart) ? current.cart : []).reduce((map, entry) => {

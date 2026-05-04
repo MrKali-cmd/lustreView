@@ -70,6 +70,23 @@
     };
 
     const getCatalogItem = (key) => catalog.find((item) => item.key === key) || null;
+    const toSavedEntry = (entry) => {
+        if (!entry || typeof entry !== 'object') return null;
+        const key = String(entry.key || '').trim();
+        if (!key) return null;
+        return {
+            key,
+            image: String(entry.image || '').trim(),
+            category: String(entry.category || '').trim(),
+            name: String(entry.name || key).trim(),
+            description: String(entry.description || '').trim(),
+            priceText: String(entry.priceText || '').trim(),
+            basePrice: Number(entry.basePrice || 0),
+            width: Number(entry.width || 0),
+            height: Number(entry.height || 0),
+            estimatedPrice: Number(entry.estimatedPrice || 0)
+        };
+    };
 
     const getState = async () => {
         if (window.LuxeState?.ready) {
@@ -102,10 +119,11 @@
         const items = activeEntries.map((entry) => {
             const key = getEntryKey(entry);
             const catalogItem = getCatalogItem(key);
-            if (!catalogItem) return null;
+            const savedEntry = toSavedEntry(entry);
+            if (!catalogItem && !savedEntry) return null;
             return {
-                ...catalogItem,
-                ...(entry && typeof entry === 'object' ? entry : {}),
+                ...(catalogItem || {}),
+                ...(savedEntry || {}),
                 key
             };
         }).filter(Boolean);
@@ -222,7 +240,10 @@
 
         const itemKey = button.dataset.itemKey;
         const action = button.dataset.action;
-        const card = getCatalogItem(itemKey);
+        const state = getCurrentState();
+        const activeEntries = Array.isArray(state[pageType]) ? state[pageType] : [];
+        const entry = activeEntries.find((current) => getEntryKey(current) === itemKey);
+        const card = getCatalogItem(itemKey) || toSavedEntry(entry);
         if (!itemKey || !card) return;
 
         if (action === 'remove') {
@@ -233,7 +254,7 @@
 
         if (pageType === 'wishlist' && action === 'move-to-cart') {
             if (window.LuxeState?.moveToCart) {
-                await window.LuxeState.moveToCart({ key: itemKey });
+                await window.LuxeState.moveToCart(card);
             }
             window.location.href = `cart.html?focus=${encodeURIComponent(itemKey)}`;
             return;
@@ -241,7 +262,7 @@
 
         if (pageType === 'cart' && action === 'save-for-later') {
             if (window.LuxeState?.moveToWishlist) {
-                await window.LuxeState.moveToWishlist(itemKey);
+                await window.LuxeState.moveToWishlist(card);
             }
             window.location.href = `wishlist.html?focus=${encodeURIComponent(itemKey)}`;
         }
