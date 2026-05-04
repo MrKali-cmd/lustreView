@@ -105,12 +105,18 @@
         })}`;
     };
 
+    const normalizeLookupKey = (value) => String(value || '')
+        .toLowerCase()
+        .replace(/[\u2018\u2019]/g, "'")
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim();
     const normalizeCatalogItem = (item) => {
         if (!item || typeof item !== 'object') return null;
         const key = String(item.key || item.name || '').trim();
         if (!key) return null;
         return {
             key,
+            lookupKey: normalizeLookupKey(key),
             image: String(item.image || '').trim(),
             category: String(item.category || item.label || '').trim(),
             label: String(item.label || item.category || '').trim(),
@@ -121,10 +127,19 @@
         };
     };
     const localCatalog = baseCatalog.map(normalizeCatalogItem).filter(Boolean);
+    const DEFAULT_IMAGE = localCatalog.find((item) => item.image)?.image || IMAGE_PLACEHOLDER;
     const getCatalogItem = (key) => {
-        const normalizedKey = String(key || '').trim();
-        return localCatalog.find((item) => item.key === normalizedKey || item.name === normalizedKey)
-            || remoteCatalog.find((item) => item.key === normalizedKey || item.name === normalizedKey)
+        const normalizedKey = normalizeLookupKey(key);
+        if (!normalizedKey) return null;
+        return localCatalog.find((item) =>
+            item.lookupKey === normalizedKey
+            || normalizeLookupKey(item.name) === normalizedKey
+            || normalizeLookupKey(item.key) === normalizedKey
+        ) || remoteCatalog.find((item) =>
+            item.lookupKey === normalizedKey
+            || normalizeLookupKey(item.name) === normalizedKey
+            || normalizeLookupKey(item.key) === normalizedKey
+        )
             || null;
     };
     const loadRemoteCatalog = async () => {
@@ -160,7 +175,7 @@
             estimatedPrice: Number(entry.estimatedPrice || 0)
         };
     };
-    const resolveImage = (item) => String(item?.image || '').trim() || IMAGE_PLACEHOLDER;
+    const resolveImage = (item) => String(item?.image || '').trim() || DEFAULT_IMAGE || IMAGE_PLACEHOLDER;
 
     const getState = async () => {
         if (window.LuxeState?.ready) {
@@ -193,7 +208,7 @@
         const activeEntries = Array.isArray(state[pageType]) ? state[pageType] : [];
         const items = activeEntries.map((entry) => {
             const key = getEntryKey(entry);
-            const catalogItem = getCatalogItem(key);
+            const catalogItem = getCatalogItem(key) || getCatalogItem(entry?.name);
             const savedEntry = toSavedEntry(entry);
             if (!catalogItem && !savedEntry) return null;
             return {
