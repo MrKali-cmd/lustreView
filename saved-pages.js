@@ -175,6 +175,28 @@
             estimatedPrice: Number(entry.estimatedPrice || 0)
         };
     };
+    const mergeItemData = (catalogItem, savedEntry, key) => {
+        const merged = {
+            ...(catalogItem || {}),
+            key
+        };
+        if (!savedEntry) return merged;
+        Object.entries(savedEntry).forEach(([field, value]) => {
+            if (field === 'key') return;
+            if (typeof value === 'string') {
+                if (value.trim()) merged[field] = value.trim();
+                return;
+            }
+            if (typeof value === 'number') {
+                if (Number.isFinite(value) && value > 0) merged[field] = value;
+                return;
+            }
+            if (value) {
+                merged[field] = value;
+            }
+        });
+        return merged;
+    };
     const resolveImage = (item) => String(item?.image || '').trim() || DEFAULT_IMAGE || IMAGE_PLACEHOLDER;
 
     const getState = async () => {
@@ -211,11 +233,7 @@
             const catalogItem = getCatalogItem(key) || getCatalogItem(entry?.name);
             const savedEntry = toSavedEntry(entry);
             if (!catalogItem && !savedEntry) return null;
-            return {
-                ...(catalogItem || {}),
-                ...(savedEntry || {}),
-                key
-            };
+            return mergeItemData(catalogItem, savedEntry, key);
         }).filter(Boolean);
 
         titleEl.textContent = config.title;
