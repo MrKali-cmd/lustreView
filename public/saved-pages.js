@@ -1,5 +1,22 @@
 (function () {
-    const catalog = Array.isArray(window.LUXE_CATALOG) ? window.LUXE_CATALOG : [];
+    const API_BASE = (() => {
+        const configuredBase = window.__LUXE_API_BASE__
+            || document.querySelector('meta[name="luxe-api-base"]')?.getAttribute('content')?.trim();
+        if (configuredBase) {
+            return configuredBase.replace(/\/$/, '');
+        }
+        const { protocol, hostname, port, origin } = window.location;
+        if (protocol === 'file:') {
+            return 'http://localhost:3001/api';
+        }
+        if (hostname === 'localhost' && port && port !== '3001') {
+            return 'http://localhost:3001/api';
+        }
+        return `${origin}/api`;
+    })();
+    const baseCatalog = Array.isArray(window.LUXE_CATALOG) ? window.LUXE_CATALOG : [];
+    let remoteCatalog = [];
+    let catalogReadyPromise = null;
     const pageType = document.body.dataset.savedPage || 'wishlist';
     const pageConfig = {
         wishlist: {
@@ -48,6 +65,25 @@
     const headerWishlistCount = document.querySelector('[data-wishlist-count]');
     let focusTimer = null;
     const USD_RATE = 42000;
+    const IMAGE_PLACEHOLDER = `data:image/svg+xml;utf8,${encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="720" height="520" viewBox="0 0 720 520">
+            <defs>
+                <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#f5efe2"/>
+                    <stop offset="100%" stop-color="#d9c08a"/>
+                </linearGradient>
+            </defs>
+            <rect width="720" height="520" rx="32" fill="url(#bg)"/>
+            <g fill="none" stroke="rgba(34,28,18,0.18)" stroke-width="14">
+                <rect x="136" y="76" width="448" height="368" rx="26"/>
+                <line x1="360" y1="76" x2="360" y2="444"/>
+                <line x1="136" y1="214" x2="584" y2="214"/>
+            </g>
+            <text x="360" y="484" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#2d2418">
+                Luxe Drapes
+            </text>
+        </svg>
+    `)}`;
 
     const toUsd = (value) => Number(value || 0) / USD_RATE;
     const formatBasePrice = (rawValue) => `From $${toUsd(rawValue).toLocaleString('en-US', {
@@ -69,7 +105,44 @@
         })}`;
     };
 
-    const getCatalogItem = (key) => catalog.find((item) => item.key === key) || null;
+    const normalizeCatalogItem = (item) => {
+        if (!item || typeof item !== 'object') return null;
+        const key = String(item.key || item.name || '').trim();
+        if (!key) return null;
+        return {
+            key,
+            image: String(item.image || '').trim(),
+            category: String(item.category || item.label || '').trim(),
+            label: String(item.label || item.category || '').trim(),
+            name: String(item.name || key).trim(),
+            description: String(item.description || '').trim(),
+            priceText: String(item.priceText || '').trim(),
+            basePrice: Number(item.basePrice || item.price || 0)
+        };
+    };
+    const localCatalog = baseCatalog.map(normalizeCatalogItem).filter(Boolean);
+    const getCatalogItem = (key) => {
+        const normalizedKey = String(key || '').trim();
+        return localCatalog.find((item) => item.key === normalizedKey || item.name === normalizedKey)
+            || remoteCatalog.find((item) => item.key === normalizedKey || item.name === normalizedKey)
+            || null;
+    };
+    const loadRemoteCatalog = async () => {
+        try {
+            const response = await fetch(`${API_BASE}/collections`);
+            if (!response.ok) throw new Error(`Failed to load collections (${response.status})`);
+            const items = await response.json();
+            remoteCatalog = Array.isArray(items) ? items.map(normalizeCatalogItem).filter(Boolean) : [];
+        } catch {
+            remoteCatalog = [];
+        }
+    };
+    const ensureCatalog = async () => {
+        if (!catalogReadyPromise) {
+            catalogReadyPromise = loadRemoteCatalog();
+        }
+        await catalogReadyPromise;
+    };
     const toSavedEntry = (entry) => {
         if (!entry || typeof entry !== 'object') return null;
         const key = String(entry.key || '').trim();
@@ -87,6 +160,7 @@
             estimatedPrice: Number(entry.estimatedPrice || 0)
         };
     };
+    const resolveImage = (item) => String(item?.image || '').trim() || IMAGE_PLACEHOLDER;
 
     const getState = async () => {
         if (window.LuxeState?.ready) {
@@ -114,6 +188,7 @@
     };
 
     const render = async () => {
+        await ensureCatalog();
         const state = await getState();
         const activeEntries = Array.isArray(state[pageType]) ? state[pageType] : [];
         const items = activeEntries.map((entry) => {
@@ -178,7 +253,7 @@
 
             return `
                 <article class="saved-card" data-item-key="${item.key}">
-                    <img class="saved-card-image" src="${item.image}" alt="${item.name}">
+                    <img class="saved-card-image" src="${resolveImage(item)}" alt="${item.name}">
                     <div class="saved-card-body">
                         <div class="saved-card-head">
                             <div>
