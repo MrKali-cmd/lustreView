@@ -1119,6 +1119,7 @@
             description: card.querySelector('.product-info p')?.textContent.trim() || '',
             priceText: card.querySelector('.price')?.textContent.trim() || '',
             priceValue: toUsd(Number(card.dataset.price || 0)),
+            basePrice: toUsd(Number(card.dataset.price || 0)),
         });
 
         const getBaseRate = (card) => toUsd(Number(card?.dataset?.price || 0));
@@ -1217,11 +1218,12 @@
 
         const findCardByKey = (key) => productCards.find((card) => getCardKey(card) === key);
 
-        const addToFavorites = async (key) => {
+        const addToFavorites = async (item) => {
+            const key = typeof item === 'object' ? item?.key : item;
             const favorites = getSavedSet('wishlist');
             if (!key || favorites.has(key)) return false;
             if (window.LuxeState?.addToWishlist) {
-                await window.LuxeState.addToWishlist(key);
+                await window.LuxeState.addToWishlist(item);
             }
             return true;
         };
@@ -1533,7 +1535,7 @@
                                 } else {
                                     // Add to wishlist
                                     console.log('Adding to favorites, key:', key);
-                                    addToFavorites(key).then((result) => {
+                                    addToFavorites(getCardData(card)).then((result) => {
                                         console.log('addToFavorites result:', result);
                                         updateActionState();
                                         syncPanels();
@@ -1566,7 +1568,7 @@
                                 } else {
                                     // Add to cart
                                     console.log('Adding to cart, key:', key);
-                                    addToCart({ key }).then((result) => {
+                                    addToCart(getCardData(card)).then((result) => {
                                         console.log('addToCart result:', result);
                                         updateActionState();
                                         syncPanels();
