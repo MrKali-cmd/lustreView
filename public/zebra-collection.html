@@ -1368,8 +1368,13 @@
 
         .modal-body img {
             width: 52%;
+            flex: 0 0 52%;
+            aspect-ratio: 4 / 5;
+            max-height: 620px;
             border-radius: 14px;
             object-fit: cover;
+            object-position: center;
+            background: rgba(201, 169, 98, 0.08);
         }
 
         .modal-info {
@@ -1494,6 +1499,8 @@
 
             .modal-body img {
                 width: 100%;
+                flex-basis: auto;
+                aspect-ratio: 4 / 3;
                 max-height: 300px;
             }
 
@@ -1602,6 +1609,9 @@
             }
 
             .modal-body img {
+                width: 100%;
+                flex-basis: auto;
+                aspect-ratio: 4 / 3;
                 max-height: 210px;
             }
 
@@ -1672,6 +1682,9 @@
             }
 
             .modal-body img {
+                width: 100%;
+                flex-basis: auto;
+                aspect-ratio: 4 / 3;
                 max-height: 180px;
                 border-radius: 12px;
             }
