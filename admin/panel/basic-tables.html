@@ -932,9 +932,87 @@
       });
     };
 
-    const render = (messages) => {
-      const newest = messages.slice(0, 5);
-      const unread = messages.filter((item) => item.status === 'New');
+    const REVIEW_NOTIFICATION_API = API_BASE.replace('/collections', '/admin/reviews');
+    const REVIEW_FALLBACK_API = API_BASE.replace('/collections', '/reviews');
+    const APPOINTMENT_NOTIFICATION_API = API_BASE.replace('/collections', '/appointments');
+    const NOTIFICATION_SEEN_KEY = 'lustreview-admin-seen-notifications';
+    let currentNotifications = [];
+    let seenNotifications = (() => {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(NOTIFICATION_SEEN_KEY) || '[]');
+        return new Set(Array.isArray(parsed) ? parsed : []);
+      } catch {
+        return new Set();
+      }
+    })();
+
+    const persistSeenNotifications = () => {
+      localStorage.setItem(
+        NOTIFICATION_SEEN_KEY,
+        JSON.stringify(Array.from(seenNotifications).slice(-300))
+      );
+    };
+
+    const truncateText = (value, max = 78) => {
+      const text = String(value ?? '').replace(/\s+/g, ' ').trim();
+      return text.length > max ? `${text.slice(0, max).trim()}...` : text;
+    };
+
+    const readJson = async (response) => {
+      const raw = await response.text();
+      if (!raw) return [];
+      try {
+        return JSON.parse(raw);
+      } catch {
+        return [];
+      }
+    };
+
+    const getNotificationLink = (item) => {
+      if (item.kind === 'contact') return `alerts.html?focus=${encodeURIComponent(item.entityId)}`;
+      if (item.kind === 'review') return `basic-tables.html?tab=reviews&focus=${encodeURIComponent(item.entityId)}`;
+      return `basic-tables.html?tab=appointments&focus=${encodeURIComponent(item.entityId)}`;
+    };
+
+    const buildNotifications = ({ messages = [], reviews = [], appointments = [] }) => {
+      const contactItems = messages.map((message) => ({
+        id: `contact:${message.id}`,
+        entityId: message.id,
+        kind: 'contact',
+        title: message.name || 'New contact message',
+        subtitle: `${message.roomType || message.room_type || 'Contact'} · ${message.email || message.phone || ''}`,
+        createdAt: message.createdAt || message.updatedAt,
+        unread: (message.status || 'New') === 'New' && !seenNotifications.has(`contact:${message.id}`)
+      }));
+
+      const reviewItems = reviews.map((review) => ({
+        id: `review:${review.id}`,
+        entityId: review.id,
+        kind: 'review',
+        title: `Review from ${review.customerName || 'Customer'}`,
+        subtitle: truncateText(review.comment || 'New customer review'),
+        createdAt: review.createdAt || review.updatedAt,
+        unread: !seenNotifications.has(`review:${review.id}`)
+      }));
+
+      const appointmentItems = appointments.map((item) => ({
+        id: `appointment:${item.id}`,
+        entityId: item.id,
+        kind: 'appointment',
+        title: `Measurement request from ${item.name || 'Customer'}`,
+        subtitle: `${item.serviceType || 'Measurement'} · ${item.preferredDate || ''} ${item.preferredTime || ''}`.trim(),
+        createdAt: item.createdAt || item.updatedAt,
+        unread: (item.status || 'Pending') !== 'Done' && !seenNotifications.has(`appointment:${item.id}`)
+      }));
+
+      return [...contactItems, ...reviewItems, ...appointmentItems]
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    };
+
+    const render = (notifications) => {
+      currentNotifications = Array.isArray(notifications) ? notifications : [];
+      const newest = currentNotifications.slice(0, 8);
+      const unread = currentNotifications.filter((item) => item.unread);
 
       if (notificationDot) {
         notificationDot.classList.toggle('hidden', unread.length === 0);
@@ -943,7 +1021,7 @@
       if (!newest.length) {
         notificationList.innerHTML = `
           <li class="px-4 py-4 text-sm text-gray-500 dark:text-gray-400">
-            No contact messages yet.
+            No notifications yet.
           </li>
         `;
         return;
@@ -951,21 +1029,23 @@
 
       notificationList.innerHTML = newest
         .map(
-          (message) => `
+          (item) => `
             <li>
               <a
-                href="alerts.html"
+                href="${getNotificationLink(item)}"
+                data-notification-id="${escapeHtml(item.id)}"
                 class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
               >
+                <span class="mt-1 inline-flex h-2.5 w-2.5 flex-none rounded-full ${item.unread ? 'bg-orange-400' : 'bg-gray-300 dark:bg-gray-700'}"></span>
                 <span class="block w-full">
                   <span class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400">
-                    <span class="font-medium text-gray-800 dark:text-white/90">${escapeHtml(message.name)}</span>
-                    Â· ${escapeHtml(message.email || message.phone || '')}
+                    <span class="font-medium text-gray-800 dark:text-white/90">${escapeHtml(item.title)}</span>
                   </span>
+                  <span class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400">${escapeHtml(item.subtitle || '-')}</span>
                   <span class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400">
-                    <span>${escapeHtml(message.roomType || message.room_type || 'Contact')}</span>
+                    <span class="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-600 dark:bg-white/5 dark:text-gray-300">${escapeHtml(item.kind)}</span>
                     <span class="h-1 w-1 rounded-full bg-gray-400"></span>
-                    <span>${formatTime(message.createdAt || message.updatedAt)}</span>
+                    <span>${formatTime(item.createdAt)}</span>
                   </span>
                 </span>
               </a>
@@ -976,13 +1056,57 @@
     };
 
     const loadNotifications = async () => {
-      const response = await fetch(`${API_BASE}/contact-messages`, {
-        cache: 'no-store'
-      });
-      if (!response.ok) throw new Error('Failed to load notifications');
-      const messages = await response.json();
-      render(messages);
+      const [messagesResponse, appointmentsResponse, reviewsResponse] = await Promise.all([
+        fetch(`${API_BASE}/contact-messages`, {
+          cache: 'no-store'
+        }),
+        fetch(APPOINTMENT_NOTIFICATION_API, {
+          cache: 'no-store',
+          credentials: 'include'
+        }),
+        (async () => {
+          try {
+            const adminResponse = await fetch(REVIEW_NOTIFICATION_API, {
+              cache: 'no-store'
+            });
+            if (adminResponse.ok) return adminResponse;
+          } catch (error) {
+            // Fall back to the public review feed when the admin endpoint is unavailable.
+          }
+
+          return fetch(REVIEW_FALLBACK_API, {
+            cache: 'no-store'
+          });
+        })()
+      ]);
+
+      if (!messagesResponse.ok || !appointmentsResponse.ok || !reviewsResponse.ok) {
+        throw new Error('Failed to load notifications');
+      }
+
+      const [messages, appointments, reviews] = await Promise.all([
+        readJson(messagesResponse),
+        readJson(appointmentsResponse),
+        readJson(reviewsResponse)
+      ]);
+
+      render(buildNotifications({ messages, reviews, appointments }));
     };
+
+    notificationList.addEventListener('click', (event) => {
+      const link = event.target.closest('[data-notification-id]');
+      if (!link) return;
+
+      const id = link.dataset.notificationId;
+      if (!id) return;
+
+      seenNotifications.add(id);
+      persistSeenNotifications();
+      currentNotifications = currentNotifications.map((item) =>
+        item.id === id ? { ...item, unread: false } : item
+      );
+      render(currentNotifications);
+    });
 
     loadNotifications().catch(() => {
       notificationList.innerHTML = `
@@ -1910,7 +2034,9 @@
       });
 
       loadCollections();
-      setAdminTab('collections');
+      const requestedTab = new URLSearchParams(window.location.search).get('tab');
+      setAdminTab(['collections', 'reviews', 'appointments'].includes(requestedTab) ? requestedTab : 'collections');
     </script>
   <script defer src="bundle.js"></script></body>
 </html>
+
