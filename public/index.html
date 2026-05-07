@@ -866,7 +866,7 @@
         };
 
         const syncReviewItems = (nextItems = []) => {
-            reviewItems = Array.isArray(nextItems) ? nextItems.slice(0, 6) : [];
+            reviewItems = Array.isArray(nextItems) ? nextItems.slice() : [];
             renderReviews(reviewItems);
         };
 
@@ -1100,7 +1100,7 @@
                 const response = await fetch(`${API_BASE}/reviews`, { cache: 'no-store' });
                 if (!response.ok) throw new Error('Failed to load reviews');
                 const data = await readApiResponse(response);
-                renderReviews(Array.isArray(data) ? data.slice(0, 6) : []);
+                renderReviews(Array.isArray(data) ? data.slice() : []);
             } catch {
                 const fallback = '<div class="rev-bubble review-card">Reviews are temporarily unavailable.</div>'.repeat(4);
                 reviewsCarouselTrack.innerHTML = fallback;
