@@ -1568,19 +1568,34 @@
                 width: 100%;
                 padding-inline: 14px;
                 box-sizing: border-box;
-                display: flex !important;
-                flex-wrap: wrap;
+                display: grid !important;
+                grid-template-columns: 1fr !important;
                 gap: 12px;
             }
 
             .products-grid > .product-card {
-                flex: 0 0 calc(50% - 6px);
-                max-width: calc(50% - 6px);
+                width: 100%;
+                max-width: 100%;
                 min-width: 0;
+                display: grid;
+                grid-template-columns: 148px 1fr;
+                align-items: stretch;
             }
 
             .product-image {
-                height: 180px;
+                height: 100%;
+                min-height: 148px;
+            }
+
+            .product-image img {
+                height: 100%;
+            }
+
+            .product-info {
+                padding: 16px 16px 16px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
             }
 
             .hero-stats {
@@ -1713,18 +1728,21 @@
                 width: 100%;
                 padding-inline: 12px;
                 box-sizing: border-box;
-                display: flex !important;
-                flex-wrap: wrap;
+                display: grid !important;
+                grid-template-columns: 1fr !important;
                 gap: 10px;
             }
 
             .products-grid > .product-card {
-                flex: 0 0 calc(50% - 5px);
-                max-width: calc(50% - 5px);
+                width: 100%;
+                max-width: 100%;
+                display: grid;
+                grid-template-columns: 132px 1fr;
             }
 
             .product-image {
-                height: 150px;
+                height: 100%;
+                min-height: 132px;
             }
 
             .product-info {
@@ -2214,8 +2232,8 @@
 
             if (isMobile) {
                 grid.style.setProperty('display', 'grid', 'important');
-                grid.style.setProperty('grid-template-columns', 'repeat(2, minmax(0, 1fr))', 'important');
-                grid.style.setProperty('gap', '10px', 'important');
+                grid.style.setProperty('grid-template-columns', '1fr', 'important');
+                grid.style.setProperty('gap', '12px', 'important');
                 grid.style.setProperty('width', '100%', 'important');
                 grid.style.setProperty('padding-inline', '14px', 'important');
                 grid.style.setProperty('box-sizing', 'border-box', 'important');
