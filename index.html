@@ -1094,17 +1094,58 @@
             startReviewAutoplay();
         });
 
+        const REVIEWS_CACHE_KEY = 'luxe-reviews-cache-v1';
+
+        const loadCachedReviews = () => {
+            try {
+                const raw = localStorage.getItem(REVIEWS_CACHE_KEY);
+                const parsed = raw ? JSON.parse(raw) : null;
+                return Array.isArray(parsed) ? parsed : [];
+            } catch {
+                return [];
+            }
+        };
+
+        const saveCachedReviews = (items) => {
+            try {
+                localStorage.setItem(REVIEWS_CACHE_KEY, JSON.stringify(Array.isArray(items) ? items : []));
+            } catch {
+                // ignore cache write failures (privacy mode, quota, etc.)
+            }
+        };
+
         const loadReviews = async () => {
             if (!reviewsCarouselTrack) return;
+
+            // Show cached data immediately so we never get stuck on "Loading reviews..."
+            const cached = loadCachedReviews();
+            if (cached.length) {
+                renderReviews(cached);
+            }
+
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 9000);
+
             try {
-                const response = await fetch(`${API_BASE}/reviews`, { cache: 'no-store' });
+                const response = await fetch(`${API_BASE}/reviews`, {
+                    cache: 'no-store',
+                    signal: controller.signal
+                });
                 if (!response.ok) throw new Error('Failed to load reviews');
                 const data = await readApiResponse(response);
-                renderReviews(Array.isArray(data) ? data.slice() : []);
+                const items = Array.isArray(data) ? data.slice() : [];
+                saveCachedReviews(items);
+                renderReviews(items);
             } catch {
-                const fallback = '<div class="rev-bubble review-card">Reviews are temporarily unavailable.</div>'.repeat(4);
-                reviewsCarouselTrack.innerHTML = fallback;
-                applyReviewCarouselState();
+                // If we have no cache and the network fails, replace the loading UI with a safe fallback.
+                const hasRendered = reviewsCarouselTrack.querySelector('.review-card');
+                if (!hasRendered) {
+                    const fallback = '<div class="rev-bubble review-card">Reviews are temporarily unavailable.</div>'.repeat(4);
+                    reviewsCarouselTrack.innerHTML = fallback;
+                    applyReviewCarouselState();
+                }
+            } finally {
+                clearTimeout(timeout);
             }
         };
         const getSavedState = () => (window.LuxeState?.getSnapshot ? window.LuxeState.getSnapshot() : { cart: [], wishlist: [], lastOrder: null });
