@@ -123,6 +123,82 @@
         </div>
     </section>
 
+    <section class="roller-videos" id="roller-videos">
+        <div class="section-header">
+            <span class="section-tag">ROLLER BLINDS</span>
+            <h2 class="section-title">See Roller Blinds In Action</h2>
+            <p class="section-desc">Hover (or touch) to preview. Tap to watch in full screen.</p>
+        </div>
+
+        <div class="roller-videos-grid" aria-label="Roller blind installation videos">
+            <button type="button" class="roller-video-card" data-video-open aria-label="Play video: Smooth Operation">
+                <div class="roller-video-media">
+                    <video class="roller-preview" data-preview-video preload="metadata" muted playsinline
+                        poster="img/curtain-1.jpg">
+                        <source src="videos/roller-1.mp4" type="video/mp4">
+                    </video>
+                    <span class="roller-video-play" aria-hidden="true"><i class="fa-solid fa-play"></i></span>
+                </div>
+                <div class="roller-video-meta">
+                    <div class="roller-video-title">Smooth Operation</div>
+                    <div class="roller-video-subtitle">Effortless up & down</div>
+                </div>
+            </button>
+
+            <button type="button" class="roller-video-card" data-video-open aria-label="Play video: Light Control">
+                <div class="roller-video-media">
+                    <video class="roller-preview" data-preview-video preload="metadata" muted playsinline
+                        poster="img/curtain-2.jpg">
+                        <source src="videos/roller-2.mp4" type="video/mp4">
+                    </video>
+                    <span class="roller-video-play" aria-hidden="true"><i class="fa-solid fa-play"></i></span>
+                </div>
+                <div class="roller-video-meta">
+                    <div class="roller-video-title">Light Control</div>
+                    <div class="roller-video-subtitle">Adjust daylight your way</div>
+                </div>
+            </button>
+
+            <button type="button" class="roller-video-card" data-video-open aria-label="Play video: Perfect For Any Room">
+                <div class="roller-video-media">
+                    <video class="roller-preview" data-preview-video preload="metadata" muted playsinline
+                        poster="img/curtain-3.jpg">
+                        <source src="videos/roller-3.mp4" type="video/mp4">
+                    </video>
+                    <span class="roller-video-play" aria-hidden="true"><i class="fa-solid fa-play"></i></span>
+                </div>
+                <div class="roller-video-meta">
+                    <div class="roller-video-title">Perfect For Any Room</div>
+                    <div class="roller-video-subtitle">Modern, clean finish</div>
+                </div>
+            </button>
+
+            <button type="button" class="roller-video-card" data-video-open aria-label="Play video: Premium Quality">
+                <div class="roller-video-media">
+                    <video class="roller-preview" data-preview-video preload="metadata" muted playsinline
+                        poster="img/curtain-4.jpg">
+                        <source src="videos/roller-4.mp4" type="video/mp4">
+                    </video>
+                    <span class="roller-video-play" aria-hidden="true"><i class="fa-solid fa-play"></i></span>
+                </div>
+                <div class="roller-video-meta">
+                    <div class="roller-video-title">Premium Quality</div>
+                    <div class="roller-video-subtitle">Built to last</div>
+                </div>
+            </button>
+        </div>
+    </section>
+
+    <div class="video-lightbox" id="video-lightbox" aria-hidden="true">
+        <div class="video-lightbox-backdrop" data-video-close></div>
+        <div class="video-lightbox-panel" role="dialog" aria-modal="true" aria-label="Video player">
+            <button type="button" class="video-lightbox-close" data-video-close aria-label="Close video">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="video-lightbox-body" id="video-lightbox-body"></div>
+        </div>
+    </div>
+
 
     <section class="products" id="products">
         <div class="section-header">
@@ -1862,6 +1938,139 @@
             updateActionState();
             loadReviews();
         }
+
+        const initRollerVideoGallery = () => {
+            const cards = Array.from(document.querySelectorAll('[data-video-open]'));
+            if (!cards.length) return;
+
+            const lightbox = document.getElementById('video-lightbox');
+            const lightboxBody = document.getElementById('video-lightbox-body');
+            const closeTargets = Array.from(document.querySelectorAll('[data-video-close]'));
+            const isTouch = window.matchMedia('(hover: none)').matches;
+
+            const activePreview = new WeakMap();
+
+            const getPreviewPoints = (video) => {
+                const duration = Number(video.duration || 0);
+                if (!duration || !Number.isFinite(duration)) return [0];
+                // Key moments: 15%, 45%, 75% into the clip.
+                return [0.15, 0.45, 0.75].map((p) => Math.max(0, Math.min(duration - 0.4, duration * p)));
+            };
+
+            const stopPreview = (video) => {
+                const state = activePreview.get(video);
+                if (state?.timer) clearInterval(state.timer);
+                activePreview.delete(video);
+                try {
+                    video.pause();
+                    video.currentTime = 0;
+                } catch {
+                    // ignore
+                }
+            };
+
+            const startPreview = async (video) => {
+                stopPreview(video);
+                video.muted = true;
+                video.playsInline = true;
+
+                const ensureMeta = () =>
+                    new Promise((resolve) => {
+                        if (Number.isFinite(video.duration) && video.duration) return resolve();
+                        const handler = () => {
+                            video.removeEventListener('loadedmetadata', handler);
+                            resolve();
+                        };
+                        video.addEventListener('loadedmetadata', handler, { once: true });
+                        video.load();
+                    });
+
+                await ensureMeta();
+                const points = getPreviewPoints(video);
+                let idx = 0;
+
+                const jump = async () => {
+                    try {
+                        video.currentTime = points[idx] || 0;
+                        await video.play();
+                    } catch {
+                        // ignore play errors (browser policies)
+                    }
+                    idx = (idx + 1) % points.length;
+                };
+
+                await jump();
+                const timer = setInterval(jump, 1200);
+                activePreview.set(video, { timer });
+            };
+
+            const openLightbox = (sourceVideo) => {
+                if (!lightbox || !lightboxBody) return;
+
+                // Stop preview to avoid audio/CPU overlap.
+                stopPreview(sourceVideo);
+
+                const src = sourceVideo.querySelector('source')?.src || sourceVideo.currentSrc || sourceVideo.src;
+                const poster = sourceVideo.getAttribute('poster') || '';
+
+                lightboxBody.innerHTML = '';
+                const player = document.createElement('video');
+                player.controls = true;
+                player.autoplay = true;
+                player.playsInline = true;
+                player.preload = 'metadata';
+                player.poster = poster;
+                player.src = src;
+                player.style.width = '100%';
+                player.style.height = '100%';
+                player.style.objectFit = 'contain';
+
+                lightboxBody.appendChild(player);
+                lightbox.classList.add('is-open');
+                lightbox.setAttribute('aria-hidden', 'false');
+
+                // Try to start with sound when possible.
+                try {
+                    player.muted = false;
+                } catch {
+                    // ignore
+                }
+            };
+
+            const closeLightbox = () => {
+                if (!lightbox || !lightboxBody) return;
+                lightbox.classList.remove('is-open');
+                lightbox.setAttribute('aria-hidden', 'true');
+                lightboxBody.innerHTML = '';
+            };
+
+            closeTargets.forEach((node) => node.addEventListener('click', closeLightbox));
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeLightbox();
+            });
+
+            cards.forEach((card) => {
+                const video = card.querySelector('[data-preview-video]');
+                if (!video) return;
+
+                if (!isTouch) {
+                    card.addEventListener('mouseenter', () => startPreview(video));
+                    card.addEventListener('mouseleave', () => stopPreview(video));
+                } else {
+                    // Touch: hold to preview, tap to open full screen.
+                    card.addEventListener('pointerdown', () => startPreview(video), { passive: true });
+                    card.addEventListener('pointerup', () => stopPreview(video), { passive: true });
+                    card.addEventListener('pointercancel', () => stopPreview(video), { passive: true });
+                }
+
+                card.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    openLightbox(video);
+                });
+            });
+        };
+
+        initRollerVideoGallery();
     </script>
 </body>
 
