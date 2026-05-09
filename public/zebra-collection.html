@@ -1086,15 +1086,22 @@
             box-shadow: 0 14px 34px rgba(30, 26, 16, 0.12);
         }
 
-        .products-grid {
-            width: min(1260px, 92%);
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
-            gap: 22px;
-            transition: opacity 0.22s ease, transform 0.22s ease, filter 0.22s ease;
-            will-change: opacity, transform;
-        }
+            .products-grid {
+                width: min(1260px, 92%);
+                margin: 0 auto;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+                gap: 22px;
+                transition: opacity 0.22s ease, transform 0.22s ease, filter 0.22s ease;
+                will-change: opacity, transform;
+            }
+
+            /* MOBILE: show 1 card per row */
+            @media (max-width: 768px) {
+                .products-grid {
+                    grid-template-columns: 1fr !important;
+                }
+            }
 
         .products-grid.is-updating {
             opacity: 0.55;
