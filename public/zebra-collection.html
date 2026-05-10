@@ -2193,15 +2193,38 @@
             return stars.join('');
         };
 
+        const escapeHtml = (value) => {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '<')
+                .replace(/>/g, '>')
+                .replace(/"/g, '"')
+                .replace(/'/g, '&#39;');
+        };
+
         const renderCards = (items) => {
             const visible = items.filter((item) => item.status !== 'Hidden');
             grid.innerHTML = visible.map((item) => {
                 const dateKey = formatDateKey(item.updatedAt);
+
+                // Escape anything that might come from DB/admin.
+                const safeKey = escapeHtml(item.name);
+                const safeTags = escapeHtml(item.tags);
+                const safePrice = escapeHtml(item.price);
+                const safePopular = escapeHtml(item.popular);
+                const safeRating = escapeHtml(item.rating || '');
+                const safeBadge = item.badge ? escapeHtml(item.badge) : '';
+                const safeImage = escapeHtml(item.image);
+                const safeAlt = escapeHtml(item.name);
+                const safeLabel = escapeHtml(item.label);
+                const safeName = escapeHtml(item.name);
+                const safeDesc = escapeHtml(truncate(item.description));
+
                 return `
-                <div class="product-card" data-key="${item.name}" data-category="${item.tags}" data-price="${item.price}" data-date="${dateKey}" data-popular="${item.popular}" data-rating="${item.rating || ''}">
+                <div class="product-card" data-key="${safeKey}" data-category="${safeTags}" data-price="${safePrice}" data-date="${dateKey}" data-popular="${safePopular}" data-rating="${safeRating}">
                     <div class="product-image">
-                        ${item.badge ? `<span class=\"product-badge\">${item.badge}</span>` : ''}
-                        <img src="${item.image}" alt="${item.name}" loading="lazy">
+                        ${safeBadge ? `<span class=\"product-badge\">${safeBadge}</span>` : ''}
+                        <img src="${safeImage}" alt="${safeAlt}" loading="lazy">
                         <div class="product-actions">
                             <button class="product-action favorite-btn" aria-label="Favorite"><i class="fas fa-heart"></i></button>
                             <button class="product-action cart-btn" aria-label="Add to cart"><i class="fas fa-shopping-cart"></i></button>
@@ -2209,9 +2232,9 @@
                         </div>
                     </div>
                     <div class="product-info">
-                        <span class="product-category">${item.label}</span>
-                        <h3 class="product-name">${item.name}</h3>
-                        <p>${truncate(item.description)}</p>
+                        <span class="product-category">${safeLabel}</span>
+                        <h3 class="product-name">${safeName}</h3>
+                        <p>${safeDesc}</p>
                     </div>
                 </div>`;
             }).join('');
