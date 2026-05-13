@@ -411,16 +411,14 @@
                 <div class="why-videos-header">
                     <span class="section-tag">ROLLER BLINDS IN ACTION</span>
                     <h3 class="why-videos-title">See Roller Blinds In Motion</h3>
-                    <p class="why-videos-desc">Hover on desktop or touch on mobile to preview. Tap any video to watch it larger.</p>
+                    <p class="why-videos-desc">A quick look at real roller blind installs, finishes, and smooth operation.</p>
                 </div>
 
                 <section class="roller-videos" id="roller-videos" aria-label="Roller blinds video gallery">
                     <div class="roller-videos-grid">
-                        <button type="button" class="roller-video-card" data-video-open aria-label="Play video: Smooth operation">
+                        <button type="button" class="roller-video-card" data-video-open data-embed-url="https://player.cloudinary.com/embed/?cloud_name=dgyjxz9di&public_id=InShot_20260424_030108650_npfqcq" aria-label="Play video: Smooth operation">
                             <div class="roller-video-media">
-                                <video class="roller-preview" data-preview-video preload="metadata" muted playsinline poster="img/curtain-1.jpg">
-                                    <source src="videos/roller-1.mp4" type="video/mp4">
-                                </video>
+                                <img class="roller-thumb" src="https://res.cloudinary.com/dgyjxz9di/video/upload/InShot_20260424_030108650_npfqcq.jpg" alt="Smooth operation preview" loading="lazy" decoding="async">
                                 <span class="roller-video-play" aria-hidden="true"><i class="fa-solid fa-play"></i></span>
                             </div>
                             <div class="roller-video-meta">
@@ -429,11 +427,9 @@
                             </div>
                         </button>
 
-                        <button type="button" class="roller-video-card" data-video-open aria-label="Play video: Light control">
+                        <button type="button" class="roller-video-card" data-video-open data-embed-url="https://player.cloudinary.com/embed/?cloud_name=dgyjxz9di&public_id=InShot_20260424_030223063_cacmn5" aria-label="Play video: Light control">
                             <div class="roller-video-media">
-                                <video class="roller-preview" data-preview-video preload="metadata" muted playsinline poster="img/curtain-2.jpg">
-                                    <source src="videos/roller-2.mp4" type="video/mp4">
-                                </video>
+                                <img class="roller-thumb" src="https://res.cloudinary.com/dgyjxz9di/video/upload/InShot_20260424_030223063_cacmn5.jpg" alt="Light control preview" loading="lazy" decoding="async">
                                 <span class="roller-video-play" aria-hidden="true"><i class="fa-solid fa-play"></i></span>
                             </div>
                             <div class="roller-video-meta">
@@ -442,11 +438,9 @@
                             </div>
                         </button>
 
-                        <button type="button" class="roller-video-card" data-video-open aria-label="Play video: Perfect for any room">
+                        <button type="button" class="roller-video-card" data-video-open data-embed-url="https://player.cloudinary.com/embed/?cloud_name=dgyjxz9di&public_id=WhatsApp_Video_2026-05-08_at_6.15.35_AM_rzympe" aria-label="Play video: Perfect for any room">
                             <div class="roller-video-media">
-                                <video class="roller-preview" data-preview-video preload="metadata" muted playsinline poster="img/curtain-3.jpg">
-                                    <source src="videos/roller-3.mp4" type="video/mp4">
-                                </video>
+                                <img class="roller-thumb" src="https://res.cloudinary.com/dgyjxz9di/video/upload/WhatsApp_Video_2026-05-08_at_6.15.35_AM_rzympe.jpg" alt="Perfect for any room preview" loading="lazy" decoding="async">
                                 <span class="roller-video-play" aria-hidden="true"><i class="fa-solid fa-play"></i></span>
                             </div>
                             <div class="roller-video-meta">
@@ -455,11 +449,9 @@
                             </div>
                         </button>
 
-                        <button type="button" class="roller-video-card" data-video-open aria-label="Play video: Premium quality">
+                        <button type="button" class="roller-video-card" data-video-open data-embed-url="https://player.cloudinary.com/embed/?cloud_name=dgyjxz9di&public_id=WhatsApp_Video_2026-05-08_at_6.15.35_AM_rzympe" aria-label="Play video: Premium quality">
                             <div class="roller-video-media">
-                                <video class="roller-preview" data-preview-video preload="metadata" muted playsinline poster="img/curtain-4.jpg">
-                                    <source src="videos/roller-4.mp4" type="video/mp4">
-                                </video>
+                                <img class="roller-thumb" src="https://res.cloudinary.com/dgyjxz9di/video/upload/WhatsApp_Video_2026-05-08_at_6.15.35_AM_rzympe.jpg" alt="Premium quality preview" loading="lazy" decoding="async">
                                 <span class="roller-video-play" aria-hidden="true"><i class="fa-solid fa-play"></i></span>
                             </div>
                             <div class="roller-video-meta">
@@ -768,7 +760,7 @@
         </div>
     </footer>
 
-    <script>
+        <script>
         const API_BASE = (() => {
             const configuredBase = window.__LUXE_API_BASE__
                 || document.querySelector('meta[name="luxe-api-base"]')?.getAttribute('content')?.trim();
@@ -1947,65 +1939,6 @@
             const lightbox = document.getElementById('video-lightbox');
             const lightboxBody = document.getElementById('video-lightbox-body');
             const closeTargets = Array.from(document.querySelectorAll('[data-video-close]'));
-            const prefersTouch = window.matchMedia('(hover: none)').matches;
-            const previewTimers = new WeakMap();
-
-            const stopPreview = (video) => {
-                const timer = previewTimers.get(video);
-                if (timer) {
-                    clearInterval(timer);
-                    previewTimers.delete(video);
-                }
-                try {
-                    video.pause();
-                    video.currentTime = 0;
-                } catch {
-                    // ignore preview reset errors
-                }
-            };
-
-            const getPreviewPoints = (video) => {
-                const duration = Number(video.duration || 0);
-                if (!duration || !Number.isFinite(duration)) return [0];
-                return [0.12, 0.36, 0.64, 0.84].map((ratio) =>
-                    Math.max(0, Math.min(duration - 0.35, duration * ratio))
-                );
-            };
-
-            const ensureMetadata = (video) =>
-                new Promise((resolve) => {
-                    if (Number.isFinite(video.duration) && video.duration > 0) {
-                        resolve();
-                        return;
-                    }
-                    const onLoaded = () => resolve();
-                    video.addEventListener('loadedmetadata', onLoaded, { once: true });
-                    video.load();
-                });
-
-            const startPreview = async (video) => {
-                stopPreview(video);
-                video.muted = true;
-                video.playsInline = true;
-                await ensureMetadata(video);
-
-                const points = getPreviewPoints(video);
-                let pointIndex = 0;
-
-                const jumpToPoint = async () => {
-                    try {
-                        video.currentTime = points[pointIndex] || 0;
-                        await video.play();
-                    } catch {
-                        // ignore autoplay restrictions
-                    }
-                    pointIndex = (pointIndex + 1) % points.length;
-                };
-
-                await jumpToPoint();
-                const timer = setInterval(jumpToPoint, 1200);
-                previewTimers.set(video, timer);
-            };
 
             const closeLightbox = () => {
                 if (!lightbox || !lightboxBody) return;
@@ -2014,24 +1947,22 @@
                 lightboxBody.innerHTML = '';
             };
 
-            const openLightbox = (video) => {
+            const openLightbox = (embedUrl) => {
                 if (!lightbox || !lightboxBody) return;
-                stopPreview(video);
+                if (!embedUrl) return;
 
-                const source = video.querySelector('source')?.src || video.currentSrc || video.src;
-                const player = document.createElement('video');
-                player.src = source;
-                player.controls = true;
-                player.autoplay = true;
-                player.playsInline = true;
-                player.preload = 'metadata';
-                player.poster = video.getAttribute('poster') || '';
-                player.style.width = '100%';
-                player.style.height = '100%';
-                player.style.objectFit = 'contain';
+                const iframe = document.createElement('iframe');
+                iframe.src = embedUrl;
+                iframe.allow = 'autoplay; fullscreen; picture-in-picture';
+                iframe.allowFullscreen = true;
+                iframe.loading = 'lazy';
+                iframe.referrerPolicy = 'no-referrer-when-downgrade';
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.border = '0';
 
                 lightboxBody.innerHTML = '';
-                lightboxBody.appendChild(player);
+                lightboxBody.appendChild(iframe);
                 lightbox.classList.add('is-open');
                 lightbox.setAttribute('aria-hidden', 'false');
             };
@@ -2045,21 +1976,9 @@
             });
 
             cards.forEach((card) => {
-                const video = card.querySelector('[data-preview-video]');
-                if (!video) return;
-
-                if (prefersTouch) {
-                    card.addEventListener('pointerenter', () => startPreview(video));
-                    card.addEventListener('pointerleave', () => stopPreview(video));
-                    card.addEventListener('pointercancel', () => stopPreview(video));
-                } else {
-                    card.addEventListener('mouseenter', () => startPreview(video));
-                    card.addEventListener('mouseleave', () => stopPreview(video));
-                }
-
                 card.addEventListener('click', (event) => {
                     event.preventDefault();
-                    openLightbox(video);
+                    openLightbox(card.getAttribute('data-embed-url'));
                 });
             });
         };

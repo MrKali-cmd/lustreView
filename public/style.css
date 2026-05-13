@@ -3654,6 +3654,13 @@ body::after {
             display: block;
         }
 
+        .roller-thumb {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
         .roller-video-play {
             position: absolute;
             inset: 0;
