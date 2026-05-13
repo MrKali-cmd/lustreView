@@ -1986,7 +1986,6 @@
                 lightbox.setAttribute('aria-hidden', 'true');
                 lightboxBody.innerHTML = '';
                 document.body.classList.remove('video-lightbox-open');
-                document.body.style.top = '';
                 window.scrollTo(0, lockedScrollY);
             };
 
@@ -1994,6 +1993,7 @@
                 if (!lightbox || !lightboxBody) return;
                 if (!embedUrl) return;
                 lockedScrollY = window.scrollY || window.pageYOffset || 0;
+                const closeButton = lightbox.querySelector('.video-lightbox-close');
 
                 const iframe = document.createElement('iframe');
                 iframe.src = embedUrl;
@@ -2001,17 +2001,23 @@
                 iframe.allowFullscreen = true;
                 iframe.loading = 'lazy';
                 iframe.referrerPolicy = 'no-referrer-when-downgrade';
+                iframe.tabIndex = -1;
                 iframe.style.width = '100%';
                 iframe.style.height = '100%';
                 iframe.style.border = '0';
+                iframe.addEventListener('load', () => {
+                    requestAnimationFrame(() => window.scrollTo(0, lockedScrollY));
+                }, { once: true });
 
                 lightboxBody.innerHTML = '';
                 lightboxBody.appendChild(iframe);
                 lightbox.classList.add('is-open');
                 lightbox.setAttribute('aria-hidden', 'false');
                 document.body.classList.add('video-lightbox-open');
-                document.body.style.top = `-${lockedScrollY}px`;
-                requestAnimationFrame(() => window.scrollTo(0, lockedScrollY));
+                requestAnimationFrame(() => {
+                    window.scrollTo(0, lockedScrollY);
+                    closeButton?.focus({ preventScroll: true });
+                });
             };
 
             closeTargets.forEach((target) => {
