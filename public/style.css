@@ -3648,17 +3648,37 @@ body::after {
         }
 
         .roller-preview {
+            position: absolute;
+            inset: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
             display: block;
+            opacity: 0;
+            transition: opacity 0.22s ease;
+            pointer-events: none;
         }
 
         .roller-thumb {
+            position: absolute;
+            inset: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
             display: block;
+            transition: opacity 0.22s ease, transform 0.35s ease;
+        }
+
+        .roller-video-card.is-previewing .roller-preview {
+            opacity: 1;
+        }
+
+        .roller-video-card.is-previewing .roller-thumb {
+            opacity: 0;
+        }
+
+        .roller-video-card:hover .roller-thumb {
+            transform: scale(1.02);
         }
 
         .roller-video-play {
@@ -3719,15 +3739,24 @@ body::after {
         }
 
         .video-lightbox-panel {
-            position: absolute;
-            inset: 24px;
-            max-width: 1100px;
-            margin: auto;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: min(920px, calc(100vw - 44px));
+            height: min(560px, calc(100vh - 44px));
             border-radius: 18px;
             border: 1px solid rgba(255, 255, 255, 0.18);
             background: rgba(18, 18, 18, 0.84);
             overflow: hidden;
             box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+        }
+
+        body.video-lightbox-open {
+            overflow: hidden;
+            position: fixed;
+            left: 0;
+            width: 100%;
         }
 
         .video-lightbox-close {
@@ -3748,6 +3777,19 @@ body::after {
             position: absolute;
             inset: 0;
             padding: 18px;
+            display: grid;
+            place-items: center;
+        }
+
+        /* Keep embeds/videos nicely sized and centered */
+        .video-lightbox-body iframe,
+        .video-lightbox-body video {
+            width: min(860px, 100%);
+            height: auto;
+            max-height: 100%;
+            aspect-ratio: 16 / 9;
+            border-radius: 14px;
+            background: #000;
         }
 
         @media (max-width: 980px) {
@@ -3768,7 +3810,8 @@ body::after {
             }
 
             .video-lightbox-panel {
-                inset: 12px;
+                width: calc(100vw - 20px);
+                height: min(420px, calc(100vh - 20px));
             }
 
             .video-lightbox-body {

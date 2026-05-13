@@ -419,6 +419,9 @@
                         <button type="button" class="roller-video-card" data-video-open data-embed-url="https://player.cloudinary.com/embed/?cloud_name=dgyjxz9di&public_id=InShot_20260424_030108650_npfqcq" aria-label="Play video: Smooth operation">
                             <div class="roller-video-media">
                                 <img class="roller-thumb" src="https://res.cloudinary.com/dgyjxz9di/video/upload/InShot_20260424_030108650_npfqcq.jpg" alt="Smooth operation preview" loading="lazy" decoding="async">
+                                <video class="roller-preview" data-preview-video muted playsinline loop preload="metadata">
+                                    <source src="https://res.cloudinary.com/dgyjxz9di/video/upload/InShot_20260424_030108650_npfqcq.mp4" type="video/mp4">
+                                </video>
                                 <span class="roller-video-play" aria-hidden="true"><i class="fa-solid fa-play"></i></span>
                             </div>
                             <div class="roller-video-meta">
@@ -430,6 +433,9 @@
                         <button type="button" class="roller-video-card" data-video-open data-embed-url="https://player.cloudinary.com/embed/?cloud_name=dgyjxz9di&public_id=InShot_20260424_030223063_cacmn5" aria-label="Play video: Light control">
                             <div class="roller-video-media">
                                 <img class="roller-thumb" src="https://res.cloudinary.com/dgyjxz9di/video/upload/InShot_20260424_030223063_cacmn5.jpg" alt="Light control preview" loading="lazy" decoding="async">
+                                <video class="roller-preview" data-preview-video muted playsinline loop preload="metadata">
+                                    <source src="https://res.cloudinary.com/dgyjxz9di/video/upload/InShot_20260424_030223063_cacmn5.mp4" type="video/mp4">
+                                </video>
                                 <span class="roller-video-play" aria-hidden="true"><i class="fa-solid fa-play"></i></span>
                             </div>
                             <div class="roller-video-meta">
@@ -441,6 +447,9 @@
                         <button type="button" class="roller-video-card" data-video-open data-embed-url="https://player.cloudinary.com/embed/?cloud_name=dgyjxz9di&public_id=WhatsApp_Video_2026-05-08_at_6.15.35_AM_rzympe" aria-label="Play video: Perfect for any room">
                             <div class="roller-video-media">
                                 <img class="roller-thumb" src="https://res.cloudinary.com/dgyjxz9di/video/upload/WhatsApp_Video_2026-05-08_at_6.15.35_AM_rzympe.jpg" alt="Perfect for any room preview" loading="lazy" decoding="async">
+                                <video class="roller-preview" data-preview-video muted playsinline loop preload="metadata">
+                                    <source src="https://res.cloudinary.com/dgyjxz9di/video/upload/WhatsApp_Video_2026-05-08_at_6.15.35_AM_rzympe.mp4" type="video/mp4">
+                                </video>
                                 <span class="roller-video-play" aria-hidden="true"><i class="fa-solid fa-play"></i></span>
                             </div>
                             <div class="roller-video-meta">
@@ -449,9 +458,12 @@
                             </div>
                         </button>
 
-                        <button type="button" class="roller-video-card" data-video-open data-embed-url="https://player.cloudinary.com/embed/?cloud_name=dgyjxz9di&public_id=WhatsApp_Video_2026-05-08_at_6.15.35_AM_rzympe" aria-label="Play video: Premium quality">
+                        <button type="button" class="roller-video-card" data-video-open data-embed-url="https://player.cloudinary.com/embed/?cloud_name=dgyjxz9di&public_id=InShot_20260424_025851806_vke3yo" aria-label="Play video: Premium quality">
                             <div class="roller-video-media">
-                                <img class="roller-thumb" src="https://res.cloudinary.com/dgyjxz9di/video/upload/WhatsApp_Video_2026-05-08_at_6.15.35_AM_rzympe.jpg" alt="Premium quality preview" loading="lazy" decoding="async">
+                                <img class="roller-thumb" src="https://res.cloudinary.com/dgyjxz9di/video/upload/InShot_20260424_025851806_vke3yo.jpg" alt="Premium quality preview" loading="lazy" decoding="async">
+                                <video class="roller-preview" data-preview-video muted playsinline loop preload="metadata">
+                                    <source src="https://res.cloudinary.com/dgyjxz9di/video/upload/InShot_20260424_025851806_vke3yo.mp4" type="video/mp4">
+                                </video>
                                 <span class="roller-video-play" aria-hidden="true"><i class="fa-solid fa-play"></i></span>
                             </div>
                             <div class="roller-video-meta">
@@ -497,16 +509,6 @@
             <a href="zebra-collection.html" class="cta-btn outline">View Full Catalog</a>
         </div>
     </section>
-
-    <div class="video-lightbox" id="video-lightbox" aria-hidden="true">
-        <div class="video-lightbox-backdrop" data-video-close></div>
-        <div class="video-lightbox-panel" role="dialog" aria-modal="true" aria-label="Video player">
-            <button type="button" class="video-lightbox-close" data-video-close aria-label="Close video">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-            <div class="video-lightbox-body" id="video-lightbox-body"></div>
-        </div>
-    </div>
 
     <section class="contact" id="contact">
         <div class="section-header">
@@ -760,7 +762,17 @@
         </div>
     </footer>
 
-        <script>
+    <div class="video-lightbox" id="video-lightbox" aria-hidden="true">
+        <div class="video-lightbox-backdrop" data-video-close></div>
+        <div class="video-lightbox-panel" role="dialog" aria-modal="true" aria-label="Video player">
+            <button type="button" class="video-lightbox-close" data-video-close aria-label="Close video">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="video-lightbox-body" id="video-lightbox-body"></div>
+        </div>
+    </div>
+
+    <script>
         const API_BASE = (() => {
             const configuredBase = window.__LUXE_API_BASE__
                 || document.querySelector('meta[name="luxe-api-base"]')?.getAttribute('content')?.trim();
@@ -1939,17 +1951,49 @@
             const lightbox = document.getElementById('video-lightbox');
             const lightboxBody = document.getElementById('video-lightbox-body');
             const closeTargets = Array.from(document.querySelectorAll('[data-video-close]'));
+            const prefersTouch = window.matchMedia('(hover: none)').matches;
+            let lockedScrollY = 0;
+
+            if (lightbox && lightbox.parentElement !== document.body) {
+                document.body.appendChild(lightbox);
+            }
+
+            const startPreview = async (card, video) => {
+                if (!video) return;
+                card.classList.add('is-previewing');
+                try {
+                    video.currentTime = 0;
+                    await video.play();
+                } catch {
+                    card.classList.remove('is-previewing');
+                }
+            };
+
+            const stopPreview = (card, video) => {
+                card.classList.remove('is-previewing');
+                if (!video) return;
+                try {
+                    video.pause();
+                    video.currentTime = 0;
+                } catch {
+                    // ignore reset errors
+                }
+            };
 
             const closeLightbox = () => {
                 if (!lightbox || !lightboxBody) return;
                 lightbox.classList.remove('is-open');
                 lightbox.setAttribute('aria-hidden', 'true');
                 lightboxBody.innerHTML = '';
+                document.body.classList.remove('video-lightbox-open');
+                document.body.style.top = '';
+                window.scrollTo(0, lockedScrollY);
             };
 
             const openLightbox = (embedUrl) => {
                 if (!lightbox || !lightboxBody) return;
                 if (!embedUrl) return;
+                lockedScrollY = window.scrollY || window.pageYOffset || 0;
 
                 const iframe = document.createElement('iframe');
                 iframe.src = embedUrl;
@@ -1965,6 +2009,9 @@
                 lightboxBody.appendChild(iframe);
                 lightbox.classList.add('is-open');
                 lightbox.setAttribute('aria-hidden', 'false');
+                document.body.classList.add('video-lightbox-open');
+                document.body.style.top = `-${lockedScrollY}px`;
+                requestAnimationFrame(() => window.scrollTo(0, lockedScrollY));
             };
 
             closeTargets.forEach((target) => {
@@ -1976,8 +2023,22 @@
             });
 
             cards.forEach((card) => {
+                const video = card.querySelector('[data-preview-video]');
+
+                if (video) {
+                    if (prefersTouch) {
+                        card.addEventListener('pointerenter', () => startPreview(card, video));
+                        card.addEventListener('pointerleave', () => stopPreview(card, video));
+                        card.addEventListener('pointercancel', () => stopPreview(card, video));
+                    } else {
+                        card.addEventListener('mouseenter', () => startPreview(card, video));
+                        card.addEventListener('mouseleave', () => stopPreview(card, video));
+                    }
+                }
+
                 card.addEventListener('click', (event) => {
                     event.preventDefault();
+                    stopPreview(card, video);
                     openLightbox(card.getAttribute('data-embed-url'));
                 });
             });
