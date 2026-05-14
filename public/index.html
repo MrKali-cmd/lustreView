@@ -416,11 +416,11 @@
 
                 <section class="roller-videos" id="roller-videos" aria-label="Roller blinds video gallery">
                     <div class="roller-videos-grid">
-                        <button type="button" class="roller-video-card" data-video-open data-embed-url="https://player.cloudinary.com/embed/?cloud_name=dgyjxz9di&public_id=InShot_20260424_030108650_npfqcq" aria-label="Play video: Smooth operation">
+                        <button type="button" class="roller-video-card" data-video-open data-embed-url="https://player.cloudinary.com/embed/?cloud_name=dgyjxz9di&public_id=WhatsApp_Video_2026-05-08_at_6.15.35_AM_1_ng3t27" aria-label="Play video: Smooth operation">
                             <div class="roller-video-media">
-                                <img class="roller-thumb" src="https://res.cloudinary.com/dgyjxz9di/video/upload/InShot_20260424_030108650_npfqcq.jpg" alt="Smooth operation preview" loading="lazy" decoding="async">
+                                <img class="roller-thumb" src="https://res.cloudinary.com/dgyjxz9di/video/upload/WhatsApp_Video_2026-05-08_at_6.15.35_AM_1_ng3t27.jpg" alt="Smooth operation preview" loading="lazy" decoding="async">
                                 <video class="roller-preview" data-preview-video muted playsinline loop preload="metadata">
-                                    <source src="https://res.cloudinary.com/dgyjxz9di/video/upload/InShot_20260424_030108650_npfqcq.mp4" type="video/mp4">
+                                    <source src="https://res.cloudinary.com/dgyjxz9di/video/upload/WhatsApp_Video_2026-05-08_at_6.15.35_AM_1_ng3t27.mp4" type="video/mp4">
                                 </video>
                                 <span class="roller-video-play" aria-hidden="true"><i class="fa-solid fa-play"></i></span>
                             </div>
@@ -1954,8 +1954,8 @@
             const prefersTouch = window.matchMedia('(hover: none)').matches;
             let lockedScrollY = 0;
 
-            if (lightbox && lightbox.parentElement !== document.body) {
-                document.body.appendChild(lightbox);
+            if (lightbox && lightbox.parentElement !== document.documentElement) {
+                document.documentElement.appendChild(lightbox);
             }
 
             const startPreview = async (card, video) => {
